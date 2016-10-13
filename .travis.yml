@@ -1,0 +1,7 @@
+language: node_js
+node_js:
+- '4.2'
+- 'stable'
+cache:
+  directories:
+  - node_modules
