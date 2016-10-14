@@ -1,7 +1,7 @@
 var Tone = require('tone');
 var Soundfont = require('soundfont-player');
 
-function AudioEngine () {
+function AudioEngine (sounds) {
 
     // tone setup
 
@@ -25,8 +25,9 @@ function AudioEngine () {
 
     // sound urls - map each url to its tone.sampler
     this.soundSamplers = [];
+    this.loadSounds(sounds);
 
-       // soundfont setup
+   // soundfont setup
 
     // instrument names used by Musyng Kite soundfont, in order to
     // match scratch instruments
@@ -41,6 +42,15 @@ function AudioEngine () {
         }.bind(this)
     );
 }
+
+AudioEngine.prototype.loadSounds = function (sounds) {
+    for (var i=0; i<sounds.length; i++) {
+        var url = sounds[i].fileUrl;
+        var sampler = new Tone.Sampler(url, function () {
+            this.soundSamplers[url] = sampler;
+        }.bind(this)).toMaster();
+    }
+};
 
 AudioEngine.prototype.playSound = function (soundNum) {
     this.soundSamplers[soundNum].triggerAttack();
@@ -143,13 +153,6 @@ AudioEngine.prototype.clearEffects = function () {
 // AudioEngine.prototype.loadSoundFromUrl = function(url) {
 
 // };
-
-AudioEngine.prototype.loadSounds = function (sounds) {
-    for (var sound in sounds) {
-        var sampler = new Tone.Sampler(sound.fileUrl).toMaster();
-        this.soundSamplers[sound.fileUrl] = sampler;
-    }
-};
 
 AudioEngine.prototype._clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);
