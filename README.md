@@ -1,6 +1,8 @@
 # scratch-audioengine
 #### Scratch audio engine is for playing sounds, instruments and audio effects in Scratch 3.0 projects
 
+#### Please note this project is at an early stage and we are not ready for pull requests
+
 [![Build Status](https://travis-ci.com/LLK/scratch-audioengine.svg?token=KcCHRot8oJYS4bsz1qET&branch=master)](https://travis-ci.com/LLK/scratch-audioengine)
 
 ## Installation
