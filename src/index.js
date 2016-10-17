@@ -12,10 +12,14 @@ function AudioEngine (sounds) {
     this.delay = new Tone.FeedbackDelay(0.25, 0.5);
     this.panner = new Tone.Panner();
     this.reverb = new Tone.Freeverb();
+    this.pitchShiftRatio = 1;
 
     this.clearEffects();
 
-    Tone.Master.chain(this.delay, this.panner, this.reverb);
+    this.effectsNode = new Tone.Gain();
+    this.effectsNode.chain(this.delay, this.panner, this.reverb, Tone.Master);
+
+    // Tone.Master.chain(this.delay, this.panner, this.reverb);
 
     // drum sounds
 
@@ -38,7 +42,7 @@ function AudioEngine (sounds) {
     Soundfont.instrument(Tone.context, this.instrumentNames[0]).then(
         function (inst) {
             this.instrument = inst;
-            this.instrument.connect(Tone.Master);
+            this.instrument.connect(this.effectsNode);
         }.bind(this)
     );
 }
@@ -46,7 +50,8 @@ function AudioEngine (sounds) {
 AudioEngine.prototype.loadSounds = function (sounds) {
     for (var i=0; i<sounds.length; i++) {
         var url = sounds[i].fileUrl;
-        var sampler = new Tone.Sampler(url).toMaster();
+        var sampler = new Tone.Sampler(url);
+        sampler.connect(this.effectsNode);
         this.soundSamplers.push(sampler);
     }
 };
@@ -114,13 +119,15 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.reverb.wet.value = this._clamp(this.reverb.wet.value, 0, 1);
         break;
     case 'PITCH':
+        this._setPitchShift(this.pitchShiftRatio + (value / 20));
         break;
     }
 };
 
 AudioEngine.prototype._setPitchShift = function (value) {
+    this.pitchShiftRatio = value;
     for (var i in this.soundSamplers) {
-        this.soundSamplers[i].player.playbackRate = 1 + value;
+        this.soundSamplers[i].player.playbackRate = 1 + this.pitchShiftRatio;
     }
 };
 
