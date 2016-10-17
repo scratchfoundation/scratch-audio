@@ -46,35 +46,17 @@ function AudioEngine (sounds) {
 AudioEngine.prototype.loadSounds = function (sounds) {
     for (var i=0; i<sounds.length; i++) {
         var url = sounds[i].fileUrl;
-        var sampler = new Tone.Sampler(url, function () {
-            this.soundSamplers[url] = sampler;
-        }.bind(this)).toMaster();
+        var sampler = new Tone.Sampler(url).toMaster();
+        this.soundSamplers.push(sampler);
     }
 };
 
-AudioEngine.prototype.playSound = function (soundNum) {
-    this.soundSamplers[soundNum].triggerAttack();
+AudioEngine.prototype.playSound = function (index) {
+    this.soundSamplers[index].triggerAttack();
 };
 
-AudioEngine.prototype.playSoundFromUrl = function (url) {
-    if (url) {
-        // if we've loaded it already, play it
-        if (this.soundSamplers[url]) {
-            // this.soundSamplers[url].triggerAttack();
-            this.soundSamplers[url].player.start();
-        } else {
-        // else load, play, and store it
-        // this results in a delay the first time you play the sound
-            var sampler = new Tone.Sampler(url, function () {
-                sampler.triggerAttack();
-                this.soundSamplers[url] = sampler;
-            }.bind(this)).toMaster();
-        }
-    }
-};
-
-AudioEngine.prototype.getSoundDuration = function (url) {
-    return this.soundSamplers[url].player.buffer.duration;
+AudioEngine.prototype.getSoundDuration = function (index) {
+    return this.soundSamplers[index].player.buffer.duration;
 };
 
 AudioEngine.prototype.playNoteForBeats = function (note, beats) {
@@ -132,7 +114,6 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.reverb.wet.value = this._clamp(this.reverb.wet.value, 0, 1);
         break;
     case 'PITCH':
-        // this.pitchShift.pitch += value / 20;
         break;
     }
 };
