@@ -8,18 +8,21 @@ function AudioEngine (sounds) {
     this.tone = new Tone();
 
 	// effects setup
+    // each effect has a single parameter controlled by the effects block
 
     this.delay = new Tone.FeedbackDelay(0.25, 0.5);
     this.panner = new Tone.Panner();
     this.reverb = new Tone.Freeverb();
-    this.pitchShiftRatio = 1;
+    this.pitchShiftRatio;
 
+    // reset effects to their default parameters
     this.clearEffects();
 
+    // the effects are chained to an effects node for this clone, then to the master output
+    // so audio is sent from each sampler or instrument, through the effects in order, then out
+    // note that the pitch effect works differently - it sets the playback rate for each sampler
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(this.delay, this.panner, this.reverb, Tone.Master);
-
-    // Tone.Master.chain(this.delay, this.panner, this.reverb);
 
     // drum sounds
 
@@ -137,10 +140,6 @@ AudioEngine.prototype.clearEffects = function () {
     this.panner.pan.value = 0;
     this.reverb.wet.value = 0;
 };
-
-// AudioEngine.prototype.loadSoundFromUrl = function(url) {
-
-// };
 
 AudioEngine.prototype._clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);
