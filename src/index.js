@@ -42,12 +42,17 @@ function AudioEngine (sounds) {
         'drawbar_organ', 'acoustic_guitar_nylon', 'electric_guitar_clean',
          'acoustic_bass', 'pizzicato_strings', 'cello', 'trombone', 'clarinet'];
 
-    Soundfont.instrument(Tone.context, this.instrumentNames[0]).then(
-        function (inst) {
-            this.instrument = inst;
-            this.instrument.connect(this.effectsNode);
-        }.bind(this)
-    );
+    this.setInstrument(0);
+
+    // theremin setup
+
+    this.theremin = new Tone.Synth();
+    this.portamentoTime = 0.25;
+    this.theremin.portamento = this.portamentoTime;
+    this.thereminVibrato = new Tone.Vibrato(4, 0.5);
+    this.theremin.chain(this.thereminVibrato, this.effectsNode);
+    this.thereminTimeout;
+    this.thereminIsPlaying = false;
 }
 
 AudioEngine.prototype.loadSounds = function (sounds) {
@@ -61,6 +66,8 @@ AudioEngine.prototype.loadSounds = function (sounds) {
 
 AudioEngine.prototype.playSound = function (index) {
     this.soundSamplers[index].triggerAttack();
+    this.soundSamplers[index].player.playbackRate = 1 + this.pitchShiftRatio;
+
 };
 
 AudioEngine.prototype.getSoundDuration = function (index) {
@@ -71,6 +78,35 @@ AudioEngine.prototype.playNoteForBeats = function (note, beats) {
     this.instrument.play(
         note, Tone.context.currentTime, {duration : Number(beats)}
     );
+};
+
+AudioEngine.prototype.playThereminForBeats = function (note, beats) {
+    // if the theremin is playing
+    //      set frequency
+    // else
+    //      trigger attack
+    // create a timeout for slightly longer than the duration of the block
+    // that releases the theremin - so we can slide continuously between
+    // successive notes without releasing and attacking
+
+    var freq = this._midiToFreq(note);
+
+    if (this.thereminIsPlaying) {
+        this.theremin.frequency.rampTo(freq, this.portamentoTime);
+    } else {
+        this.theremin.triggerAttack(freq);
+        this.thereminIsPlaying = true;
+    }
+    clearTimeout(this.thereminTimeout);
+    this.thereminTimeout = setTimeout(function () {
+        this.theremin.triggerRelease();
+        this.thereminIsPlaying = false;
+    }.bind(this), (1000 * beats) + 100);
+};
+
+AudioEngine.prototype._midiToFreq = function (midiNote) {
+    var freq = this.tone.intervalToFrequencyRatio(midiNote - 60) * 261.63; // 60 is C4
+    return freq;
 };
 
 AudioEngine.prototype.playDrumForBeats = function (drumNum) {
@@ -132,6 +168,15 @@ AudioEngine.prototype._setPitchShift = function (value) {
     for (var i in this.soundSamplers) {
         this.soundSamplers[i].player.playbackRate = 1 + this.pitchShiftRatio;
     }
+};
+
+AudioEngine.prototype.setInstrument = function (instrumentNum) {
+    return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum]).then(
+        function (inst) {
+            this.instrument = inst;
+            this.instrument.connect(this.effectsNode);
+        }.bind(this)
+    );
 };
 
 AudioEngine.prototype.clearEffects = function () {
