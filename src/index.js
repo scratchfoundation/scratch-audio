@@ -60,9 +60,14 @@ function AudioEngine (sounds) {
 AudioEngine.prototype.loadSounds = function (sounds) {
     for (var i=0; i<sounds.length; i++) {
         var url = sounds[i].fileUrl;
+        // skip adpcm form sounds since we can't load them yet
+        if (sounds[i].format == 'adpcm') {
+            continue;
+        }
         var sampler = new Tone.Sampler(url);
         sampler.connect(this.effectsNode);
-        this.soundSamplers.push(sampler);
+        // this.soundSamplers.push(sampler);
+        this.soundSamplers[i] = sampler;
     }
 };
 
