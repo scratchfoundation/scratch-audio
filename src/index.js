@@ -50,7 +50,6 @@ function AudioEngine (sounds) {
 
     this.theremin = new Tone.Synth();
     this.portamentoTime = 0.25;
-    this.theremin.portamento = this.portamentoTime;
     this.thereminVibrato = new Tone.Vibrato(4, 0.5);
     this.theremin.chain(this.thereminVibrato, this.effectsNode);
     this.thereminTimeout;
@@ -89,7 +88,7 @@ AudioEngine.prototype.playNoteForBeats = function (note, beats) {
 
 AudioEngine.prototype.playThereminForBeats = function (note, beats) {
     // if the theremin is playing
-    //      set frequency
+    //      ramp to new frequency
     // else
     //      trigger attack
     // create a timeout for slightly longer than the duration of the block
