@@ -27,6 +27,7 @@
     "babel-preset-es2015": "6.16.0",
     "eslint": "3.7.1",
     "json": "9.0.4",
+    "minilog": "^3.0.1",
     "soundfont-player": "0.10.5",
     "tone": "0.8.0",
     "travis-after-all": "1.4.4",
