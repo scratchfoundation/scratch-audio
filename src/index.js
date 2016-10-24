@@ -1,3 +1,4 @@
+var log = require('./log');
 var Tone = require('tone');
 var Soundfont = require('soundfont-player');
 
@@ -15,23 +16,18 @@ function AudioEngine (sounds) {
     this.reverb = new Tone.Freeverb();
     this.pitchShiftRatio;
 
-    // reset effects to their default parameters
-    this.clearEffects();
-
     // the effects are chained to an effects node for this clone, then to the master output
-    // so audio is sent from each sampler or instrument, through the effects in order, then out
-    // note that the pitch effect works differently - it sets the playback rate for each sampler
+    // so audio is sent from each player or instrument, through the effects in order, then out
+    // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(this.delay, this.panner, this.reverb, Tone.Master);
 
-    // drum sounds
+    // reset effects to their default parameters
+    // this.clearEffects();
 
-    // var drumFileNames = ['high_conga', 'small_cowbell',
-    // 'snare_drum', 'splash cymbal'];
-    // this.drumSamplers = this._loadSoundFiles(drumFileNames);
+    // load sounds
 
-    // sound urls - map each url to its tone.sampler
-    this.soundSamplers = [];
+    this.soundPlayers = [];
     this.loadSounds(sounds);
 
    // soundfont setup
@@ -58,26 +54,31 @@ function AudioEngine (sounds) {
 
 AudioEngine.prototype.loadSounds = function (sounds) {
     for (var i=0; i<sounds.length; i++) {
-        var url = sounds[i].fileUrl;
         // skip adpcm form sounds since we can't load them yet
         if (sounds[i].format == 'adpcm') {
+            log.warn('cannot load sound in adpcm format');
             continue;
         }
-        var sampler = new Tone.Sampler(url);
-        sampler.connect(this.effectsNode);
-        // this.soundSamplers.push(sampler);
-        this.soundSamplers[i] = sampler;
+        this.soundPlayers[i] = new Tone.Player(sounds[i].fileUrl);
+        this.soundPlayers[i].connect(this.effectsNode);
     }
 };
 
 AudioEngine.prototype.playSound = function (index) {
-    this.soundSamplers[index].triggerAttack();
-    this.soundSamplers[index].player.playbackRate = 1 + this.pitchShiftRatio;
-
+    var player = this.soundPlayers[index];
+    if (player.buffer.loaded) {
+        player.start();
+    } else {
+        // if the sound has not yet loaded, wait and try again
+        log.warn('sound ' + index + ' not loaded yet');
+        setTimeout(function () {
+            this.playSound(index);
+        }, 100);
+    }
 };
 
 AudioEngine.prototype.getSoundDuration = function (index) {
-    return this.soundSamplers[index].player.buffer.duration;
+    return this.soundPlayers[index].buffer.duration;
 };
 
 AudioEngine.prototype.playNoteForBeats = function (note, beats) {
@@ -93,7 +94,7 @@ AudioEngine.prototype.playThereminForBeats = function (note, beats) {
     //      trigger attack
     // create a timeout for slightly longer than the duration of the block
     // that releases the theremin - so we can slide continuously between
-    // successive notes without releasing and attacking
+    // successive notes without releasing and re-attacking
 
     var freq = this._midiToFreq(note);
 
@@ -124,9 +125,9 @@ AudioEngine.prototype.stopAllSounds = function () {
     // for (var i = 0; i<this.drumSamplers.length; i++) {
     //     this.drumSamplers[i].triggerRelease();
     // }
-    // stop sounds triggered with playSound (indexed by their urls)
-    for (var key in this.soundSamplers) {
-        this.soundSamplers[key].triggerRelease();
+    // stop sounds triggered with playSound
+    for (var i=0; i<this.soundPlayers.length; i++) {
+        this.soundPlayers[i].stop();
     }
     // stop soundfont notes
     this.instrument.stop();
@@ -171,8 +172,11 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
 
 AudioEngine.prototype._setPitchShift = function (value) {
     this.pitchShiftRatio = value;
-    for (var i in this.soundSamplers) {
-        this.soundSamplers[i].player.playbackRate = 1 + this.pitchShiftRatio;
+    for (var i=0; i<this.soundPlayers.length; i++) {
+        var s = this.soundPlayers[i];
+        if (s) {
+            s.playbackRate = 1 + this.pitchShiftRatio;
+        }
     }
 };
 
