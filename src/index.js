@@ -23,7 +23,7 @@ function AudioEngine (sounds) {
     this.effectsNode.chain(this.delay, this.panner, this.reverb, Tone.Master);
 
     // reset effects to their default parameters
-    // this.clearEffects();
+    this.clearEffects();
 
     // load sounds
 
@@ -66,19 +66,24 @@ AudioEngine.prototype.loadSounds = function (sounds) {
 
 AudioEngine.prototype.playSound = function (index) {
     var player = this.soundPlayers[index];
-    if (player.buffer.loaded) {
+    if (player && player.buffer.loaded) {
         player.start();
     } else {
         // if the sound has not yet loaded, wait and try again
         log.warn('sound ' + index + ' not loaded yet');
         setTimeout(function () {
             this.playSound(index);
-        }, 100);
+        }.bind(this), 100);
     }
 };
 
 AudioEngine.prototype.getSoundDuration = function (index) {
-    return this.soundPlayers[index].buffer.duration;
+    var player = this.soundPlayers[index];
+    if (player && player.buffer.loaded) {
+        return player.buffer.duration;
+    } else {
+        return 0;
+    }
 };
 
 AudioEngine.prototype.playNoteForBeats = function (note, beats) {
@@ -172,6 +177,9 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
 
 AudioEngine.prototype._setPitchShift = function (value) {
     this.pitchShiftRatio = value;
+    if (!this.soundPlayers) {
+        return;
+    }
     for (var i=0; i<this.soundPlayers.length; i++) {
         var s = this.soundPlayers[i];
         if (s) {
