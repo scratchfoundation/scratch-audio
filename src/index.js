@@ -150,7 +150,7 @@ AudioEngine.prototype.setEffect = function (effect, value) {
         this.reverb.wet.value = value / 100;
         break;
     case 'PITCH':
-        this._setPitchShift(value / 20);
+        this._setPitchShift(value / 100);
         break;
     }
 };
@@ -170,7 +170,7 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.reverb.wet.value = this._clamp(this.reverb.wet.value, 0, 1);
         break;
     case 'PITCH':
-        this._setPitchShift(this.pitchShiftRatio + (value / 20));
+        this._setPitchShift(this.pitchShiftRatio + (value / 100));
         break;
     }
 };
