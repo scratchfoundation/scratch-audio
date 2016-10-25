@@ -71,9 +71,11 @@ AudioEngine.prototype.playSound = function (index) {
     } else {
         // if the sound has not yet loaded, wait and try again
         log.warn('sound ' + index + ' not loaded yet');
-        setTimeout(function () {
-            this.playSound(index);
-        }.bind(this), 500);
+        if (player) {
+            setTimeout(function () {
+                this.playSound(index);
+            }.bind(this), 500);
+        }
     }
 };
 
