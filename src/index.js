@@ -73,7 +73,7 @@ AudioEngine.prototype.playSound = function (index) {
         log.warn('sound ' + index + ' not loaded yet');
         setTimeout(function () {
             this.playSound(index);
-        }.bind(this), 100);
+        }.bind(this), 500);
     }
 };
 
