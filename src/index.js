@@ -42,6 +42,11 @@ function AudioEngine (sounds) {
 
     this.setInstrument(0);
 
+    // tempo in bpm (beats per minute)
+    // default is 60bpm
+
+    this.currentTempo = 60;
+
     // theremin setup
 
     this.theremin = new Tone.Synth();
@@ -222,6 +227,16 @@ AudioEngine.prototype.changeVolume = function (value) {
     value /= 100;
     var newVol = this.effectsNode.gain.value + value;
     this.effectsNode.gain.value = this._clamp(newVol, 0, 1);
+};
+
+AudioEngine.prototype.setTempo = function (value) {
+    var newTempo = this._clamp(value, 10, 1000);
+    this.currentTempo = newTempo;
+};
+
+AudioEngine.prototype.changeTempo = function (value) {
+    var newTempo = this._clamp(this.currentTempo + value, 10, 1000);
+    this.currentTempo = newTempo;
 };
 
 AudioEngine.prototype._clamp = function (input, min, max) {
