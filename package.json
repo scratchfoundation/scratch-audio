@@ -32,5 +32,8 @@
     "tone": "0.8.0",
     "travis-after-all": "1.4.4",
     "webpack": "1.13.2"
+  },
+  "dependencies": {
+    "vocoder": "^0.1.1"
   }
 }
