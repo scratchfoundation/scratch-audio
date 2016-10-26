@@ -207,6 +207,18 @@ AudioEngine.prototype.clearEffects = function () {
     this.reverb.wet.value = 0;
 };
 
+AudioEngine.prototype.setVolume = function (value) {
+    var vol = this._clamp(value, 0, 100);
+    vol /= 100;
+    this.effectsNode.gain.value = vol;
+};
+
+AudioEngine.prototype.changeVolume = function (value) {
+    value /= 100;
+    var newVol = this.effectsNode.gain.value + value;
+    this.effectsNode.gain.value = this._clamp(newVol, 0, 1);
+};
+
 AudioEngine.prototype._clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);
 };
