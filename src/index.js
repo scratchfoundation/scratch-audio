@@ -14,7 +14,7 @@ function AudioEngine (sounds) {
     this.delay = new Tone.FeedbackDelay(0.25, 0.5);
     this.panner = new Tone.Panner();
     this.reverb = new Tone.Freeverb();
-    this.pitchShiftRatio;
+    this.pitchEffectValue;
 
     // the effects are chained to an effects node for this clone, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
@@ -152,7 +152,7 @@ AudioEngine.prototype.setEffect = function (effect, value) {
         this.reverb.wet.value = value / 100;
         break;
     case 'PITCH':
-        this._setPitchShift(value / 100);
+        this._setPitchShift(value);
         break;
     }
 };
@@ -172,20 +172,21 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.reverb.wet.value = this._clamp(this.reverb.wet.value, 0, 1);
         break;
     case 'PITCH':
-        this._setPitchShift(this.pitchShiftRatio + (value / 100));
+        this._setPitchShift(this.pitchEffectValue + Number(value));
         break;
     }
 };
 
 AudioEngine.prototype._setPitchShift = function (value) {
-    this.pitchShiftRatio = value;
+    this.pitchEffectValue = value;
     if (!this.soundPlayers) {
         return;
     }
+    var ratio = this.tone.intervalToFrequencyRatio(this.pitchEffectValue / 10);
     for (var i=0; i<this.soundPlayers.length; i++) {
         var s = this.soundPlayers[i];
         if (s) {
-            s.playbackRate = 1 + this.pitchShiftRatio;
+            s.playbackRate = ratio;
         }
     }
 };
