@@ -14,13 +14,15 @@ function AudioEngine (sounds) {
     this.delay = new Tone.FeedbackDelay(0.25, 0.5);
     this.panner = new Tone.Panner();
     this.reverb = new Tone.Freeverb();
+    this.distortion = new Tone.Distortion();
     this.pitchEffectValue;
+
 
     // the effects are chained to an effects node for this clone, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
     // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
-    this.effectsNode.chain(this.delay, this.panner, this.reverb, Tone.Master);
+    this.effectsNode.chain(this.distortion, this.delay, this.panner, this.reverb, Tone.Master);
 
     // reset effects to their default parameters
     this.clearEffects();
@@ -164,6 +166,12 @@ AudioEngine.prototype.setEffect = function (effect, value) {
     case 'PITCH':
         this._setPitchShift(value);
         break;
+    case 'DISTORTION' :
+        this.distortion.wet.value = value / 100;
+        break;
+    case 'ROBOTIC' :
+        // vocoder effect?
+        break;
     }
 };
 
@@ -184,6 +192,14 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
     case 'PITCH':
         this._setPitchShift(this.pitchEffectValue + Number(value));
         break;
+    case 'DISTORTION' :
+        this.distortion.wet.value += value / 100;
+        this.distortion.wet.value = this._clamp(this.distortion.wet.value, 0, 1);
+        break;
+    case 'ROBOTIC' :
+        // vocoder effect?
+        break;
+
     }
 };
 
@@ -215,6 +231,7 @@ AudioEngine.prototype.clearEffects = function () {
     this._setPitchShift(0);
     this.panner.pan.value = 0;
     this.reverb.wet.value = 0;
+    this.distortion.wet.value = 0;
 };
 
 AudioEngine.prototype.setVolume = function (value) {
