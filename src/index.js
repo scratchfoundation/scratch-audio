@@ -17,7 +17,6 @@ function AudioEngine (sounds) {
     this.distortion = new Tone.Distortion();
     this.pitchEffectValue;
 
-
     // the effects are chained to an effects node for this clone, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
     // note that the pitch effect works differently - it sets the playback rate for each player
@@ -145,11 +144,15 @@ AudioEngine.prototype.stopAllSounds = function () {
     //     this.drumSamplers[i].triggerRelease();
     // }
     // stop sounds triggered with playSound
-    for (var i=0; i<this.soundPlayers.length; i++) {
-        this.soundPlayers[i].stop();
+    if (this.soundPlayers && this.soundPlayers.length > 0) {
+        for (var i=0; i<this.soundPlayers.length; i++) {
+            this.soundPlayers[i].stop();
+        }
     }
     // stop soundfont notes
-    this.instrument.stop();
+    if (this.instrument) {
+        this.instrument.stop();
+    }
 };
 
 AudioEngine.prototype.setEffect = function (effect, value) {
@@ -232,6 +235,8 @@ AudioEngine.prototype.clearEffects = function () {
     this.panner.pan.value = 0;
     this.reverb.wet.value = 0;
     this.distortion.wet.value = 0;
+
+    this.effectsNode.gain.value = 1;
 };
 
 AudioEngine.prototype.setVolume = function (value) {
