@@ -28,8 +28,8 @@ function AudioEngine (sounds) {
 
     // load sounds
 
-    this.soundPlayers = [];
-    this.loadSounds(sounds);
+    this.soundPlayers = this.loadSounds(sounds);
+    // Tone.Buffer.on('load', this._soundsLoaded.bind(this));
 
    // soundfont setup
 
@@ -59,43 +59,46 @@ function AudioEngine (sounds) {
 }
 
 AudioEngine.prototype.loadSounds = function (sounds) {
+    var soundPlayers = [];
+
     for (var i=0; i<sounds.length; i++) {
         // skip adpcm form sounds since we can't load them yet
         if (sounds[i].format == 'adpcm') {
             log.warn('cannot load sound in adpcm format');
             continue;
         }
-        this.soundPlayers[i] = new Tone.Player(sounds[i].fileUrl);
-        this.soundPlayers[i].connect(this.effectsNode);
+
+        var player = {};
+        player.buffer = new Tone.Buffer(sounds[i].fileUrl);
+        player.bufferSource = null;
+        soundPlayers[i] = player;
     }
+
+    return soundPlayers;
 };
+
+// AudioEngine.prototype._soundsLoaded = function() {
+//     console.log('all sounds loaded');
+// }
 
 AudioEngine.prototype.playSound = function (index) {
-    var player = this.soundPlayers[index];
-    if (player && player.buffer.loaded) {
-        player.start();
-        return new Promise(function (resolve) {
-            setTimeout(function () {
-                resolve();
-            }, (player.buffer.duration * 1000) / player.playbackRate);
-        });
-    } else {
-        // if the sound has not yet loaded, wait and try again
-        log.warn('sound ' + index + ' not loaded yet');
-        if (player) {
-            setTimeout(function () {
-                this.playSound(index);
-            }.bind(this), 500);
+    // if the soundplayer exists and its buffer has loaded
+    if (this.soundPlayers[index] && this.soundPlayers[index].buffer.loaded) {
+        // stop the sound if it's already playing
+        var bufferSource = this.soundPlayers[index].bufferSource;
+        if (bufferSource) {
+            bufferSource.stop();
         }
-    }
-};
+        // create a new buffer source to play the sound
+        var bufferSource = new Tone.BufferSource(this.soundPlayers[index].buffer.get());
+        bufferSource.connect(this.effectsNode);
+        bufferSource.start();
+        bufferSource.playbackRate.value = this._getPitchRatio();
+        this.soundPlayers[index].bufferSource = bufferSource;
 
-AudioEngine.prototype.getSoundDuration = function (index) {
-    var player = this.soundPlayers[index];
-    if (player && player.buffer.loaded) {
-        return player.buffer.duration;
-    } else {
-        return 0;
+        return new Promise(function(resolve) {
+            bufferSource.onended = function(){resolve()};
+        });
     }
 };
 
@@ -146,7 +149,10 @@ AudioEngine.prototype.stopAllSounds = function () {
     // stop sounds triggered with playSound
     if (this.soundPlayers && this.soundPlayers.length > 0) {
         for (var i=0; i<this.soundPlayers.length; i++) {
-            this.soundPlayers[i].stop();
+            var bufferSource = this.soundPlayers[i].bufferSource;
+            if (bufferSource) {
+                bufferSource.stop();
+            }
         }
     }
     // stop soundfont notes
@@ -211,13 +217,18 @@ AudioEngine.prototype._setPitchShift = function (value) {
     if (!this.soundPlayers) {
         return;
     }
-    var ratio = this.tone.intervalToFrequencyRatio(this.pitchEffectValue / 10);
+
+    var ratio = this._getPitchRatio();
     for (var i=0; i<this.soundPlayers.length; i++) {
-        var s = this.soundPlayers[i];
-        if (s) {
-            s.playbackRate = ratio;
+        var s = this.soundPlayers[i].bufferSource;
+        if (s && s.playbackRate) {
+            s.playbackRate.value = ratio;
         }
     }
+};
+
+AudioEngine.prototype._getPitchRatio = function () {
+    return this.tone.intervalToFrequencyRatio(this.pitchEffectValue / 10);
 };
 
 AudioEngine.prototype.setInstrument = function (instrumentNum) {
