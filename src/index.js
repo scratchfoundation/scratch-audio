@@ -85,9 +85,9 @@ AudioEngine.prototype.playSound = function (index) {
     // if the soundplayer exists and its buffer has loaded
     if (this.soundPlayers[index] && this.soundPlayers[index].buffer.loaded) {
         // stop the sound if it's already playing
-        var bufferSource = this.soundPlayers[index].bufferSource;
-        if (bufferSource) {
-            bufferSource.stop();
+        var b = this.soundPlayers[index].bufferSource;
+        if (b) {
+            b.stop();
         }
         // create a new buffer source to play the sound
         var bufferSource = new Tone.BufferSource(this.soundPlayers[index].buffer.get());
@@ -96,8 +96,8 @@ AudioEngine.prototype.playSound = function (index) {
         bufferSource.playbackRate.value = this._getPitchRatio();
         this.soundPlayers[index].bufferSource = bufferSource;
 
-        return new Promise(function(resolve) {
-            bufferSource.onended = function(){resolve()};
+        return new Promise(function (resolve) {
+            bufferSource.onended = function (){resolve();};
         });
     }
 };
