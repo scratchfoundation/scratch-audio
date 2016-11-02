@@ -14,7 +14,7 @@ function AudioEngine (sounds) {
     this.delay = new Tone.FeedbackDelay(0.25, 0.5);
     this.panner = new Tone.Panner();
     this.reverb = new Tone.Freeverb();
-    this.distortion = new Tone.Distortion();
+    this.distortion = new Tone.Distortion(1);
     this.pitchEffectValue;
 
     // the effects are chained to an effects node for this clone, then to the master output
@@ -175,7 +175,7 @@ AudioEngine.prototype.setEffect = function (effect, value) {
     case 'PITCH':
         this._setPitchShift(value);
         break;
-    case 'DISTORTION' :
+    case 'FUZZ' :
         this.distortion.wet.value = value / 100;
         break;
     case 'ROBOTIC' :
@@ -201,7 +201,7 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
     case 'PITCH':
         this._setPitchShift(this.pitchEffectValue + Number(value));
         break;
-    case 'DISTORTION' :
+    case 'FUZZ' :
         this.distortion.wet.value += value / 100;
         this.distortion.wet.value = this._clamp(this.distortion.wet.value, 0, 1);
         break;
