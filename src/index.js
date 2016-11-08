@@ -1,6 +1,7 @@
 var log = require('./log');
 var Tone = require('tone');
 var Soundfont = require('soundfont-player');
+var Vocoder = require('./vocoder');
 
 function AudioEngine (sounds) {
 
@@ -16,12 +17,13 @@ function AudioEngine (sounds) {
     this.reverb = new Tone.Freeverb();
     this.distortion = new Tone.Distortion(1);
     this.pitchEffectValue;
+    this.vocoder = new Vocoder();
 
     // the effects are chained to an effects node for this clone, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
     // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
-    this.effectsNode.chain(this.distortion, this.delay, this.panner, this.reverb, Tone.Master);
+    this.effectsNode.chain(this.vocoder, this.distortion, this.delay, this.panner, this.reverb, Tone.Master);
 
     // reset effects to their default parameters
     this.clearEffects();
@@ -179,7 +181,7 @@ AudioEngine.prototype.setEffect = function (effect, value) {
         this.distortion.wet.value = value / 100;
         break;
     case 'ROBOTIC' :
-        // vocoder effect?
+        this.vocoder.wet.value = value / 100;
         break;
     }
 };
@@ -206,7 +208,8 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.distortion.wet.value = this._clamp(this.distortion.wet.value, 0, 1);
         break;
     case 'ROBOTIC' :
-        // vocoder effect?
+        this.vocoder.wet.value += value / 100;
+        this.vocoder.wet.value = this._clamp(this.vocoder.wet.value, 0, 1);
         break;
 
     }
@@ -225,6 +228,9 @@ AudioEngine.prototype._setPitchShift = function (value) {
             s.playbackRate.value = ratio;
         }
     }
+
+    var freq = this._getPitchRatio() * Tone.Frequency('C3').eval();
+    this.vocoder.setCarrierOscFrequency(freq);
 };
 
 AudioEngine.prototype._getPitchRatio = function () {
@@ -246,6 +252,7 @@ AudioEngine.prototype.clearEffects = function () {
     this.panner.pan.value = 0;
     this.reverb.wet.value = 0;
     this.distortion.wet.value = 0;
+    this.vocoder.wet.value = 0;
 
     this.effectsNode.gain.value = 1;
 };
