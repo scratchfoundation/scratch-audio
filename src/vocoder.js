@@ -1,13 +1,7 @@
-/*
-
-*/
-
 var Tone = require('tone');
 
 function Vocoder () {
     Tone.Effect.call(this);
-
-    this.FILTER_QUALITY = 6;  // The Q value for the carrier and modulator filters
 
     this.modulatorInput = new Tone.Gain();
     this.carrierInput = new Tone.Gain();
@@ -52,6 +46,8 @@ Vocoder.prototype.generateVocoderBands = function (startFreq, endFreq, numBands)
 
 Vocoder.prototype.initBandpassFilters = function () {
 
+    var FILTER_QUALITY = 6;  // The Q value for the carrier and modulator filters
+
     // Set up a high-pass filter to add back in the fricatives, etc.
     var hpFilter = new Tone.Filter(8000, 'highpass');
     this.modulatorInput.connect(hpFilter);
@@ -62,12 +58,11 @@ Vocoder.prototype.initBandpassFilters = function () {
         // CREATE THE MODULATOR CHAIN
         // create the bandpass filter in the modulator chain
         var modulatorFilter = new Tone.Filter(this.vocoderBands[i].frequency, 'bandpass', -24);
-        modulatorFilter.Q.value = this.FILTER_QUALITY;
+        modulatorFilter.Q.value = FILTER_QUALITY;
         this.modulatorInput.connect(modulatorFilter);
 
         // create a post-filtering gain to bump the levels up.
-        var modulatorFilterPostGain = new Tone.Gain();
-        modulatorFilterPostGain.gain.value = 6;
+        var modulatorFilterPostGain = new Tone.Gain(6);
         modulatorFilter.connect(modulatorFilterPostGain);
 
         // Create the sine oscillator for the heterodyne
@@ -91,7 +86,6 @@ Vocoder.prototype.initBandpassFilters = function () {
         rectifier.connect(lpFilter);
 
         var lpFilterPostGain = new Tone.Gain();
-        lpFilterPostGain.gain.value = 1.0;
         lpFilter.connect(lpFilterPostGain);
 
         var waveshaper = new Tone.WaveShaper([1, 0, 1]);
@@ -99,7 +93,7 @@ Vocoder.prototype.initBandpassFilters = function () {
 
         // Create the bandpass filter in the carrier chain
         var carrierFilter = new Tone.Filter(this.vocoderBands[i].frequency, 'bandpass', -24);
-        carrierFilter.Q.value = this.FILTER_QUALITY;
+        carrierFilter.Q.value = FILTER_QUALITY;
         this.carrierInput.connect(carrierFilter);
 
         var carrierFilterPostGain = new Tone.Gain(10);
