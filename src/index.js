@@ -43,6 +43,7 @@ function AudioEngine (sounds) {
          'tenor_sax', 'flute', 'pan_flute', 'bassoon', 'choir_aahs', 'vibraphone',
          'music_box', 'steel_drums', 'marimba', 'lead_1_square', 'fx_4_atmosphere'];
 
+    this.instrumentNum;
     this.setInstrument(0);
 
     // tempo in bpm (beats per minute)
@@ -105,9 +106,26 @@ AudioEngine.prototype.playSound = function (index) {
 };
 
 AudioEngine.prototype.playNoteForBeats = function (note, beats) {
-    this.instrument.play(
-        note, Tone.context.currentTime, {duration : Number(beats)}
-    );
+    // this.instrument.play(
+    //     note, Tone.context.currentTime, {duration : Number(beats)}
+    // );
+
+    // if the soundplayer exists and its buffer has loaded
+    if (this.soundPlayers[this.instrumentNum] && this.soundPlayers[this.instrumentNum].buffer.loaded) {
+        // create a new buffer source to play the sound
+        var bufferSource = new Tone.BufferSource(this.soundPlayers[this.instrumentNum].buffer.get());
+        bufferSource.connect(this.effectsNode);
+        bufferSource.start('+0', 0, beats);
+        var ratio = this.tone.intervalToFrequencyRatio(note - 60);
+        bufferSource.playbackRate.value = ratio;
+
+        return new Promise(function (resolve) {
+            setTimeout( function () {
+                resolve();
+            }, 1000 * beats);
+        });
+
+    }
 };
 
 AudioEngine.prototype.playThereminForBeats = function (note, beats) {
@@ -238,12 +256,15 @@ AudioEngine.prototype._getPitchRatio = function () {
 };
 
 AudioEngine.prototype.setInstrument = function (instrumentNum) {
+    this.instrumentNum = instrumentNum;
+    /*
     return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum]).then(
         function (inst) {
             this.instrument = inst;
             this.instrument.connect(this.effectsNode);
         }.bind(this)
     );
+    */
 };
 
 AudioEngine.prototype.clearEffects = function () {
