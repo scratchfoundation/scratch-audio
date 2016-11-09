@@ -1,6 +1,6 @@
 var log = require('./log');
 var Tone = require('tone');
-var Soundfont = require('soundfont-player');
+// var Soundfont = require('soundfont-player');
 var Vocoder = require('./vocoder');
 
 function AudioEngine (sounds) {
