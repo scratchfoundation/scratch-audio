@@ -102,12 +102,12 @@ Vocoder.prototype.initBandpassFilters = function () {
         var modulatorFilterPostGain = new Tone.Gain(6);
         modulatorFilter.connect(modulatorFilterPostGain);
 
-        // create a lowpass filtered follower to turn the bandpass filter output into a smooth control
-        // signal for the carrier filter
-        var follower = new Tone.Follower(0,0);
-        modulatorFilterPostGain.connect(follower);
-        var followerLowPass = new Tone.Filter(50, 'lowpass');
-        follower.connect(followerLowPass);
+        // add a rectifier with a lowpass filter to turn the bandpass filtered signal
+        // into a smoothed control signal to control the carrier filter
+        var rectifier = new Tone.WaveShaper([1,0,1]);
+        modulatorFilterPostGain.connect(rectifier);
+        var rectifierLowPass = new Tone.Filter(50, 'lowpass');
+        rectifier.connect(rectifierLowPass);
 
         // Create the bandpass filter in the carrier chain
         var carrierFilter = new Tone.Filter(this.vocoderBands[i].frequency, 'bandpass', -24);
@@ -121,7 +121,7 @@ Vocoder.prototype.initBandpassFilters = function () {
         var bandGain = new Tone.Gain(0);
         carrierFilterPostGain.connect(bandGain);
 
-        followerLowPass.connect(bandGain.gain);
+        rectifierLowPass.connect(bandGain.gain);
 
         bandGain.connect(this.outputGain);
     }
