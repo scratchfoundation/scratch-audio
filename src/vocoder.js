@@ -1,6 +1,9 @@
 /*
 
-This is a port of Jamison Dance's port of Chris Wilson's WebAudio vocoder.
+This is a port of Jamison Dance's port of Chris Wilson's WebAudio vocoder:
+https://github.com/jergason/Vocoder
+https://github.com/cwilso/Vocoder
+
 I have adapted it to use the ToneJs library, making it a Tone Effect that
 can be added to an audio effects chain.
 
@@ -43,7 +46,7 @@ function Vocoder () {
 
     this.oscillatorNode;
 
-    this.vocoderBands = this.generateVocoderBands(55, 7040, 10);
+    this.vocoderBands = this.generateVocoderBands(55, 7040, 8);
     this.initBandpassFilters();
     this.createCarrier();
 
@@ -99,31 +102,12 @@ Vocoder.prototype.initBandpassFilters = function () {
         var modulatorFilterPostGain = new Tone.Gain(6);
         modulatorFilter.connect(modulatorFilterPostGain);
 
-        // Create the sine oscillator for the heterodyne
-        var heterodyneOscillator = new Tone.Oscillator(this.vocoderBands[i].frequency).start();
-
-        // Create the node to multiply the sine by the modulator
-        var heterodyne = new Tone.Gain(0); // audio-rate inputs are summed with initial intrinsic value
-        modulatorFilterPostGain.connect(heterodyne);
-        heterodyneOscillator.connect(heterodyne.gain);
-
-        var heterodynePostGain = new Tone.Gain(2.0);
-        heterodyne.connect(heterodynePostGain);
-
-        // Create the rectifier node
-        var rectifier = new Tone.WaveShaper([1, 0, 1]);
-        heterodynePostGain.connect(rectifier);
-
-        // Create the lowpass filter to mask off the difference (near zero)
-        var lpFilter = new Tone.Filter(5, 'lowpass');
-        lpFilter.Q.value = 1; // don't need a peak
-        rectifier.connect(lpFilter);
-
-        var lpFilterPostGain = new Tone.Gain();
-        lpFilter.connect(lpFilterPostGain);
-
-        var waveshaper = new Tone.WaveShaper([1, 0, 1]);
-        lpFilterPostGain.connect(waveshaper);
+        // create a lowpass filtered follower to turn the bandpass filter output into a smooth control
+        // signal for the carrier filter
+        var follower = new Tone.Follower(0,0);
+        modulatorFilterPostGain.connect(follower);
+        var followerLowPass = new Tone.Filter(50, 'lowpass');
+        follower.connect(followerLowPass);
 
         // Create the bandpass filter in the carrier chain
         var carrierFilter = new Tone.Filter(this.vocoderBands[i].frequency, 'bandpass', -24);
@@ -134,9 +118,10 @@ Vocoder.prototype.initBandpassFilters = function () {
         carrierFilter.connect(carrierFilterPostGain);
 
         // Create the carrier band gain node
-        var bandGain = new Tone.Gain(0); // audio-rate inputs are summed with initial intrinsic value
+        var bandGain = new Tone.Gain(0);
         carrierFilterPostGain.connect(bandGain);
-        waveshaper.connect(bandGain.gain);  // connect the lp controller
+
+        followerLowPass.connect(bandGain.gain);
 
         bandGain.connect(this.outputGain);
     }
