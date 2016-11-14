@@ -65,19 +65,79 @@ AudioEngine.prototype.loadSounds = function (sounds) {
     var soundPlayers = [];
 
     for (var i=0; i<sounds.length; i++) {
-        // skip adpcm form sounds since we can't load them yet
+
+        var buffer;
+
         if (sounds[i].format == 'adpcm') {
-            log.warn('cannot load sound in adpcm format');
-            continue;
+            log.warn('attempting to load sound in adpcm format');
+            buffer = this._loadSoundADPCM(sounds[i].fileUrl);
+        } else {
+            buffer = new Tone.Buffer(sounds[i].fileUrl);
         }
 
         var player = {};
-        player.buffer = new Tone.Buffer(sounds[i].fileUrl);
+        player.buffer = buffer;
         player.bufferSource = null;
         soundPlayers[i] = player;
     }
 
     return soundPlayers;
+};
+
+AudioEngine.prototype._loadSoundADPCM = function (url) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url, true);
+    request.responseType = 'arraybuffer';
+
+    request.onload = function () {
+        var audioData = request.response;
+
+        // convert a Uint8 array to a string
+        function Uint8ToStr (arr) {
+            var str = '';
+            for (var i=0; i<arr.length; i++) {
+                str += String.fromCharCode(arr[i]);
+            }
+            return str;
+        }
+
+        // RIFF
+        var riffData = new Uint8Array(audioData, 0, 4);
+        if (Uint8ToStr(riffData) != 'RIFF') {
+            log.warn('adpcm wav header missing RIFF');
+        }
+        // length
+        var length = new Int32Array(audioData, 4, 1)[0];
+        if ((length + 8) != audioData.byteLength) {
+            log.warn('adpcm wav length in header: ' + length + 'is incorrect');
+        }
+        // WAVE
+        var waveData = new Uint8Array(audioData, 8, 4);
+        if (Uint8ToStr(waveData) != 'WAVE') {
+            log.warn('adpcm wave header missing WAVE');
+        }
+
+        extractChunk('fmt', audioData);
+
+        function extractChunk (chunkType, arrayBuffer) {
+            var position = 12; // start at the 12th byte, after RIFF + length + WAVE
+            while (position < (arrayBuffer.byteLength - 8)) {
+                var type = new Uint8Array(arrayBuffer, position, 4);
+                var typeStr = Uint8ToStr(type);
+                position += 4;
+                var chunkSize = new Uint32Array(arrayBuffer, position, 1)[0];
+                position += 4;
+                position += chunkSize;
+
+                if (typeStr == chunkType) {
+
+                }
+            }
+        }
+
+
+    };
+    request.send();
 };
 
 // AudioEngine.prototype._soundsLoaded = function() {
