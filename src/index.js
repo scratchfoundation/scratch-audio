@@ -72,6 +72,7 @@ AudioEngine.prototype.loadSounds = function (sounds) {
         if (sounds[i].format == 'adpcm') {
             log.warn('attempting to load sound in adpcm format');
             var loader = new ADPCMSoundLoader(sounds[i].fileUrl);
+            loader; // lint
             // var audioBuffer = loader.getAudioBuffer();
             // buffer = new Tone.Buffer(audioBuffer);
         } else {
