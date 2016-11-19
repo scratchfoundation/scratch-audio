@@ -20,11 +20,27 @@ function AudioEngine (sounds) {
     this.pitchEffectValue;
     this.vocoder = new Vocoder();
 
+    this.wobble = new Tone.Effect();
+    var wobbleLFO = new Tone.LFO(10, 0, 1).start();
+    var wobbleGain = new Tone.Gain();
+    wobbleLFO.connect(wobbleGain.gain);
+    this.wobble.effectSend.chain(wobbleGain, this.wobble.effectReturn);
+
+    // telephone effect - simulating the 'tinny' sound coming over a phone line
+    // basically, a lowpass filter and a highpass filter
+    this.telephone = new Tone.Effect();
+    var telephoneLP = new Tone.Filter(1200, 'lowpass', -24);
+    var telephoneHP = new Tone.Filter(800, 'highpass', -24);
+    this.telephone.effectSend.chain(telephoneLP, telephoneHP, this.telephone.effectReturn);
+
     // the effects are chained to an effects node for this clone, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
     // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
-    this.effectsNode.chain(this.vocoder, this.distortion, this.delay, this.panner, this.reverb, Tone.Master);
+    this.effectsNode.chain(
+        // this.vocoder,
+        this.distortion, this.delay, this.telephone,
+        this.wobble, this.panner, this.reverb, Tone.Master);
 
     // reset effects to their default parameters
     this.clearEffects();
@@ -199,20 +215,26 @@ AudioEngine.prototype.stopAllSounds = function () {
 
 AudioEngine.prototype.setEffect = function (effect, value) {
     switch (effect) {
-    case 'ECHO':
-        this.delay.wet.value = (value / 100) / 2; // max 50% wet
+    case 'PITCH':
+        this._setPitchShift(value);
         break;
     case 'PAN':
         this.panner.pan.value = value / 100;
         break;
+    case 'ECHO':
+        this.delay.wet.value = (value / 100) / 2; // max 50% wet
+        break;
     case 'REVERB':
         this.reverb.wet.value = value / 100;
         break;
-    case 'PITCH':
-        this._setPitchShift(value);
-        break;
     case 'FUZZ' :
         this.distortion.wet.value = value / 100;
+        break;
+    case 'TELEPHONE' :
+        this.telephone.wet.value = value / 100;
+        break;
+    case 'WOBBLE' :
+        this.wobble.wet.value = value / 100;
         break;
     case 'ROBOTIC' :
         this.vocoder.wet.value = value / 100;
@@ -222,24 +244,32 @@ AudioEngine.prototype.setEffect = function (effect, value) {
 
 AudioEngine.prototype.changeEffect = function (effect, value) {
     switch (effect) {
-    case 'ECHO':
-        this.delay.wet.value += (value / 100) / 2; // max 50% wet
-        this.delay.wet.value = this._clamp(this.delay.wet.value, 0, 0.5);
+    case 'PITCH':
+        this._setPitchShift(this.pitchEffectValue + Number(value));
         break;
     case 'PAN':
         this.panner.pan.value += value / 100;
         this.panner.pan.value = this._clamp(this.panner.pan.value, -1, 1);
         break;
+    case 'ECHO':
+        this.delay.wet.value += (value / 100) / 2; // max 50% wet
+        this.delay.wet.value = this._clamp(this.delay.wet.value, 0, 0.5);
+        break;
     case 'REVERB':
         this.reverb.wet.value += value / 100;
         this.reverb.wet.value = this._clamp(this.reverb.wet.value, 0, 1);
         break;
-    case 'PITCH':
-        this._setPitchShift(this.pitchEffectValue + Number(value));
-        break;
     case 'FUZZ' :
         this.distortion.wet.value += value / 100;
         this.distortion.wet.value = this._clamp(this.distortion.wet.value, 0, 1);
+        break;
+    case 'TELEPHONE' :
+        this.telephone.wet.value += value / 100;
+        this.telephone.wet.value = this._clamp(this.telephone.wet.value, 0, 1);
+        break;
+    case 'WOBBLE' :
+        this.wobble.wet.value += value / 100;
+        this.wobble.wet.value = this._clamp(this.wobble.wet.value, 0, 1);
         break;
     case 'ROBOTIC' :
         this.vocoder.wet.value += value / 100;
@@ -251,20 +281,25 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
 
 AudioEngine.prototype._setPitchShift = function (value) {
     this.pitchEffectValue = value;
-    if (!this.soundPlayers) {
-        return;
-    }
-
-    var ratio = this._getPitchRatio();
-    for (var i=0; i<this.soundPlayers.length; i++) {
-        var s = this.soundPlayers[i].bufferSource;
-        if (s && s.playbackRate) {
-            s.playbackRate.value = ratio;
-        }
-    }
 
     var freq = this._getPitchRatio() * Tone.Frequency('C3').eval();
     this.vocoder.setCarrierOscFrequency(freq);
+
+    if (!this.soundPlayers) {
+        return;
+    }
+    var ratio = this._getPitchRatio();
+    this._setPlaybackRateForAllSoundPlayers(ratio);
+
+};
+
+AudioEngine.prototype._setPlaybackRateForAllSoundPlayers = function (rate) {
+    for (var i=0; i<this.soundPlayers.length; i++) {
+        var s = this.soundPlayers[i].bufferSource;
+        if (s && s.playbackRate) {
+            s.playbackRate.value = rate;
+        }
+    }
 };
 
 AudioEngine.prototype._getPitchRatio = function () {
@@ -285,11 +320,13 @@ AudioEngine.prototype.setInstrument = function (instrumentNum) {
 
 AudioEngine.prototype.clearEffects = function () {
     this.delay.wet.value = 0;
-    this._setPitchShift(0);
     this.panner.pan.value = 0;
     this.reverb.wet.value = 0;
     this.distortion.wet.value = 0;
     this.vocoder.wet.value = 0;
+    this.wobble.wet.value = 0;
+    this.telephone.wet.value = 0;
+    this._setPitchShift(0);
 
     this.effectsNode.gain.value = 1;
 };
