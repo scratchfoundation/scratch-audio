@@ -31,7 +31,8 @@ function AudioEngine (sounds) {
 
     // load sounds
 
-    this.soundPlayers = this.loadSounds(sounds);
+    this.soundPlayers = [];
+    this.loadSounds(sounds);
     // Tone.Buffer.on('load', this._soundsLoaded.bind(this));
 
    // soundfont setup
@@ -63,38 +64,43 @@ function AudioEngine (sounds) {
 }
 
 AudioEngine.prototype.loadSounds = function (sounds) {
-    var soundPlayers = [];
 
-    for (var i=0; i<sounds.length; i++) {
+    this.soundPlayers = [];
 
-        var buffer;
-
-        if (sounds[i].format == 'adpcm') {
-            log.warn('attempting to load sound in adpcm format');
-            var loader = new ADPCMSoundLoader(sounds[i].fileUrl);
-            loader; // lint
-            // var audioBuffer = loader.getAudioBuffer();
-            // buffer = new Tone.Buffer(audioBuffer);
-        } else {
-            buffer = new Tone.Buffer(sounds[i].fileUrl);
-        }
-
+    // create a set of empty sound player objects
+    // the sound buffers will be added asynchronously as they load
+    for (var i=0; i<sounds.length; i++){
         var player = {};
-        player.buffer = buffer;
+        player.buffer = null;
         player.bufferSource = null;
-        soundPlayers[i] = player;
+        this.soundPlayers[i] = player;
     }
 
-    return soundPlayers;
-};
+    // load the sounds- most sounds decode natively, but for adpcm sounds
+    // we use our own decoder
+    var storedContext = this;
+    for (var index=0; index<sounds.length; index++) {
+        if (sounds[index].format == 'adpcm') {
+            log.warn('attempting to load sound in adpcm format');
+            // create a closure to the sound index, to use when the
+            // docder completes and resolves the promise
+            (function () {
+                var storedIndex = index;
+                var loader = new ADPCMSoundLoader();
+                loader.load(sounds[storedIndex].fileUrl).then(function (audioBuffer) {
+                    storedContext.soundPlayers[storedIndex].buffer = new Tone.Buffer(audioBuffer);
+                });
+            }());
+        } else {
+            this.soundPlayers[index].buffer = new Tone.Buffer(sounds[index].fileUrl);
+        }
 
-// AudioEngine.prototype._soundsLoaded = function() {
-//     console.log('all sounds loaded');
-// }
+    }
+};
 
 AudioEngine.prototype.playSound = function (index) {
     // if the soundplayer exists and its buffer has loaded
-    if (this.soundPlayers[index] && this.soundPlayers[index].buffer.loaded) {
+    if (this.soundPlayers[index].buffer && this.soundPlayers[index].buffer.loaded) {
         // stop the sound if it's already playing
         var b = this.soundPlayers[index].bufferSource;
         if (b) {
@@ -108,6 +114,8 @@ AudioEngine.prototype.playSound = function (index) {
         this.soundPlayers[index].bufferSource = bufferSource;
 
         return new Promise(function (resolve) {
+            // bufferSource.onended = resolve; // this works, but causes the block to display a
+                                            // blocklydropdowncontent that says 'BufferSource'
             bufferSource.onended = function (){resolve();};
         });
     }
