@@ -297,14 +297,13 @@ AudioEngine.prototype._getPitchRatio = function () {
 
 AudioEngine.prototype.setInstrument = function (instrumentNum) {
     this.instrumentNum = instrumentNum;
-    /*
+
     return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum]).then(
         function (inst) {
             this.instrument = inst;
             this.instrument.connect(this.effectsNode);
         }.bind(this)
     );
-    */
 };
 
 AudioEngine.prototype.clearEffects = function () {
