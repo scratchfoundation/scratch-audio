@@ -202,10 +202,6 @@ AudioEngine.prototype.stopAllSounds = function () {
 };
 
 AudioEngine.prototype.setEffect = function (effect, value) {
-    if (Number.isInteger(effect)) {
-        effect = this._clamp(effect, 0, this.effectNames.length);
-        effect = this.effectNames[effect];
-    }
     switch (effect) {
     case 'PITCH':
         this._setPitchShift(value);
