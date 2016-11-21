@@ -2,7 +2,6 @@ var log = require('./log');
 var Tone = require('tone');
 var SoundPlayer = require('./SoundPlayer');
 var Soundfont = require('soundfont-player');
-var Vocoder = require('./vocoder');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 
 function AudioEngine (sounds) {
@@ -19,7 +18,12 @@ function AudioEngine (sounds) {
     this.reverb = new Tone.Freeverb();
     this.distortion = new Tone.Distortion(1);
     this.pitchEffectValue;
-    this.vocoder = new Vocoder();
+
+    this.robotic = new Tone.Effect();
+    // use the period of a musical note to set the feedback filter delay time
+    var delayTime = 1 / Tone.Frequency('Gb3').eval();
+    var robotFilter = new Tone.FeedbackCombFilter(delayTime, 0.9);
+    this.robotic.effectSend.chain(robotFilter, this.robotic.effectReturn);
 
     this.wobble = new Tone.Effect();
     var wobbleLFO = new Tone.LFO(10, 0, 1).start();
@@ -39,12 +43,14 @@ function AudioEngine (sounds) {
     // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(
-        // this.vocoder,
-        this.distortion, this.delay, this.telephone,
+        this.robotic, this.distortion, this.delay, this.telephone,
         this.wobble, this.panner, this.reverb, Tone.Master);
 
     // reset effects to their default parameters
     this.clearEffects();
+
+    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'TELEPHONE', 'WOBBLE', 'ROBOTIC'];
+
 
     // load sounds
 
@@ -196,6 +202,10 @@ AudioEngine.prototype.stopAllSounds = function () {
 };
 
 AudioEngine.prototype.setEffect = function (effect, value) {
+    if (Number.isInteger(effect)) {
+        effect = this._clamp(effect, 0, this.effectNames.length);
+        effect = this.effectNames[effect];
+    }
     switch (effect) {
     case 'PITCH':
         this._setPitchShift(value);
@@ -219,7 +229,7 @@ AudioEngine.prototype.setEffect = function (effect, value) {
         this.wobble.wet.value = value / 100;
         break;
     case 'ROBOTIC' :
-        this.vocoder.wet.value = value / 100;
+        this.robotic.wet.value = value / 100;
         break;
     }
 };
@@ -254,8 +264,8 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.wobble.wet.value = this._clamp(this.wobble.wet.value, 0, 1);
         break;
     case 'ROBOTIC' :
-        this.vocoder.wet.value += value / 100;
-        this.vocoder.wet.value = this._clamp(this.vocoder.wet.value, 0, 1);
+        this.robotic.wet.value += value / 100;
+        this.robotic.wet.value = this._clamp(this.robotic.wet.value, 0, 1);
         break;
 
     }
@@ -263,9 +273,6 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
 
 AudioEngine.prototype._setPitchShift = function (value) {
     this.pitchEffectValue = value;
-
-    var freq = this._getPitchRatio() * Tone.Frequency('C3').eval();
-    this.vocoder.setCarrierOscFrequency(freq);
 
     if (!this.soundPlayers) {
         return;
@@ -302,7 +309,7 @@ AudioEngine.prototype.clearEffects = function () {
     this.panner.pan.value = 0;
     this.reverb.wet.value = 0;
     this.distortion.wet.value = 0;
-    this.vocoder.wet.value = 0;
+    this.robotic.wet.value = 0;
     this.wobble.wet.value = 0;
     this.telephone.wet.value = 0;
     this._setPitchShift(0);
