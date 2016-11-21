@@ -1,5 +1,6 @@
 var log = require('./log');
 var Tone = require('tone');
+var SoundPlayer = require('./SoundPlayer');
 // var Soundfont = require('soundfont-player');
 var Vocoder = require('./vocoder');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
@@ -27,7 +28,7 @@ function AudioEngine (sounds) {
     this.wobble.effectSend.chain(wobbleGain, this.wobble.effectReturn);
 
     // telephone effect - simulating the 'tinny' sound coming over a phone line
-    // basically, a lowpass filter and a highpass filter
+    // using a lowpass filter and a highpass filter
     this.telephone = new Tone.Effect();
     var telephoneLP = new Tone.Filter(1200, 'lowpass', -24);
     var telephoneHP = new Tone.Filter(800, 'highpass', -24);
@@ -86,10 +87,7 @@ AudioEngine.prototype.loadSounds = function (sounds) {
     // create a set of empty sound player objects
     // the sound buffers will be added asynchronously as they load
     for (var i=0; i<sounds.length; i++){
-        var player = {};
-        player.buffer = null;
-        player.bufferSource = null;
-        this.soundPlayers[i] = player;
+        this.soundPlayers[i] = new SoundPlayer(this.effectsNode);
     }
 
     // load the sounds- most sounds decode natively, but for adpcm sounds
@@ -98,17 +96,17 @@ AudioEngine.prototype.loadSounds = function (sounds) {
     for (var index=0; index<sounds.length; index++) {
         if (sounds[index].format == 'adpcm') {
             log.warn('attempting to load sound in adpcm format');
-            // create a closure to the sound index, to use when the
+            // create a closure to store the sound index, to use when the
             // docder completes and resolves the promise
             (function () {
                 var storedIndex = index;
                 var loader = new ADPCMSoundLoader();
                 loader.load(sounds[storedIndex].fileUrl).then(function (audioBuffer) {
-                    storedContext.soundPlayers[storedIndex].buffer = new Tone.Buffer(audioBuffer);
+                    storedContext.soundPlayers[storedIndex].setBuffer(new Tone.Buffer(audioBuffer));
                 });
             }());
         } else {
-            this.soundPlayers[index].buffer = new Tone.Buffer(sounds[index].fileUrl);
+            this.soundPlayers[index].setBuffer(new Tone.Buffer(sounds[index].fileUrl));
         }
 
     }
@@ -117,22 +115,12 @@ AudioEngine.prototype.loadSounds = function (sounds) {
 AudioEngine.prototype.playSound = function (index) {
     // if the soundplayer exists and its buffer has loaded
     if (this.soundPlayers[index].buffer && this.soundPlayers[index].buffer.loaded) {
-        // stop the sound if it's already playing
-        var b = this.soundPlayers[index].bufferSource;
-        if (b) {
-            b.stop();
-        }
-        // create a new buffer source to play the sound
-        var bufferSource = new Tone.BufferSource(this.soundPlayers[index].buffer.get());
-        bufferSource.connect(this.effectsNode);
-        bufferSource.start();
-        bufferSource.playbackRate.value = this._getPitchRatio();
-        this.soundPlayers[index].bufferSource = bufferSource;
+        // play the sound
+        this.soundPlayers[index].start();
 
+        var storedContext = this;
         return new Promise(function (resolve) {
-            // bufferSource.onended = resolve; // this works, but causes the block to display a
-                                            // blocklydropdowncontent that says 'BufferSource'
-            bufferSource.onended = function (){resolve();};
+            storedContext.soundPlayers[index].onEnded(resolve);
         });
     }
 };
