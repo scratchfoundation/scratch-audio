@@ -1,7 +1,7 @@
 var log = require('./log');
 var Tone = require('tone');
 var SoundPlayer = require('./SoundPlayer');
-// var Soundfont = require('soundfont-player');
+var Soundfont = require('soundfont-player');
 var Vocoder = require('./vocoder');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 
@@ -126,10 +126,11 @@ AudioEngine.prototype.playSound = function (index) {
 };
 
 AudioEngine.prototype.playNoteForBeats = function (note, beats) {
-    // this.instrument.play(
-    //     note, Tone.context.currentTime, {duration : Number(beats)}
-    // );
+    this.instrument.play(
+        note, Tone.context.currentTime, {duration : Number(beats)}
+    );
 
+/*
     // if the soundplayer exists and its buffer has loaded
     if (this.soundPlayers[this.instrumentNum] && this.soundPlayers[this.instrumentNum].buffer.loaded) {
         // create a new buffer source to play the sound
@@ -144,8 +145,8 @@ AudioEngine.prototype.playNoteForBeats = function (note, beats) {
                 resolve();
             }, 1000 * beats);
         });
-
     }
+*/
 };
 
 AudioEngine.prototype.playThereminForBeats = function (note, beats) {
