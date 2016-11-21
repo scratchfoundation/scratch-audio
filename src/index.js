@@ -113,16 +113,12 @@ AudioEngine.prototype.loadSounds = function (sounds) {
 };
 
 AudioEngine.prototype.playSound = function (index) {
-    // if the soundplayer exists and its buffer has loaded
-    if (this.soundPlayers[index].buffer && this.soundPlayers[index].buffer.loaded) {
-        // play the sound
-        this.soundPlayers[index].start();
+    this.soundPlayers[index].start();
 
-        var storedContext = this;
-        return new Promise(function (resolve) {
-            storedContext.soundPlayers[index].onEnded(resolve);
-        });
-    }
+    var storedContext = this;
+    return new Promise(function (resolve) {
+        storedContext.soundPlayers[index].onEnded(resolve);
+    });
 };
 
 AudioEngine.prototype.playNoteForBeats = function (note, beats) {
@@ -187,15 +183,12 @@ AudioEngine.prototype.stopAllSounds = function () {
     // for (var i = 0; i<this.drumSamplers.length; i++) {
     //     this.drumSamplers[i].triggerRelease();
     // }
+
     // stop sounds triggered with playSound
-    if (this.soundPlayers && this.soundPlayers.length > 0) {
-        for (var i=0; i<this.soundPlayers.length; i++) {
-            var bufferSource = this.soundPlayers[i].bufferSource;
-            if (bufferSource) {
-                bufferSource.stop();
-            }
-        }
+    for (var i=0; i<this.soundPlayers.length; i++) {
+        this.soundPlayers[i].stop();
     }
+
     // stop soundfont notes
     if (this.instrument) {
         this.instrument.stop();
@@ -277,6 +270,7 @@ AudioEngine.prototype._setPitchShift = function (value) {
     if (!this.soundPlayers) {
         return;
     }
+
     var ratio = this._getPitchRatio();
     this._setPlaybackRateForAllSoundPlayers(ratio);
 
@@ -284,10 +278,7 @@ AudioEngine.prototype._setPitchShift = function (value) {
 
 AudioEngine.prototype._setPlaybackRateForAllSoundPlayers = function (rate) {
     for (var i=0; i<this.soundPlayers.length; i++) {
-        var s = this.soundPlayers[i].bufferSource;
-        if (s && s.playbackRate) {
-            s.playbackRate.value = rate;
-        }
+        this.soundPlayers[i].setPlaybackRate(rate);
     }
 };
 
