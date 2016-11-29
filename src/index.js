@@ -1,5 +1,14 @@
 var log = require('./log');
 var Tone = require('tone');
+
+var PitchEffect = require('./effects/PitchEffect');
+var EchoEffect = require('./effects/EchoEffect');
+var PanEffect = require('./effects/PanEffect');
+var RoboticEffect = require('./effects/RoboticEffect');
+var ReverbEffect = require('./effects/ReverbEffect');
+var FuzzEffect = require('./effects/FuzzEffect');
+var WobbleEffect = require('./effects/WobbleEffect');
+
 var SoundPlayer = require('./SoundPlayer');
 var Soundfont = require('soundfont-player');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
@@ -11,52 +20,31 @@ function AudioEngine (sounds) {
     this.tone = new Tone();
 
 	// effects setup
-    // each effect has a single parameter controlled by the effects block
-
-    this.delay = new Tone.FeedbackDelay(0.25, 0.5);
-    this.panner = new Tone.Panner();
-    this.reverb = new Tone.Freeverb();
-    this.distortion = new Tone.Distortion(1);
-    this.pitchEffectValue;
-
-    this.robotic = new Tone.Effect();
-    // use the period of a musical note to set the feedback filter delay time
-    var delayTime = 1 / Tone.Frequency('Gb3').eval();
-    var robotFilter = new Tone.FeedbackCombFilter(delayTime, 0.9);
-    this.robotic.effectSend.chain(robotFilter, this.robotic.effectReturn);
-
-    this.wobble = new Tone.Effect();
-    var wobbleLFO = new Tone.LFO(10, 0, 1).start();
-    var wobbleGain = new Tone.Gain();
-    wobbleLFO.connect(wobbleGain.gain);
-    this.wobble.effectSend.chain(wobbleGain, this.wobble.effectReturn);
-
-    // telephone effect - simulating the 'tinny' sound coming over a phone line
-    // using a lowpass filter and a highpass filter
-    this.telephone = new Tone.Effect();
-    var telephoneLP = new Tone.Filter(1200, 'lowpass', -24);
-    var telephoneHP = new Tone.Filter(800, 'highpass', -24);
-    this.telephone.effectSend.chain(telephoneLP, telephoneHP, this.telephone.effectReturn);
+    this.pitchEffect = new PitchEffect();
+    this.echoEffect = new EchoEffect();
+    this.panEffect = new PanEffect();
+    this.reverbEffect = new ReverbEffect();
+    this.fuzzEffect = new FuzzEffect();
+    this.wobbleEffect = new WobbleEffect();
+    this.roboticEffect = new RoboticEffect();
 
     // the effects are chained to an effects node for this clone, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
     // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(
-        this.robotic, this.distortion, this.delay, this.telephone,
-        this.wobble, this.panner, this.reverb, Tone.Master);
+        this.roboticEffect, this.fuzzEffect, this.echoEffect,
+        this.wobbleEffect, this.panEffect, this.reverbEffect, Tone.Master);
 
     // reset effects to their default parameters
     this.clearEffects();
 
     this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'TELEPHONE', 'WOBBLE', 'ROBOTIC'];
 
-
     // load sounds
 
     this.soundPlayers = [];
     this.loadSounds(sounds);
-    // Tone.Buffer.on('load', this._soundsLoaded.bind(this));
 
    // soundfont setup
 
@@ -69,21 +57,12 @@ function AudioEngine (sounds) {
          'music_box', 'steel_drums', 'marimba', 'lead_1_square', 'fx_4_atmosphere'];
 
     this.instrumentNum;
-    this.setInstrument(0);
+    this.setInstrument(1);
 
     // tempo in bpm (beats per minute)
     // default is 60bpm
 
     this.currentTempo = 60;
-
-    // theremin setup
-
-    this.theremin = new Tone.Synth();
-    this.portamentoTime = 0.25;
-    this.thereminVibrato = new Tone.Vibrato(4, 0.5);
-    this.theremin.chain(this.thereminVibrato, this.effectsNode);
-    this.thereminTimeout;
-    this.thereminIsPlaying = false;
 }
 
 AudioEngine.prototype.loadSounds = function (sounds) {
@@ -151,30 +130,6 @@ AudioEngine.prototype.playNoteForBeats = function (note, beats) {
 */
 };
 
-AudioEngine.prototype.playThereminForBeats = function (note, beats) {
-    // if the theremin is playing
-    //      ramp to new frequency
-    // else
-    //      trigger attack
-    // create a timeout for slightly longer than the duration of the block
-    // that releases the theremin - so we can slide continuously between
-    // successive notes without releasing and re-attacking
-
-    var freq = this._midiToFreq(note);
-
-    if (this.thereminIsPlaying) {
-        this.theremin.frequency.rampTo(freq, this.portamentoTime);
-    } else {
-        this.theremin.triggerAttack(freq);
-        this.thereminIsPlaying = true;
-    }
-    clearTimeout(this.thereminTimeout);
-    this.thereminTimeout = setTimeout(function () {
-        this.theremin.triggerRelease();
-        this.thereminIsPlaying = false;
-    }.bind(this), (1000 * beats) + 100);
-};
-
 AudioEngine.prototype._midiToFreq = function (midiNote) {
     var freq = this.tone.intervalToFrequencyRatio(midiNote - 60) * 261.63; // 60 is C4
     return freq;
@@ -204,28 +159,25 @@ AudioEngine.prototype.stopAllSounds = function () {
 AudioEngine.prototype.setEffect = function (effect, value) {
     switch (effect) {
     case 'PITCH':
-        this._setPitchShift(value);
+        this.pitchEffect.set(value, this.soundPlayers);
         break;
     case 'PAN':
-        this.panner.pan.value = value / 100;
+        this.panEffect.set(value);
         break;
     case 'ECHO':
-        this.delay.wet.value = (value / 100) / 2; // max 50% wet
+        this.echoEffect.set(value);
         break;
     case 'REVERB':
-        this.reverb.wet.value = value / 100;
+        this.reverbEffect.set(value);
         break;
     case 'FUZZ' :
-        this.distortion.wet.value = value / 100;
-        break;
-    case 'TELEPHONE' :
-        this.telephone.wet.value = value / 100;
+        this.fuzzEffect.set(value);
         break;
     case 'WOBBLE' :
-        this.wobble.wet.value = value / 100;
+        this.wobbleEffect.set(value);
         break;
     case 'ROBOTIC' :
-        this.robotic.wet.value = value / 100;
+        this.roboticEffect.set(value);
         break;
     }
 };
@@ -233,84 +185,51 @@ AudioEngine.prototype.setEffect = function (effect, value) {
 AudioEngine.prototype.changeEffect = function (effect, value) {
     switch (effect) {
     case 'PITCH':
-        this._setPitchShift(this.pitchEffectValue + Number(value));
+        this.pitchEffect.changeBy(value, this.soundPlayers);
         break;
     case 'PAN':
-        this.panner.pan.value += value / 100;
-        this.panner.pan.value = this._clamp(this.panner.pan.value, -1, 1);
+        this.panEffect.changeBy(value);
         break;
     case 'ECHO':
-        this.delay.wet.value += (value / 100) / 2; // max 50% wet
-        this.delay.wet.value = this._clamp(this.delay.wet.value, 0, 0.5);
+        this.echoEffect.changeBy(value);
         break;
     case 'REVERB':
-        this.reverb.wet.value += value / 100;
-        this.reverb.wet.value = this._clamp(this.reverb.wet.value, 0, 1);
+        this.reverbEffect.changeBy(value);
         break;
     case 'FUZZ' :
-        this.distortion.wet.value += value / 100;
-        this.distortion.wet.value = this._clamp(this.distortion.wet.value, 0, 1);
-        break;
-    case 'TELEPHONE' :
-        this.telephone.wet.value += value / 100;
-        this.telephone.wet.value = this._clamp(this.telephone.wet.value, 0, 1);
+        this.fuzzEffect.changeBy(value);
         break;
     case 'WOBBLE' :
-        this.wobble.wet.value += value / 100;
-        this.wobble.wet.value = this._clamp(this.wobble.wet.value, 0, 1);
+        this.wobbleEffect.changeBy(value);
         break;
     case 'ROBOTIC' :
-        this.robotic.wet.value += value / 100;
-        this.robotic.wet.value = this._clamp(this.robotic.wet.value, 0, 1);
+        this.roboticEffect.changeBy(value);
         break;
 
     }
 };
 
-AudioEngine.prototype._setPitchShift = function (value) {
-    this.pitchEffectValue = value;
+AudioEngine.prototype.clearEffects = function () {
+    this.echoEffect.set(0);
+    this.panEffect.set(0);
+    this.reverbEffect.set(0);
+    this.fuzzEffect.set(0);
+    this.roboticEffect.set(0);
+    this.wobbleEffect.set(0);
+    this.pitchEffect.set(0, this.soundPlayers);
 
-    if (!this.soundPlayers) {
-        return;
-    }
-
-    var ratio = this._getPitchRatio();
-    this._setPlaybackRateForAllSoundPlayers(ratio);
-
-};
-
-AudioEngine.prototype._setPlaybackRateForAllSoundPlayers = function (rate) {
-    for (var i=0; i<this.soundPlayers.length; i++) {
-        this.soundPlayers[i].setPlaybackRate(rate);
-    }
-};
-
-AudioEngine.prototype._getPitchRatio = function () {
-    return this.tone.intervalToFrequencyRatio(this.pitchEffectValue / 10);
+    this.effectsNode.gain.value = 1;
 };
 
 AudioEngine.prototype.setInstrument = function (instrumentNum) {
-    this.instrumentNum = instrumentNum;
+    this.instrumentNum = instrumentNum - 1;
 
-    return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum]).then(
+    return Soundfont.instrument(Tone.context, this.instrumentNames[this.instrumentNum]).then(
         function (inst) {
             this.instrument = inst;
             this.instrument.connect(this.effectsNode);
         }.bind(this)
     );
-};
-
-AudioEngine.prototype.clearEffects = function () {
-    this.delay.wet.value = 0;
-    this.panner.pan.value = 0;
-    this.reverb.wet.value = 0;
-    this.distortion.wet.value = 0;
-    this.robotic.wet.value = 0;
-    this.wobble.wet.value = 0;
-    this.telephone.wet.value = 0;
-    this._setPitchShift(0);
-
-    this.effectsNode.gain.value = 1;
 };
 
 AudioEngine.prototype.setVolume = function (value) {
