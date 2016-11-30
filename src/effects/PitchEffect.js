@@ -7,9 +7,9 @@ A Pitch effect
 var Tone = require('tone');
 
 function PitchEffect () {
-     this.value = 0;
+    this.value = 0;
 
-     this.tone = new Tone();
+    this.tone = new Tone();
 }
 
 PitchEffect.prototype.set = function (val, players) {
