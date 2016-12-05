@@ -73,6 +73,7 @@ AudioEngine.prototype.loadSounds = function (sounds) {
     // the sound buffers will be added asynchronously as they load
     for (var i=0; i<sounds.length; i++){
         this.soundPlayers[i] = new SoundPlayer(this.effectsNode);
+        console.log(sounds[i].fileUrl);
     }
 
     // load the sounds- most sounds decode natively, but for adpcm sounds
