@@ -19,6 +19,16 @@ function AudioEngine (sounds) {
 
     this.tone = new Tone();
 
+<<<<<<< Updated upstream
+=======
+    // workaround to start the audio context in ios
+    // as soon as the user the clicks on anything in the UI, start the audio context
+    var element = document.querySelector('#blocks');
+    StartAudioContext(Tone.context, element).then(function (){
+        log.warn('context started');
+    });
+
+>>>>>>> Stashed changes
 	// effects setup
     this.pitchEffect = new PitchEffect();
     this.echoEffect = new EchoEffect();
@@ -28,9 +38,6 @@ function AudioEngine (sounds) {
     this.wobbleEffect = new WobbleEffect();
     this.roboticEffect = new RoboticEffect();
 
-    // the effects are chained to an effects node for this clone, then to the master output
-    // so audio is sent from each player or instrument, through the effects in order, then out
-    // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(
         this.roboticEffect, this.fuzzEffect, this.echoEffect,
@@ -39,12 +46,30 @@ function AudioEngine (sounds) {
     // reset effects to their default parameters
     this.clearEffects();
 
+<<<<<<< Updated upstream
     this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'TELEPHONE', 'WOBBLE', 'ROBOTIC'];
+=======
+    this.effectNames = ['PITCH', 'ECHO', 'ROBOTIC'];
+>>>>>>> Stashed changes
 
     // load sounds
 
     this.soundPlayers = [];
+<<<<<<< Updated upstream
     this.loadSounds(sounds);
+=======
+    var soundUrls = [
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/83a9787d4cb6f3b7632b4ddfebf74367.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/b17100ed9b49f050c313045c98d1b1f4.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/071d2c4d10fa4846f26c3e15d2c860cc.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/3b344f15e691810eafa81f25082e1669.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/300705f9920be572f3762730e12a210d.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/975f5f70d3ff1aa1e204784f5f437215.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/e2e6d112aab43e8d961a8a612cc1c4a0.wav/get/',
+        'https://cdn.assets.scratch.mit.edu/internalapi/asset/da8db992cb6091bc2671a680b35cb37d.wav/get/'
+    ];
+    this.loadSounds(soundUrls);
+>>>>>>> Stashed changes
 
    // soundfont setup
 
@@ -110,24 +135,6 @@ AudioEngine.prototype.playNoteForBeats = function (note, beats) {
     this.instrument.play(
         note, Tone.context.currentTime, {duration : Number(beats)}
     );
-
-/*
-    // if the soundplayer exists and its buffer has loaded
-    if (this.soundPlayers[this.instrumentNum] && this.soundPlayers[this.instrumentNum].buffer.loaded) {
-        // create a new buffer source to play the sound
-        var bufferSource = new Tone.BufferSource(this.soundPlayers[this.instrumentNum].buffer.get());
-        bufferSource.connect(this.effectsNode);
-        bufferSource.start('+0', 0, beats);
-        var ratio = this.tone.intervalToFrequencyRatio(note - 60);
-        bufferSource.playbackRate.value = ratio;
-
-        return new Promise(function (resolve) {
-            setTimeout( function () {
-                resolve();
-            }, 1000 * beats);
-        });
-    }
-*/
 };
 
 AudioEngine.prototype._midiToFreq = function (midiNote) {

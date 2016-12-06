@@ -1,23 +1,26 @@
 var path = require('path');
 
-module.exports = {
-    entry: {
-        'dist': './src/index.js'
+module.exports = [
+    {
+        entry: {
+            'audio': './src/index.js'
+        },
+        output: {
+            path: __dirname,
+            library: 'AudioEngine',
+            libraryTarget: 'var',
+            filename: '[name].js'
+        }
     },
-    output: {
-        path: __dirname,
-        library: 'AudioEngine',
-        libraryTarget: 'commonjs2',
-        filename: '[name].js'
-    },
-    module: {
-        loaders: [{
-            test: /\.js$/,
-            loader: 'babel-loader',
-            include: path.resolve(__dirname, 'src'),
-            query: {
-                presets: ['es2015']
-            }
-        }]
+    {
+        entry: {
+            'audio': './src/index.js'
+        },
+        output: {
+            path: __dirname,
+            library: 'AudioEngine',
+            libraryTarget: 'commonjs2',
+            filename: '[name].commonjs.js'
+        }
     }
-};
+];
