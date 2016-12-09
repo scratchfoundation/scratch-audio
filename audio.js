@@ -45,53 +45,65 @@ var AudioEngine =
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var log = __webpack_require__(1);
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
+	var StartAudioContext = __webpack_require__(2);
+	var Soundfont = __webpack_require__(3);
 
-	var PitchEffect = __webpack_require__(32);
-	var EchoEffect = __webpack_require__(33);
-	var PanEffect = __webpack_require__(35);
-	var RoboticEffect = __webpack_require__(34);
-	var ReverbEffect = __webpack_require__(36);
-	var FuzzEffect = __webpack_require__(37);
-	var WobbleEffect = __webpack_require__(38);
+	var PitchEffect = __webpack_require__(18);
+	var EchoEffect = __webpack_require__(19);
+	var PanEffect = __webpack_require__(20);
+	var RoboticEffect = __webpack_require__(21);
+	var ReverbEffect = __webpack_require__(22);
+	var FuzzEffect = __webpack_require__(23);
+	var WobbleEffect = __webpack_require__(24);
 
-	var SoundPlayer = __webpack_require__(16);
-	var Soundfont = __webpack_require__(17);
+	var SoundPlayer = __webpack_require__(25);
 	var ADPCMSoundLoader = __webpack_require__(39);
+	var log = __webpack_require__(26);
 
 	function AudioEngine (sounds) {
 
 	    // tone setup
-
 	    this.tone = new Tone();
+
+	    // workaround to start the audio context in ios
+	    // as soon as the user the clicks on anything in the UI, start the audio context
+	    var element = document.querySelector('#blocks');
+	    StartAudioContext(Tone.context, element).then(function (){
+	        log.warn('context started');
+	    });
 
 		// effects setup
 	    this.pitchEffect = new PitchEffect();
 	    this.echoEffect = new EchoEffect();
-	    this.panEffect = new PanEffect();
-	    this.reverbEffect = new ReverbEffect();
-	    this.fuzzEffect = new FuzzEffect();
-	    this.wobbleEffect = new WobbleEffect();
 	    this.roboticEffect = new RoboticEffect();
+	    this.fuzzEffect = new FuzzEffect();
 
-	    // the effects are chained to an effects node for this clone, then to the master output
-	    // so audio is sent from each player or instrument, through the effects in order, then out
-	    // note that the pitch effect works differently - it sets the playback rate for each player
 	    this.effectsNode = new Tone.Gain();
 	    this.effectsNode.chain(
-	        this.roboticEffect, this.fuzzEffect, this.echoEffect,
-	        this.wobbleEffect, this.panEffect, this.reverbEffect, Tone.Master);
+	        this.roboticEffect,
+	        this.echoEffect,
+	        this.fuzzEffect,
+	        Tone.Master
+	    );
 
 	    // reset effects to their default parameters
 	    this.clearEffects();
-
-	    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'TELEPHONE', 'WOBBLE', 'ROBOTIC'];
+	    this.effectNames = ['PITCH', 'ECHO', 'ROBOTIC', 'FUZZ'];
 
 	    // load sounds
-
 	    this.soundPlayers = [];
-	    this.loadSounds(sounds);
+	    var soundUrls = [
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/83a9787d4cb6f3b7632b4ddfebf74367.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/b17100ed9b49f050c313045c98d1b1f4.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/071d2c4d10fa4846f26c3e15d2c860cc.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/3b344f15e691810eafa81f25082e1669.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/300705f9920be572f3762730e12a210d.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/975f5f70d3ff1aa1e204784f5f437215.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/e2e6d112aab43e8d961a8a612cc1c4a0.wav/get/'},
+	        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/da8db992cb6091bc2671a680b35cb37d.wav/get/'}
+	    ];
+	    this.loadSounds(soundUrls);
 
 	   // soundfont setup
 
@@ -157,24 +169,6 @@ var AudioEngine =
 	    this.instrument.play(
 	        note, Tone.context.currentTime, {duration : Number(beats)}
 	    );
-
-	/*
-	    // if the soundplayer exists and its buffer has loaded
-	    if (this.soundPlayers[this.instrumentNum] && this.soundPlayers[this.instrumentNum].buffer.loaded) {
-	        // create a new buffer source to play the sound
-	        var bufferSource = new Tone.BufferSource(this.soundPlayers[this.instrumentNum].buffer.get());
-	        bufferSource.connect(this.effectsNode);
-	        bufferSource.start('+0', 0, beats);
-	        var ratio = this.tone.intervalToFrequencyRatio(note - 60);
-	        bufferSource.playbackRate.value = ratio;
-
-	        return new Promise(function (resolve) {
-	            setTimeout( function () {
-	                resolve();
-	            }, 1000 * beats);
-	        });
-	    }
-	*/
 	};
 
 	AudioEngine.prototype._midiToFreq = function (midiNote) {
@@ -258,13 +252,9 @@ var AudioEngine =
 
 	AudioEngine.prototype.clearEffects = function () {
 	    this.echoEffect.set(0);
-	    this.panEffect.set(0);
-	    this.reverbEffect.set(0);
-	    this.fuzzEffect.set(0);
 	    this.roboticEffect.set(0);
-	    this.wobbleEffect.set(0);
+	    this.fuzzEffect.set(0);
 	    this.pitchEffect.set(0, this.soundPlayers);
-
 	    this.effectsNode.gain.value = 1;
 	};
 
@@ -308,551 +298,8 @@ var AudioEngine =
 	module.exports = AudioEngine;
 
 
-
 /***/ },
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var minilog = __webpack_require__(2);
-	minilog.enable();
-
-	module.exports = minilog('scratch-audioengine');
-
-
-/***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Minilog = __webpack_require__(3);
-
-	var oldEnable = Minilog.enable,
-	    oldDisable = Minilog.disable,
-	    isChrome = (typeof navigator != 'undefined' && /chrome/i.test(navigator.userAgent)),
-	    console = __webpack_require__(7);
-
-	// Use a more capable logging backend if on Chrome
-	Minilog.defaultBackend = (isChrome ? console.minilog : console);
-
-	// apply enable inputs from localStorage and from the URL
-	if(typeof window != 'undefined') {
-	  try {
-	    Minilog.enable(JSON.parse(window.localStorage['minilogSettings']));
-	  } catch(e) {}
-	  if(window.location && window.location.search) {
-	    var match = RegExp('[?&]minilog=([^&]*)').exec(window.location.search);
-	    match && Minilog.enable(decodeURIComponent(match[1]));
-	  }
-	}
-
-	// Make enable also add to localStorage
-	Minilog.enable = function() {
-	  oldEnable.call(Minilog, true);
-	  try { window.localStorage['minilogSettings'] = JSON.stringify(true); } catch(e) {}
-	  return this;
-	};
-
-	Minilog.disable = function() {
-	  oldDisable.call(Minilog);
-	  try { delete window.localStorage.minilogSettings; } catch(e) {}
-	  return this;
-	};
-
-	exports = module.exports = Minilog;
-
-	exports.backends = {
-	  array: __webpack_require__(11),
-	  browser: Minilog.defaultBackend,
-	  localStorage: __webpack_require__(12),
-	  jQuery: __webpack_require__(13)
-	};
-
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4),
-	    Filter = __webpack_require__(6);
-
-	var log = new Transform(),
-	    slice = Array.prototype.slice;
-
-	exports = module.exports = function create(name) {
-	  var o   = function() { log.write(name, undefined, slice.call(arguments)); return o; };
-	  o.debug = function() { log.write(name, 'debug', slice.call(arguments)); return o; };
-	  o.info  = function() { log.write(name, 'info',  slice.call(arguments)); return o; };
-	  o.warn  = function() { log.write(name, 'warn',  slice.call(arguments)); return o; };
-	  o.error = function() { log.write(name, 'error', slice.call(arguments)); return o; };
-	  o.log   = o.debug; // for interface compliance with Node and browser consoles
-	  o.suggest = exports.suggest;
-	  o.format = log.format;
-	  return o;
-	};
-
-	// filled in separately
-	exports.defaultBackend = exports.defaultFormatter = null;
-
-	exports.pipe = function(dest) {
-	  return log.pipe(dest);
-	};
-
-	exports.end = exports.unpipe = exports.disable = function(from) {
-	  return log.unpipe(from);
-	};
-
-	exports.Transform = Transform;
-	exports.Filter = Filter;
-	// this is the default filter that's applied when .enable() is called normally
-	// you can bypass it completely and set up your own pipes
-	exports.suggest = new Filter();
-
-	exports.enable = function() {
-	  if(exports.defaultFormatter) {
-	    return log.pipe(exports.suggest) // filter
-	              .pipe(exports.defaultFormatter) // formatter
-	              .pipe(exports.defaultBackend); // backend
-	  }
-	  return log.pipe(exports.suggest) // filter
-	            .pipe(exports.defaultBackend); // formatter
-	};
-
-
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var microee = __webpack_require__(5);
-
-	// Implements a subset of Node's stream.Transform - in a cross-platform manner.
-	function Transform() {}
-
-	microee.mixin(Transform);
-
-	// The write() signature is different from Node's
-	// --> makes it much easier to work with objects in logs.
-	// One of the lessons from v1 was that it's better to target
-	// a good browser rather than the lowest common denominator
-	// internally.
-	// If you want to use external streams, pipe() to ./stringify.js first.
-	Transform.prototype.write = function(name, level, args) {
-	  this.emit('item', name, level, args);
-	};
-
-	Transform.prototype.end = function() {
-	  this.emit('end');
-	  this.removeAllListeners();
-	};
-
-	Transform.prototype.pipe = function(dest) {
-	  var s = this;
-	  // prevent double piping
-	  s.emit('unpipe', dest);
-	  // tell the dest that it's being piped to
-	  dest.emit('pipe', s);
-
-	  function onItem() {
-	    dest.write.apply(dest, Array.prototype.slice.call(arguments));
-	  }
-	  function onEnd() { !dest._isStdio && dest.end(); }
-
-	  s.on('item', onItem);
-	  s.on('end', onEnd);
-
-	  s.when('unpipe', function(from) {
-	    var match = (from === dest) || typeof from == 'undefined';
-	    if(match) {
-	      s.removeListener('item', onItem);
-	      s.removeListener('end', onEnd);
-	      dest.emit('unpipe');
-	    }
-	    return match;
-	  });
-
-	  return dest;
-	};
-
-	Transform.prototype.unpipe = function(from) {
-	  this.emit('unpipe', from);
-	  return this;
-	};
-
-	Transform.prototype.format = function(dest) {
-	  throw new Error([
-	    'Warning: .format() is deprecated in Minilog v2! Use .pipe() instead. For example:',
-	    'var Minilog = require(\'minilog\');',
-	    'Minilog',
-	    '  .pipe(Minilog.backends.console.formatClean)',
-	    '  .pipe(Minilog.backends.console);'].join('\n'));
-	};
-
-	Transform.mixin = function(dest) {
-	  var o = Transform.prototype, k;
-	  for (k in o) {
-	    o.hasOwnProperty(k) && (dest.prototype[k] = o[k]);
-	  }
-	};
-
-	module.exports = Transform;
-
-
-/***/ },
-/* 5 */
-/***/ function(module, exports) {
-
-	function M() { this._events = {}; }
-	M.prototype = {
-	  on: function(ev, cb) {
-	    this._events || (this._events = {});
-	    var e = this._events;
-	    (e[ev] || (e[ev] = [])).push(cb);
-	    return this;
-	  },
-	  removeListener: function(ev, cb) {
-	    var e = this._events[ev] || [], i;
-	    for(i = e.length-1; i >= 0 && e[i]; i--){
-	      if(e[i] === cb || e[i].cb === cb) { e.splice(i, 1); }
-	    }
-	  },
-	  removeAllListeners: function(ev) {
-	    if(!ev) { this._events = {}; }
-	    else { this._events[ev] && (this._events[ev] = []); }
-	  },
-	  emit: function(ev) {
-	    this._events || (this._events = {});
-	    var args = Array.prototype.slice.call(arguments, 1), i, e = this._events[ev] || [];
-	    for(i = e.length-1; i >= 0 && e[i]; i--){
-	      e[i].apply(this, args);
-	    }
-	    return this;
-	  },
-	  when: function(ev, cb) {
-	    return this.once(ev, cb, true);
-	  },
-	  once: function(ev, cb, when) {
-	    if(!cb) return this;
-	    function c() {
-	      if(!when) this.removeListener(ev, c);
-	      if(cb.apply(this, arguments) && when) this.removeListener(ev, c);
-	    }
-	    c.cb = cb;
-	    this.on(ev, c);
-	    return this;
-	  }
-	};
-	M.mixin = function(dest) {
-	  var o = M.prototype, k;
-	  for (k in o) {
-	    o.hasOwnProperty(k) && (dest.prototype[k] = o[k]);
-	  }
-	};
-	module.exports = M;
-
-
-/***/ },
-/* 6 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// default filter
-	var Transform = __webpack_require__(4);
-
-	var levelMap = { debug: 1, info: 2, warn: 3, error: 4 };
-
-	function Filter() {
-	  this.enabled = true;
-	  this.defaultResult = true;
-	  this.clear();
-	}
-
-	Transform.mixin(Filter);
-
-	// allow all matching, with level >= given level
-	Filter.prototype.allow = function(name, level) {
-	  this._white.push({ n: name, l: levelMap[level] });
-	  return this;
-	};
-
-	// deny all matching, with level <= given level
-	Filter.prototype.deny = function(name, level) {
-	  this._black.push({ n: name, l: levelMap[level] });
-	  return this;
-	};
-
-	Filter.prototype.clear = function() {
-	  this._white = [];
-	  this._black = [];
-	  return this;
-	};
-
-	function test(rule, name) {
-	  // use .test for RegExps
-	  return (rule.n.test ? rule.n.test(name) : rule.n == name);
-	};
-
-	Filter.prototype.test = function(name, level) {
-	  var i, len = Math.max(this._white.length, this._black.length);
-	  for(i = 0; i < len; i++) {
-	    if(this._white[i] && test(this._white[i], name) && levelMap[level] >= this._white[i].l) {
-	      return true;
-	    }
-	    if(this._black[i] && test(this._black[i], name) && levelMap[level] < this._black[i].l) {
-	      return false;
-	    }
-	  }
-	  return this.defaultResult;
-	};
-
-	Filter.prototype.write = function(name, level, args) {
-	  if(!this.enabled || this.test(name, level)) {
-	    return this.emit('item', name, level, args);
-	  }
-	};
-
-	module.exports = Filter;
-
-
-/***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4);
-
-	var newlines = /\n+$/,
-	    logger = new Transform();
-
-	logger.write = function(name, level, args) {
-	  var i = args.length-1;
-	  if (typeof console === 'undefined' || !console.log) {
-	    return;
-	  }
-	  if(console.log.apply) {
-	    return console.log.apply(console, [name, level].concat(args));
-	  } else if(JSON && JSON.stringify) {
-	    // console.log.apply is undefined in IE8 and IE9
-	    // for IE8/9: make console.log at least a bit less awful
-	    if(args[i] && typeof args[i] == 'string') {
-	      args[i] = args[i].replace(newlines, '');
-	    }
-	    try {
-	      for(i = 0; i < args.length; i++) {
-	        args[i] = JSON.stringify(args[i]);
-	      }
-	    } catch(e) {}
-	    console.log(args.join(' '));
-	  }
-	};
-
-	logger.formatters = ['color', 'minilog'];
-	logger.color = __webpack_require__(8);
-	logger.minilog = __webpack_require__(10);
-
-	module.exports = logger;
-
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4),
-	    color = __webpack_require__(9);
-
-	var colors = { debug: ['cyan'], info: ['purple' ], warn: [ 'yellow', true ], error: [ 'red', true ] },
-	    logger = new Transform();
-
-	logger.write = function(name, level, args) {
-	  var fn = console.log;
-	  if(console[level] && console[level].apply) {
-	    fn = console[level];
-	    fn.apply(console, [ '%c'+name+' %c'+level, color('gray'), color.apply(color, colors[level])].concat(args));
-	  }
-	};
-
-	// NOP, because piping the formatted logs can only cause trouble.
-	logger.pipe = function() { };
-
-	module.exports = logger;
-
-
-/***/ },
-/* 9 */
-/***/ function(module, exports) {
-
-	var hex = {
-	  black: '#000',
-	  red: '#c23621',
-	  green: '#25bc26',
-	  yellow: '#bbbb00',
-	  blue:  '#492ee1',
-	  magenta: '#d338d3',
-	  cyan: '#33bbc8',
-	  gray: '#808080',
-	  purple: '#708'
-	};
-	function color(fg, isInverse) {
-	  if(isInverse) {
-	    return 'color: #fff; background: '+hex[fg]+';';
-	  } else {
-	    return 'color: '+hex[fg]+';';
-	  }
-	}
-
-	module.exports = color;
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4),
-	    color = __webpack_require__(9),
-	    colors = { debug: ['gray'], info: ['purple' ], warn: [ 'yellow', true ], error: [ 'red', true ] },
-	    logger = new Transform();
-
-	logger.write = function(name, level, args) {
-	  var fn = console.log;
-	  if(level != 'debug' && console[level]) {
-	    fn = console[level];
-	  }
-
-	  var subset = [], i = 0;
-	  if(level != 'info') {
-	    for(; i < args.length; i++) {
-	      if(typeof args[i] != 'string') break;
-	    }
-	    fn.apply(console, [ '%c'+name +' '+ args.slice(0, i).join(' '), color.apply(color, colors[level]) ].concat(args.slice(i)));
-	  } else {
-	    fn.apply(console, [ '%c'+name, color.apply(color, colors[level]) ].concat(args));
-	  }
-	};
-
-	// NOP, because piping the formatted logs can only cause trouble.
-	logger.pipe = function() { };
-
-	module.exports = logger;
-
-
-/***/ },
-/* 11 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4),
-	    cache = [ ];
-
-	var logger = new Transform();
-
-	logger.write = function(name, level, args) {
-	  cache.push([ name, level, args ]);
-	};
-
-	// utility functions
-	logger.get = function() { return cache; };
-	logger.empty = function() { cache = []; };
-
-	module.exports = logger;
-
-
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4),
-	    cache = false;
-
-	var logger = new Transform();
-
-	logger.write = function(name, level, args) {
-	  if(typeof window == 'undefined' || typeof JSON == 'undefined' || !JSON.stringify || !JSON.parse) return;
-	  try {
-	    if(!cache) { cache = (window.localStorage.minilog ? JSON.parse(window.localStorage.minilog) : []); }
-	    cache.push([ new Date().toString(), name, level, args ]);
-	    window.localStorage.minilog = JSON.stringify(cache);
-	  } catch(e) {}
-	};
-
-	module.exports = logger;
-
-/***/ },
-/* 13 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Transform = __webpack_require__(4);
-
-	var cid = new Date().valueOf().toString(36);
-
-	function AjaxLogger(options) {
-	  this.url = options.url || '';
-	  this.cache = [];
-	  this.timer = null;
-	  this.interval = options.interval || 30*1000;
-	  this.enabled = true;
-	  this.jQuery = window.jQuery;
-	  this.extras = {};
-	}
-
-	Transform.mixin(AjaxLogger);
-
-	AjaxLogger.prototype.write = function(name, level, args) {
-	  if(!this.timer) { this.init(); }
-	  this.cache.push([name, level].concat(args));
-	};
-
-	AjaxLogger.prototype.init = function() {
-	  if(!this.enabled || !this.jQuery) return;
-	  var self = this;
-	  this.timer = setTimeout(function() {
-	    var i, logs = [], ajaxData, url = self.url;
-	    if(self.cache.length == 0) return self.init();
-	    // Test each log line and only log the ones that are valid (e.g. don't have circular references).
-	    // Slight performance hit but benefit is we log all valid lines.
-	    for(i = 0; i < self.cache.length; i++) {
-	      try {
-	        JSON.stringify(self.cache[i]);
-	        logs.push(self.cache[i]);
-	      } catch(e) { }
-	    }
-	    if(self.jQuery.isEmptyObject(self.extras)) {
-	        ajaxData = JSON.stringify({ logs: logs });
-	        url = self.url + '?client_id=' + cid;
-	    } else {
-	        ajaxData = JSON.stringify(self.jQuery.extend({logs: logs}, self.extras));
-	    }
-
-	    self.jQuery.ajax(url, {
-	      type: 'POST',
-	      cache: false,
-	      processData: false,
-	      data: ajaxData,
-	      contentType: 'application/json',
-	      timeout: 10000
-	    }).success(function(data, status, jqxhr) {
-	      if(data.interval) {
-	        self.interval = Math.max(1000, data.interval);
-	      }
-	    }).error(function() {
-	      self.interval = 30000;
-	    }).always(function() {
-	      self.init();
-	    });
-	    self.cache = [];
-	  }, this.interval);
-	};
-
-	AjaxLogger.prototype.end = function() {};
-
-	// wait until jQuery is defined. Useful if you don't control the load order.
-	AjaxLogger.jQueryWait = function(onDone) {
-	  if(typeof window !== 'undefined' && (window.jQuery || window.$)) {
-	    return onDone(window.jQuery || window.$);
-	  } else if (typeof window !== 'undefined') {
-	    setTimeout(function() { AjaxLogger.jQueryWait(onDone); }, 200);
-	  }
-	};
-
-	module.exports = AjaxLogger;
-
-
-/***/ },
-/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;(function(root, factory){
@@ -22775,71 +22222,203 @@ var AudioEngine =
 	}));
 
 /***/ },
-/* 15 */,
-/* 16 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Tone = __webpack_require__(14);
-	var log = __webpack_require__(1);
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 *  StartAudioContext.js
+	 *  @author Yotam Mann
+	 *  @license http://opensource.org/licenses/MIT MIT License
+	 *  @copyright 2016 Yotam Mann
+	 */
+	(function (root, factory) {
+		if (true) {
+			!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__))
+		 } else if (typeof module === "object" && module.exports) {
+	        module.exports = factory()
+		} else {
+			root.StartAudioContext = factory()
+	  }
+	}(this, function () {
 
-	function SoundPlayer (outputNode) {
-	    this.outputNode = outputNode;
-	    this.buffer; // a Tone.Buffer
-	    this.bufferSource;
-	    this.playbackRate = 1;
-	    this.isPlaying = false;
-	}
+		//TAP LISTENER/////////////////////////////////////////////////////////////
 
-	SoundPlayer.prototype.setBuffer = function (buffer) {
-	    this.buffer = buffer;
-	};
+		/**
+		 * @class  Listens for non-dragging tap ends on the given element
+		 * @param {Element} element
+		 * @internal
+		 */
+		var TapListener = function(element, context){
 
-	SoundPlayer.prototype.setPlaybackRate = function (playbackRate) {
-	    this.playbackRate = playbackRate;
-	    if (this.bufferSource && this.bufferSource.playbackRate) {
-	        this.bufferSource.playbackRate.value = this.playbackRate;
-	    }
-	};
+			this._dragged = false
 
-	SoundPlayer.prototype.stop = function () {
-	    if (this.isPlaying){
-	        this.bufferSource.stop();
-	    }
-	};
+			this._element = element
 
-	SoundPlayer.prototype.start = function () {
-	    if (!this.buffer || !this.buffer.loaded) {
-	        log.warn('tried to play a sound that was not loaded yet');
-	        return;
-	    }
+			this._bindedMove = this._moved.bind(this)
+			this._bindedEnd = this._ended.bind(this, context)
 
-	    this.stop();
+			element.addEventListener("touchmove", this._bindedMove)
+			element.addEventListener("touchend", this._bindedEnd)
+			element.addEventListener("mouseup", this._bindedEnd)
+		}
 
-	    this.bufferSource = new Tone.BufferSource(this.buffer.get());
-	    this.bufferSource.playbackRate.value = this.playbackRate;
-	    this.bufferSource.connect(this.outputNode);
-	    this.bufferSource.start();
-	    this.isPlaying = true;
-	};
+		/**
+		 * drag move event
+		 */
+		TapListener.prototype._moved = function(e){
+			this._dragged = true
+		};
 
-	SoundPlayer.prototype.onEnded = function (callback) {
-	    this.bufferSource.onended = function () {
-	        this.isPlaying = false;
-	        callback();
-	    };
-	};
+		/**
+		 * tap ended listener
+		 */
+		TapListener.prototype._ended = function(context){
+			if (!this._dragged){
+				startContext(context)
+			}
+			this._dragged = false
+		};
 
-	module.exports = SoundPlayer;
+		/**
+		 * remove all the bound events
+		 */
+		TapListener.prototype.dispose = function(){
+			this._element.removeEventListener("touchmove", this._bindedMove)
+			this._element.removeEventListener("touchend", this._bindedEnd)
+			this._element.removeEventListener("mouseup", this._bindedEnd)
+			this._bindedMove = null
+			this._bindedEnd = null
+			this._element = null
+		};
 
+		//END TAP LISTENER/////////////////////////////////////////////////////////
+
+		/**
+		 * Plays a silent sound and also invoke the "resume" method
+		 * @param {AudioContext} context
+		 * @private
+		 */
+		function startContext(context){
+			// this accomplishes the iOS specific requirement
+			var buffer = context.createBuffer(1, 1, context.sampleRate)
+			var source = context.createBufferSource()
+			source.buffer = buffer
+			source.connect(context.destination)
+			source.start(0)
+
+			// resume the audio context
+			if (context.resume){
+				context.resume()
+			}
+		}
+
+		/**
+		 * Returns true if the audio context is started
+		 * @param  {AudioContext}  context
+		 * @return {Boolean}
+		 * @private
+		 */
+		function isStarted(context){
+			 return context.state === "running"
+		}
+
+		/**
+		 * Invokes the callback as soon as the AudioContext
+		 * is started
+		 * @param  {AudioContext}   context
+		 * @param  {Function} callback
+		 */
+		function onStarted(context, callback){
+
+			function checkLoop(){
+				if (isStarted(context)){
+					callback()
+				} else {
+					requestAnimationFrame(checkLoop)
+					if (context.resume){
+						context.resume()
+					}
+				}
+			}
+
+			if (isStarted(context)){
+				callback()
+			} else {
+				checkLoop()
+			}
+		}
+
+		/**
+		 * Add a tap listener to the audio context
+		 * @param  {Array|Element|String|jQuery} element
+		 * @param {Array} tapListeners
+		 */
+		function bindTapListener(element, tapListeners, context){
+			if (Array.isArray(element) || (NodeList && element instanceof NodeList)){
+				for (var i = 0; i < element.length; i++){
+					bindTapListener(element[i], tapListeners, context)
+				}
+			} else if (typeof element === "string"){
+				bindTapListener(document.querySelectorAll(element), tapListeners, context)
+			} else if (element.jquery && typeof element.toArray === "function"){
+				bindTapListener(element.toArray(), tapListeners, context)
+			} else if (Element && element instanceof Element){
+				//if it's an element, create a TapListener
+				var tap = new TapListener(element, context)
+				tapListeners.push(tap)
+			} 
+		}
+
+		/**
+		 * @param {AudioContext} context The AudioContext to start.
+		 * @param {Array|String|Element|jQuery} elements For iOS, the list of elements
+		 *                                               to bind tap event listeners
+		 *                                               which will start the AudioContext.
+		 * @param {Function=} callback The callback to invoke when the AudioContext is started.
+		 * @return {Promise} The promise is invoked when the AudioContext
+		 *                       is started.
+		 */
+		function StartAudioContext(context, elements, callback){
+
+			//the promise is invoked when the AudioContext is started
+			var promise = new Promise(function(success) {
+				onStarted(context, success)
+			})
+
+			// The TapListeners bound to the elements
+			var tapListeners = []
+
+			// add all the tap listeners
+			if (elements){
+				bindTapListener(elements, tapListeners, context)
+			}
+
+			//dispose all these tap listeners when the context is started
+			promise.then(function(){
+				for (var i = 0; i < tapListeners.length; i++){
+					tapListeners[i].dispose()
+				}
+				tapListeners = null
+
+				if (callback){
+					callback()
+				}
+			})
+
+			return promise
+		}
+
+		return StartAudioContext
+	}))
 
 /***/ },
-/* 17 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
 
-	var load = __webpack_require__(18)
-	var player = __webpack_require__(21)
+	var load = __webpack_require__(4)
+	var player = __webpack_require__(7)
 
 	/**
 	 * Load a soundfont instrument. It returns a promise that resolves to a
@@ -22915,7 +22494,7 @@ var AudioEngine =
 
 	// In the 1.0.0 release it will be:
 	// var Soundfont = {}
-	var Soundfont = __webpack_require__(30)
+	var Soundfont = __webpack_require__(16)
 	Soundfont.instrument = instrument
 	Soundfont.nameToUrl = nameToUrl
 
@@ -22924,13 +22503,13 @@ var AudioEngine =
 
 
 /***/ },
-/* 18 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
 
-	var base64 = __webpack_require__(19)
-	var fetch = __webpack_require__(20)
+	var base64 = __webpack_require__(5)
+	var fetch = __webpack_require__(6)
 
 	// Given a regex, return a function that test if against a string
 	function fromRegex (r) {
@@ -23077,7 +22656,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 19 */
+/* 5 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -23119,7 +22698,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 20 */
+/* 6 */
 /***/ function(module, exports) {
 
 	/* global XMLHttpRequest */
@@ -23149,16 +22728,16 @@ var AudioEngine =
 
 
 /***/ },
-/* 21 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
 
-	var player = __webpack_require__(22)
-	var events = __webpack_require__(24)
-	var notes = __webpack_require__(25)
-	var scheduler = __webpack_require__(27)
-	var midi = __webpack_require__(28)
+	var player = __webpack_require__(8)
+	var events = __webpack_require__(10)
+	var notes = __webpack_require__(11)
+	var scheduler = __webpack_require__(13)
+	var midi = __webpack_require__(14)
 
 	function SamplePlayer (ac, source, options) {
 	  return midi(scheduler(notes(events(player(ac, source, options)))))
@@ -23169,13 +22748,13 @@ var AudioEngine =
 
 
 /***/ },
-/* 22 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* global AudioBuffer */
 	'use strict'
 
-	var ADSR = __webpack_require__(23)
+	var ADSR = __webpack_require__(9)
 
 	var EMPTY = {}
 	var DEFAULTS = {
@@ -23387,7 +22966,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 23 */
+/* 9 */
 /***/ function(module, exports) {
 
 	module.exports = ADSR
@@ -23553,7 +23132,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 24 */
+/* 10 */
 /***/ function(module, exports) {
 
 	
@@ -23585,12 +23164,12 @@ var AudioEngine =
 
 
 /***/ },
-/* 25 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
 
-	var note = __webpack_require__(26)
+	var note = __webpack_require__(12)
 	var isMidi = function (n) { return n !== null && n !== [] && n >= 0 && n < 129 }
 	var toMidi = function (n) { return isMidi(n) ? +n : note.midi(n) }
 
@@ -23627,7 +23206,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 26 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -23782,7 +23361,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 27 */
+/* 13 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -23850,10 +23429,10 @@ var AudioEngine =
 
 
 /***/ },
-/* 28 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var midimessage = __webpack_require__(29)
+	var midimessage = __webpack_require__(15)
 
 	module.exports = function (player) {
 	  /**
@@ -23905,19 +23484,19 @@ var AudioEngine =
 
 
 /***/ },
-/* 29 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var require;var require;(function(e){if(true){module.exports=e()}else if(typeof define==="function"&&define.amd){define([],e)}else{var t;if(typeof window!=="undefined"){t=window}else if(typeof global!=="undefined"){t=global}else if(typeof self!=="undefined"){t=self}else{t=this}t.midimessage=e()}})(function(){var e,t,s;return function o(e,t,s){function a(n,i){if(!t[n]){if(!e[n]){var l=typeof require=="function"&&require;if(!i&&l)return require(n,!0);if(r)return r(n,!0);var h=new Error("Cannot find module '"+n+"'");throw h.code="MODULE_NOT_FOUND",h}var c=t[n]={exports:{}};e[n][0].call(c.exports,function(t){var s=e[n][1][t];return a(s?s:t)},c,c.exports,o,e,t,s)}return t[n].exports}var r=typeof require=="function"&&require;for(var n=0;n<s.length;n++)a(s[n]);return a}({1:[function(e,t,s){"use strict";Object.defineProperty(s,"__esModule",{value:true});s["default"]=function(e){function t(e){this._event=e;this._data=e.data;this.receivedTime=e.receivedTime;if(this._data&&this._data.length<2){console.warn("Illegal MIDI message of length",this._data.length);return}this._messageCode=e.data[0]&240;this.channel=e.data[0]&15;switch(this._messageCode){case 128:this.messageType="noteoff";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 144:this.messageType="noteon";this.key=e.data[1]&127;this.velocity=e.data[2]&127;break;case 160:this.messageType="keypressure";this.key=e.data[1]&127;this.pressure=e.data[2]&127;break;case 176:this.messageType="controlchange";this.controllerNumber=e.data[1]&127;this.controllerValue=e.data[2]&127;if(this.controllerNumber===120&&this.controllerValue===0){this.channelModeMessage="allsoundoff"}else if(this.controllerNumber===121){this.channelModeMessage="resetallcontrollers"}else if(this.controllerNumber===122){if(this.controllerValue===0){this.channelModeMessage="localcontroloff"}else{this.channelModeMessage="localcontrolon"}}else if(this.controllerNumber===123&&this.controllerValue===0){this.channelModeMessage="allnotesoff"}else if(this.controllerNumber===124&&this.controllerValue===0){this.channelModeMessage="omnimodeoff"}else if(this.controllerNumber===125&&this.controllerValue===0){this.channelModeMessage="omnimodeon"}else if(this.controllerNumber===126){this.channelModeMessage="monomodeon"}else if(this.controllerNumber===127){this.channelModeMessage="polymodeon"}break;case 192:this.messageType="programchange";this.program=e.data[1];break;case 208:this.messageType="channelpressure";this.pressure=e.data[1]&127;break;case 224:this.messageType="pitchbendchange";var t=e.data[2]&127;var s=e.data[1]&127;this.pitchBend=(t<<8)+s;break}}return new t(e)};t.exports=s["default"]},{}]},{},[1])(1)});
 	//# sourceMappingURL=dist/index.js.map
 
 /***/ },
-/* 30 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict'
 
-	var parser = __webpack_require__(31)
+	var parser = __webpack_require__(17)
 
 	/**
 	 * Create a Soundfont object
@@ -24058,7 +23637,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 31 */
+/* 17 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -24261,7 +23840,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 32 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24270,7 +23849,7 @@ var AudioEngine =
 
 	*/
 
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
 
 	function PitchEffect () {
 	    this.value = 0;
@@ -24306,7 +23885,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 33 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24321,7 +23900,7 @@ var AudioEngine =
 
 	*/
 
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
 
 	function EchoEffect () {
 	    Tone.Effect.call(this);
@@ -24364,7 +23943,55 @@ var AudioEngine =
 
 
 /***/ },
-/* 34 */
+/* 20 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+
+	A Pan effect
+
+	-100 puts the audio on the left channel, 0 centers it, 100 makes puts it on the right.
+
+	Clamped -100 to 100
+
+	*/
+
+	var Tone = __webpack_require__(1);
+
+	function PanEffect () {
+	    Tone.Effect.call(this);
+
+	    this.value = 0;
+
+	    this.panner = new Tone.Panner();
+
+	    this.effectSend.chain(this.panner, this.effectReturn);
+	}
+
+	Tone.extend(PanEffect, Tone.Effect);
+
+	PanEffect.prototype.set = function (val) {
+	    this.value = val;
+
+	    this.value = this.clamp(this.value, -100, 100);
+
+	    this.panner.pan.value = this.value / 100;
+	};
+
+	PanEffect.prototype.changeBy = function (val) {
+	    this.set(this.value + val);
+	};
+
+	PanEffect.prototype.clamp = function (input, min, max) {
+	    return Math.min(Math.max(input, min), max);
+	};
+
+	module.exports = PanEffect;
+
+
+
+/***/ },
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24382,7 +24009,7 @@ var AudioEngine =
 
 	*/
 
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
 
 	function RoboticEffect () {
 	    Tone.Effect.call(this);
@@ -24429,55 +24056,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/*
-
-	A Pan effect
-
-	-100 puts the audio on the left channel, 0 centers it, 100 makes puts it on the right.
-
-	Clamped -100 to 100
-
-	*/
-
-	var Tone = __webpack_require__(14);
-
-	function PanEffect () {
-	    Tone.Effect.call(this);
-
-	    this.value = 0;
-
-	    this.panner = new Tone.Panner();
-
-	    this.effectSend.chain(this.panner, this.effectReturn);
-	}
-
-	Tone.extend(PanEffect, Tone.Effect);
-
-	PanEffect.prototype.set = function (val) {
-	    this.value = val;
-
-	    this.value = this.clamp(this.value, -100, 100);
-
-	    this.panner.pan.value = this.value / 100;
-	};
-
-	PanEffect.prototype.changeBy = function (val) {
-	    this.set(this.value + val);
-	};
-
-	PanEffect.prototype.clamp = function (input, min, max) {
-	    return Math.min(Math.max(input, min), max);
-	};
-
-	module.exports = PanEffect;
-
-
-
-/***/ },
-/* 36 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24490,7 +24069,7 @@ var AudioEngine =
 
 	*/
 
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
 
 	function ReverbEffect () {
 	    Tone.Effect.call(this);
@@ -24525,7 +24104,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 37 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24540,7 +24119,7 @@ var AudioEngine =
 
 	*/
 
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
 
 	function FuzzEffect () {
 	    Tone.Effect.call(this);
@@ -24575,7 +24154,7 @@ var AudioEngine =
 
 
 /***/ },
-/* 38 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -24589,7 +24168,7 @@ var AudioEngine =
 
 	*/
 
-	var Tone = __webpack_require__(14);
+	var Tone = __webpack_require__(1);
 
 	function WobbleEffect () {
 	    Tone.Effect.call(this);
@@ -24628,6 +24207,605 @@ var AudioEngine =
 
 
 /***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Tone = __webpack_require__(1);
+	var log = __webpack_require__(26);
+
+	function SoundPlayer (outputNode) {
+	    this.outputNode = outputNode;
+	    this.buffer; // a Tone.Buffer
+	    this.bufferSource;
+	    this.playbackRate = 1;
+	    this.isPlaying = false;
+	}
+
+	SoundPlayer.prototype.setBuffer = function (buffer) {
+	    this.buffer = buffer;
+	};
+
+	SoundPlayer.prototype.setPlaybackRate = function (playbackRate) {
+	    this.playbackRate = playbackRate;
+	    if (this.bufferSource && this.bufferSource.playbackRate) {
+	        this.bufferSource.playbackRate.value = this.playbackRate;
+	    }
+	};
+
+	SoundPlayer.prototype.stop = function () {
+	    if (this.isPlaying){
+	        this.bufferSource.stop();
+	    }
+	};
+
+	SoundPlayer.prototype.start = function () {
+	    if (!this.buffer || !this.buffer.loaded) {
+	        log.warn('tried to play a sound that was not loaded yet');
+	        return;
+	    }
+
+	    this.stop();
+
+	    this.bufferSource = new Tone.BufferSource(this.buffer.get());
+	    this.bufferSource.playbackRate.value = this.playbackRate;
+	    this.bufferSource.connect(this.outputNode);
+	    this.bufferSource.start();
+	    this.isPlaying = true;
+	};
+
+	SoundPlayer.prototype.onEnded = function (callback) {
+	    this.bufferSource.onended = function () {
+	        this.isPlaying = false;
+	        callback();
+	    };
+	};
+
+	module.exports = SoundPlayer;
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var minilog = __webpack_require__(27);
+	minilog.enable();
+
+	module.exports = minilog('scratch-audioengine');
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Minilog = __webpack_require__(28);
+
+	var oldEnable = Minilog.enable,
+	    oldDisable = Minilog.disable,
+	    isChrome = (typeof navigator != 'undefined' && /chrome/i.test(navigator.userAgent)),
+	    console = __webpack_require__(32);
+
+	// Use a more capable logging backend if on Chrome
+	Minilog.defaultBackend = (isChrome ? console.minilog : console);
+
+	// apply enable inputs from localStorage and from the URL
+	if(typeof window != 'undefined') {
+	  try {
+	    Minilog.enable(JSON.parse(window.localStorage['minilogSettings']));
+	  } catch(e) {}
+	  if(window.location && window.location.search) {
+	    var match = RegExp('[?&]minilog=([^&]*)').exec(window.location.search);
+	    match && Minilog.enable(decodeURIComponent(match[1]));
+	  }
+	}
+
+	// Make enable also add to localStorage
+	Minilog.enable = function() {
+	  oldEnable.call(Minilog, true);
+	  try { window.localStorage['minilogSettings'] = JSON.stringify(true); } catch(e) {}
+	  return this;
+	};
+
+	Minilog.disable = function() {
+	  oldDisable.call(Minilog);
+	  try { delete window.localStorage.minilogSettings; } catch(e) {}
+	  return this;
+	};
+
+	exports = module.exports = Minilog;
+
+	exports.backends = {
+	  array: __webpack_require__(36),
+	  browser: Minilog.defaultBackend,
+	  localStorage: __webpack_require__(37),
+	  jQuery: __webpack_require__(38)
+	};
+
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29),
+	    Filter = __webpack_require__(31);
+
+	var log = new Transform(),
+	    slice = Array.prototype.slice;
+
+	exports = module.exports = function create(name) {
+	  var o   = function() { log.write(name, undefined, slice.call(arguments)); return o; };
+	  o.debug = function() { log.write(name, 'debug', slice.call(arguments)); return o; };
+	  o.info  = function() { log.write(name, 'info',  slice.call(arguments)); return o; };
+	  o.warn  = function() { log.write(name, 'warn',  slice.call(arguments)); return o; };
+	  o.error = function() { log.write(name, 'error', slice.call(arguments)); return o; };
+	  o.log   = o.debug; // for interface compliance with Node and browser consoles
+	  o.suggest = exports.suggest;
+	  o.format = log.format;
+	  return o;
+	};
+
+	// filled in separately
+	exports.defaultBackend = exports.defaultFormatter = null;
+
+	exports.pipe = function(dest) {
+	  return log.pipe(dest);
+	};
+
+	exports.end = exports.unpipe = exports.disable = function(from) {
+	  return log.unpipe(from);
+	};
+
+	exports.Transform = Transform;
+	exports.Filter = Filter;
+	// this is the default filter that's applied when .enable() is called normally
+	// you can bypass it completely and set up your own pipes
+	exports.suggest = new Filter();
+
+	exports.enable = function() {
+	  if(exports.defaultFormatter) {
+	    return log.pipe(exports.suggest) // filter
+	              .pipe(exports.defaultFormatter) // formatter
+	              .pipe(exports.defaultBackend); // backend
+	  }
+	  return log.pipe(exports.suggest) // filter
+	            .pipe(exports.defaultBackend); // formatter
+	};
+
+
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var microee = __webpack_require__(30);
+
+	// Implements a subset of Node's stream.Transform - in a cross-platform manner.
+	function Transform() {}
+
+	microee.mixin(Transform);
+
+	// The write() signature is different from Node's
+	// --> makes it much easier to work with objects in logs.
+	// One of the lessons from v1 was that it's better to target
+	// a good browser rather than the lowest common denominator
+	// internally.
+	// If you want to use external streams, pipe() to ./stringify.js first.
+	Transform.prototype.write = function(name, level, args) {
+	  this.emit('item', name, level, args);
+	};
+
+	Transform.prototype.end = function() {
+	  this.emit('end');
+	  this.removeAllListeners();
+	};
+
+	Transform.prototype.pipe = function(dest) {
+	  var s = this;
+	  // prevent double piping
+	  s.emit('unpipe', dest);
+	  // tell the dest that it's being piped to
+	  dest.emit('pipe', s);
+
+	  function onItem() {
+	    dest.write.apply(dest, Array.prototype.slice.call(arguments));
+	  }
+	  function onEnd() { !dest._isStdio && dest.end(); }
+
+	  s.on('item', onItem);
+	  s.on('end', onEnd);
+
+	  s.when('unpipe', function(from) {
+	    var match = (from === dest) || typeof from == 'undefined';
+	    if(match) {
+	      s.removeListener('item', onItem);
+	      s.removeListener('end', onEnd);
+	      dest.emit('unpipe');
+	    }
+	    return match;
+	  });
+
+	  return dest;
+	};
+
+	Transform.prototype.unpipe = function(from) {
+	  this.emit('unpipe', from);
+	  return this;
+	};
+
+	Transform.prototype.format = function(dest) {
+	  throw new Error([
+	    'Warning: .format() is deprecated in Minilog v2! Use .pipe() instead. For example:',
+	    'var Minilog = require(\'minilog\');',
+	    'Minilog',
+	    '  .pipe(Minilog.backends.console.formatClean)',
+	    '  .pipe(Minilog.backends.console);'].join('\n'));
+	};
+
+	Transform.mixin = function(dest) {
+	  var o = Transform.prototype, k;
+	  for (k in o) {
+	    o.hasOwnProperty(k) && (dest.prototype[k] = o[k]);
+	  }
+	};
+
+	module.exports = Transform;
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+	function M() { this._events = {}; }
+	M.prototype = {
+	  on: function(ev, cb) {
+	    this._events || (this._events = {});
+	    var e = this._events;
+	    (e[ev] || (e[ev] = [])).push(cb);
+	    return this;
+	  },
+	  removeListener: function(ev, cb) {
+	    var e = this._events[ev] || [], i;
+	    for(i = e.length-1; i >= 0 && e[i]; i--){
+	      if(e[i] === cb || e[i].cb === cb) { e.splice(i, 1); }
+	    }
+	  },
+	  removeAllListeners: function(ev) {
+	    if(!ev) { this._events = {}; }
+	    else { this._events[ev] && (this._events[ev] = []); }
+	  },
+	  emit: function(ev) {
+	    this._events || (this._events = {});
+	    var args = Array.prototype.slice.call(arguments, 1), i, e = this._events[ev] || [];
+	    for(i = e.length-1; i >= 0 && e[i]; i--){
+	      e[i].apply(this, args);
+	    }
+	    return this;
+	  },
+	  when: function(ev, cb) {
+	    return this.once(ev, cb, true);
+	  },
+	  once: function(ev, cb, when) {
+	    if(!cb) return this;
+	    function c() {
+	      if(!when) this.removeListener(ev, c);
+	      if(cb.apply(this, arguments) && when) this.removeListener(ev, c);
+	    }
+	    c.cb = cb;
+	    this.on(ev, c);
+	    return this;
+	  }
+	};
+	M.mixin = function(dest) {
+	  var o = M.prototype, k;
+	  for (k in o) {
+	    o.hasOwnProperty(k) && (dest.prototype[k] = o[k]);
+	  }
+	};
+	module.exports = M;
+
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// default filter
+	var Transform = __webpack_require__(29);
+
+	var levelMap = { debug: 1, info: 2, warn: 3, error: 4 };
+
+	function Filter() {
+	  this.enabled = true;
+	  this.defaultResult = true;
+	  this.clear();
+	}
+
+	Transform.mixin(Filter);
+
+	// allow all matching, with level >= given level
+	Filter.prototype.allow = function(name, level) {
+	  this._white.push({ n: name, l: levelMap[level] });
+	  return this;
+	};
+
+	// deny all matching, with level <= given level
+	Filter.prototype.deny = function(name, level) {
+	  this._black.push({ n: name, l: levelMap[level] });
+	  return this;
+	};
+
+	Filter.prototype.clear = function() {
+	  this._white = [];
+	  this._black = [];
+	  return this;
+	};
+
+	function test(rule, name) {
+	  // use .test for RegExps
+	  return (rule.n.test ? rule.n.test(name) : rule.n == name);
+	};
+
+	Filter.prototype.test = function(name, level) {
+	  var i, len = Math.max(this._white.length, this._black.length);
+	  for(i = 0; i < len; i++) {
+	    if(this._white[i] && test(this._white[i], name) && levelMap[level] >= this._white[i].l) {
+	      return true;
+	    }
+	    if(this._black[i] && test(this._black[i], name) && levelMap[level] < this._black[i].l) {
+	      return false;
+	    }
+	  }
+	  return this.defaultResult;
+	};
+
+	Filter.prototype.write = function(name, level, args) {
+	  if(!this.enabled || this.test(name, level)) {
+	    return this.emit('item', name, level, args);
+	  }
+	};
+
+	module.exports = Filter;
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29);
+
+	var newlines = /\n+$/,
+	    logger = new Transform();
+
+	logger.write = function(name, level, args) {
+	  var i = args.length-1;
+	  if (typeof console === 'undefined' || !console.log) {
+	    return;
+	  }
+	  if(console.log.apply) {
+	    return console.log.apply(console, [name, level].concat(args));
+	  } else if(JSON && JSON.stringify) {
+	    // console.log.apply is undefined in IE8 and IE9
+	    // for IE8/9: make console.log at least a bit less awful
+	    if(args[i] && typeof args[i] == 'string') {
+	      args[i] = args[i].replace(newlines, '');
+	    }
+	    try {
+	      for(i = 0; i < args.length; i++) {
+	        args[i] = JSON.stringify(args[i]);
+	      }
+	    } catch(e) {}
+	    console.log(args.join(' '));
+	  }
+	};
+
+	logger.formatters = ['color', 'minilog'];
+	logger.color = __webpack_require__(33);
+	logger.minilog = __webpack_require__(35);
+
+	module.exports = logger;
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29),
+	    color = __webpack_require__(34);
+
+	var colors = { debug: ['cyan'], info: ['purple' ], warn: [ 'yellow', true ], error: [ 'red', true ] },
+	    logger = new Transform();
+
+	logger.write = function(name, level, args) {
+	  var fn = console.log;
+	  if(console[level] && console[level].apply) {
+	    fn = console[level];
+	    fn.apply(console, [ '%c'+name+' %c'+level, color('gray'), color.apply(color, colors[level])].concat(args));
+	  }
+	};
+
+	// NOP, because piping the formatted logs can only cause trouble.
+	logger.pipe = function() { };
+
+	module.exports = logger;
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports) {
+
+	var hex = {
+	  black: '#000',
+	  red: '#c23621',
+	  green: '#25bc26',
+	  yellow: '#bbbb00',
+	  blue:  '#492ee1',
+	  magenta: '#d338d3',
+	  cyan: '#33bbc8',
+	  gray: '#808080',
+	  purple: '#708'
+	};
+	function color(fg, isInverse) {
+	  if(isInverse) {
+	    return 'color: #fff; background: '+hex[fg]+';';
+	  } else {
+	    return 'color: '+hex[fg]+';';
+	  }
+	}
+
+	module.exports = color;
+
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29),
+	    color = __webpack_require__(34),
+	    colors = { debug: ['gray'], info: ['purple' ], warn: [ 'yellow', true ], error: [ 'red', true ] },
+	    logger = new Transform();
+
+	logger.write = function(name, level, args) {
+	  var fn = console.log;
+	  if(level != 'debug' && console[level]) {
+	    fn = console[level];
+	  }
+
+	  var subset = [], i = 0;
+	  if(level != 'info') {
+	    for(; i < args.length; i++) {
+	      if(typeof args[i] != 'string') break;
+	    }
+	    fn.apply(console, [ '%c'+name +' '+ args.slice(0, i).join(' '), color.apply(color, colors[level]) ].concat(args.slice(i)));
+	  } else {
+	    fn.apply(console, [ '%c'+name, color.apply(color, colors[level]) ].concat(args));
+	  }
+	};
+
+	// NOP, because piping the formatted logs can only cause trouble.
+	logger.pipe = function() { };
+
+	module.exports = logger;
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29),
+	    cache = [ ];
+
+	var logger = new Transform();
+
+	logger.write = function(name, level, args) {
+	  cache.push([ name, level, args ]);
+	};
+
+	// utility functions
+	logger.get = function() { return cache; };
+	logger.empty = function() { cache = []; };
+
+	module.exports = logger;
+
+
+/***/ },
+/* 37 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29),
+	    cache = false;
+
+	var logger = new Transform();
+
+	logger.write = function(name, level, args) {
+	  if(typeof window == 'undefined' || typeof JSON == 'undefined' || !JSON.stringify || !JSON.parse) return;
+	  try {
+	    if(!cache) { cache = (window.localStorage.minilog ? JSON.parse(window.localStorage.minilog) : []); }
+	    cache.push([ new Date().toString(), name, level, args ]);
+	    window.localStorage.minilog = JSON.stringify(cache);
+	  } catch(e) {}
+	};
+
+	module.exports = logger;
+
+/***/ },
+/* 38 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Transform = __webpack_require__(29);
+
+	var cid = new Date().valueOf().toString(36);
+
+	function AjaxLogger(options) {
+	  this.url = options.url || '';
+	  this.cache = [];
+	  this.timer = null;
+	  this.interval = options.interval || 30*1000;
+	  this.enabled = true;
+	  this.jQuery = window.jQuery;
+	  this.extras = {};
+	}
+
+	Transform.mixin(AjaxLogger);
+
+	AjaxLogger.prototype.write = function(name, level, args) {
+	  if(!this.timer) { this.init(); }
+	  this.cache.push([name, level].concat(args));
+	};
+
+	AjaxLogger.prototype.init = function() {
+	  if(!this.enabled || !this.jQuery) return;
+	  var self = this;
+	  this.timer = setTimeout(function() {
+	    var i, logs = [], ajaxData, url = self.url;
+	    if(self.cache.length == 0) return self.init();
+	    // Test each log line and only log the ones that are valid (e.g. don't have circular references).
+	    // Slight performance hit but benefit is we log all valid lines.
+	    for(i = 0; i < self.cache.length; i++) {
+	      try {
+	        JSON.stringify(self.cache[i]);
+	        logs.push(self.cache[i]);
+	      } catch(e) { }
+	    }
+	    if(self.jQuery.isEmptyObject(self.extras)) {
+	        ajaxData = JSON.stringify({ logs: logs });
+	        url = self.url + '?client_id=' + cid;
+	    } else {
+	        ajaxData = JSON.stringify(self.jQuery.extend({logs: logs}, self.extras));
+	    }
+
+	    self.jQuery.ajax(url, {
+	      type: 'POST',
+	      cache: false,
+	      processData: false,
+	      data: ajaxData,
+	      contentType: 'application/json',
+	      timeout: 10000
+	    }).success(function(data, status, jqxhr) {
+	      if(data.interval) {
+	        self.interval = Math.max(1000, data.interval);
+	      }
+	    }).error(function() {
+	      self.interval = 30000;
+	    }).always(function() {
+	      self.init();
+	    });
+	    self.cache = [];
+	  }, this.interval);
+	};
+
+	AjaxLogger.prototype.end = function() {};
+
+	// wait until jQuery is defined. Useful if you don't control the load order.
+	AjaxLogger.jQueryWait = function(onDone) {
+	  if(typeof window !== 'undefined' && (window.jQuery || window.$)) {
+	    return onDone(window.jQuery || window.$);
+	  } else if (typeof window !== 'undefined') {
+	    setTimeout(function() { AjaxLogger.jQueryWait(onDone); }, 200);
+	  }
+	};
+
+	module.exports = AjaxLogger;
+
+
+/***/ },
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -24643,8 +24821,8 @@ var AudioEngine =
 	*/
 
 	var ArrayBufferStream = __webpack_require__(40);
-	var Tone = __webpack_require__(14);
-	var log = __webpack_require__(1);
+	var Tone = __webpack_require__(1);
+	var log = __webpack_require__(26);
 
 	function ADPCMSoundLoader () {
 	}

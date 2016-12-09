@@ -20,19 +20,19 @@
     "url": "https://github.com/LLK/scratch-audioengine/issues"
   },
   "homepage": "https://github.com/LLK/scratch-audioengine#readme",
+  "dependencies": {
+    "minilog": "3.0.1",
+    "soundfont-player": "0.10.5",
+    "startaudiocontext": "1.2.0",
+    "tone": "0.8.0"
+  },
   "devDependencies": {
     "babel-core": "6.17.0",
     "babel-eslint": "7.0.0",
     "babel-loader": "6.2.5",
     "eslint": "3.7.1",
     "json": "9.0.4",
-    "minilog": "^3.0.1",
-    "soundfont-player": "0.10.5",
-    "tone": "0.8.0",
     "travis-after-all": "1.4.4",
     "webpack": "1.13.2"
-  },
-  "dependencies": {
-    "startaudiocontext": "^1.2.0"
   }
 }

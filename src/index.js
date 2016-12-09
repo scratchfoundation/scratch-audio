@@ -1,5 +1,6 @@
-var log = require('./log');
 var Tone = require('tone');
+var StartAudioContext = require('startaudiocontext');
+var Soundfont = require('soundfont-player');
 
 var PitchEffect = require('./effects/PitchEffect');
 var EchoEffect = require('./effects/EchoEffect');
@@ -10,17 +11,14 @@ var FuzzEffect = require('./effects/FuzzEffect');
 var WobbleEffect = require('./effects/WobbleEffect');
 
 var SoundPlayer = require('./SoundPlayer');
-var Soundfont = require('soundfont-player');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
+var log = require('./log');
 
 function AudioEngine (sounds) {
 
     // tone setup
-
     this.tone = new Tone();
 
-<<<<<<< Updated upstream
-=======
     // workaround to start the audio context in ios
     // as soon as the user the clicks on anything in the UI, start the audio context
     var element = document.querySelector('#blocks');
@@ -28,48 +26,37 @@ function AudioEngine (sounds) {
         log.warn('context started');
     });
 
->>>>>>> Stashed changes
 	// effects setup
     this.pitchEffect = new PitchEffect();
     this.echoEffect = new EchoEffect();
-    this.panEffect = new PanEffect();
-    this.reverbEffect = new ReverbEffect();
-    this.fuzzEffect = new FuzzEffect();
-    this.wobbleEffect = new WobbleEffect();
     this.roboticEffect = new RoboticEffect();
+    this.fuzzEffect = new FuzzEffect();
 
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(
-        this.roboticEffect, this.fuzzEffect, this.echoEffect,
-        this.wobbleEffect, this.panEffect, this.reverbEffect, Tone.Master);
+        this.roboticEffect,
+        this.echoEffect,
+        this.fuzzEffect,
+        Tone.Master
+    );
 
     // reset effects to their default parameters
     this.clearEffects();
-
-<<<<<<< Updated upstream
-    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'TELEPHONE', 'WOBBLE', 'ROBOTIC'];
-=======
-    this.effectNames = ['PITCH', 'ECHO', 'ROBOTIC'];
->>>>>>> Stashed changes
+    this.effectNames = ['PITCH', 'ECHO', 'ROBOTIC', 'FUZZ'];
 
     // load sounds
-
     this.soundPlayers = [];
-<<<<<<< Updated upstream
-    this.loadSounds(sounds);
-=======
     var soundUrls = [
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/83a9787d4cb6f3b7632b4ddfebf74367.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/b17100ed9b49f050c313045c98d1b1f4.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/071d2c4d10fa4846f26c3e15d2c860cc.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/3b344f15e691810eafa81f25082e1669.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/300705f9920be572f3762730e12a210d.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/975f5f70d3ff1aa1e204784f5f437215.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/e2e6d112aab43e8d961a8a612cc1c4a0.wav/get/',
-        'https://cdn.assets.scratch.mit.edu/internalapi/asset/da8db992cb6091bc2671a680b35cb37d.wav/get/'
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/83a9787d4cb6f3b7632b4ddfebf74367.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/b17100ed9b49f050c313045c98d1b1f4.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/071d2c4d10fa4846f26c3e15d2c860cc.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/3b344f15e691810eafa81f25082e1669.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/300705f9920be572f3762730e12a210d.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/975f5f70d3ff1aa1e204784f5f437215.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/e2e6d112aab43e8d961a8a612cc1c4a0.wav/get/'},
+        {fileUrl: 'https://cdn.assets.scratch.mit.edu/internalapi/asset/da8db992cb6091bc2671a680b35cb37d.wav/get/'}
     ];
     this.loadSounds(soundUrls);
->>>>>>> Stashed changes
 
    // soundfont setup
 
@@ -218,13 +205,9 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
 
 AudioEngine.prototype.clearEffects = function () {
     this.echoEffect.set(0);
-    this.panEffect.set(0);
-    this.reverbEffect.set(0);
-    this.fuzzEffect.set(0);
     this.roboticEffect.set(0);
-    this.wobbleEffect.set(0);
+    this.fuzzEffect.set(0);
     this.pitchEffect.set(0, this.soundPlayers);
-
     this.effectsNode.gain.value = 1;
 };
 
@@ -266,4 +249,3 @@ AudioEngine.prototype._clamp = function (input, min, max) {
 };
 
 module.exports = AudioEngine;
-
