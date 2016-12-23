@@ -5,8 +5,6 @@ ADPCMSoundLoader loads wav files that have been compressed with the ADPCM format
 based on code from Scratch-Flash:
 https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
 
-to do: I think this will ultimately need to run in a web worker
-
 */
 
 var ArrayBufferStream = require('./ArrayBufferStream');
