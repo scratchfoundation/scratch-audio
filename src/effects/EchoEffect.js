@@ -33,7 +33,7 @@ EchoEffect.prototype.set = function (val) {
     if (this.value == 0) {
         this.wet.value = 0;
     } else {
-        this.wet.value = 1;
+        this.wet.value = 0.5;
     }
 
     var feedback = (this.value / 100) * 0.75;
