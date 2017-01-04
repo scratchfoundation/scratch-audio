@@ -2,51 +2,57 @@ var log = require('./log');
 var Tone = require('tone');
 
 var PitchEffect = require('./effects/PitchEffect');
-var EchoEffect = require('./effects/EchoEffect');
 var PanEffect = require('./effects/PanEffect');
 var RoboticEffect = require('./effects/RoboticEffect');
-var ReverbEffect = require('./effects/ReverbEffect');
 var FuzzEffect = require('./effects/FuzzEffect');
-var WobbleEffect = require('./effects/WobbleEffect');
+var EchoEffect = require('./effects/EchoEffect');
+var ReverbEffect = require('./effects/ReverbEffect');
 
 var SoundPlayer = require('./SoundPlayer');
 var Soundfont = require('soundfont-player');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 
-function AudioEngine (sounds) {
-
-    // tone setup
-
-    this.tone = new Tone();
-
-	// effects setup
-    this.pitchEffect = new PitchEffect();
-    this.echoEffect = new EchoEffect();
-    this.panEffect = new PanEffect();
-    this.reverbEffect = new ReverbEffect();
-    this.fuzzEffect = new FuzzEffect();
-    this.wobbleEffect = new WobbleEffect();
+function AudioEngine () {
     this.roboticEffect = new RoboticEffect();
+    this.fuzzEffect = new FuzzEffect();
+    this.echoEffect = new EchoEffect();
+    this.reverbEffect = new ReverbEffect();
 
-    // the effects are chained to an effects node for this clone, then to the master output
+    this.input = new Tone.Gain();
+    this.input.chain (
+        this.roboticEffect, this.fuzzEffect, this.echoEffect, this.reverbEffect,
+        Tone.Master
+    );
+
+    // this.input = new Tone.Gain();
+    // this.input.connect(Tone.Master);
+
+}
+
+AudioEngine.prototype.createPlayer = function () {
+    return new AudioPlayer(this);
+};
+
+function AudioPlayer (audioEngine) {
+
+    this.audioEngine = audioEngine;
+
+    // effects setup
+    this.pitchEffect = new PitchEffect();
+    this.panEffect = new PanEffect();
+
+    // the effects are chained to an effects node for this player, then to the master output
     // so audio is sent from each player or instrument, through the effects in order, then out
     // note that the pitch effect works differently - it sets the playback rate for each player
     this.effectsNode = new Tone.Gain();
-    this.effectsNode.chain(
-        this.roboticEffect, this.fuzzEffect, this.echoEffect,
-        this.wobbleEffect, this.panEffect, this.reverbEffect, Tone.Master);
+    this.effectsNode.chain(this.panEffect, this.audioEngine.input);
 
     // reset effects to their default parameters
     this.clearEffects();
 
-    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'TELEPHONE', 'WOBBLE', 'ROBOTIC'];
+    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'WOBBLE', 'ROBOTIC'];
 
-    // load sounds
-
-    this.soundPlayers = [];
-    this.loadSounds(sounds);
-
-   // soundfont setup
+    // soundfont instrument setup
 
     // instrument names used by Musyng Kite soundfont, in order to
     // match scratch instruments
@@ -65,7 +71,7 @@ function AudioEngine (sounds) {
     this.currentTempo = 60;
 }
 
-AudioEngine.prototype.loadSounds = function (sounds) {
+AudioPlayer.prototype.loadSounds = function (sounds) {
 
     this.soundPlayers = [];
 
@@ -73,17 +79,20 @@ AudioEngine.prototype.loadSounds = function (sounds) {
     // the sound buffers will be added asynchronously as they load
     for (var i=0; i<sounds.length; i++){
         this.soundPlayers[i] = new SoundPlayer(this.effectsNode);
-        console.log(sounds[i].fileUrl);
     }
 
-    // load the sounds- most sounds decode natively, but for adpcm sounds
-    // we use our own decoder
+    // load the sounds
+    // most sounds decode natively, but for adpcm sounds we use our own decoder
     var storedContext = this;
     for (var index=0; index<sounds.length; index++) {
+        if (sounds[index].format == 'squeak') {
+            log.warn('unable to load sound in squeak format');
+            continue;
+        }
         if (sounds[index].format == 'adpcm') {
-            log.warn('attempting to load sound in adpcm format');
+            log.warn('loading sound in adpcm format');
             // create a closure to store the sound index, to use when the
-            // docder completes and resolves the promise
+            // decoder completes and resolves the promise
             (function () {
                 var storedIndex = index;
                 var loader = new ADPCMSoundLoader();
@@ -94,11 +103,11 @@ AudioEngine.prototype.loadSounds = function (sounds) {
         } else {
             this.soundPlayers[index].setBuffer(new Tone.Buffer(sounds[index].fileUrl));
         }
-
     }
+
 };
 
-AudioEngine.prototype.playSound = function (index) {
+AudioPlayer.prototype.playSound = function (index) {
     this.soundPlayers[index].start();
 
     var storedContext = this;
@@ -107,40 +116,22 @@ AudioEngine.prototype.playSound = function (index) {
     });
 };
 
-AudioEngine.prototype.playNoteForBeats = function (note, beats) {
+AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
     this.instrument.play(
         note, Tone.context.currentTime, {duration : Number(beats)}
     );
-
-/*
-    // if the soundplayer exists and its buffer has loaded
-    if (this.soundPlayers[this.instrumentNum] && this.soundPlayers[this.instrumentNum].buffer.loaded) {
-        // create a new buffer source to play the sound
-        var bufferSource = new Tone.BufferSource(this.soundPlayers[this.instrumentNum].buffer.get());
-        bufferSource.connect(this.effectsNode);
-        bufferSource.start('+0', 0, beats);
-        var ratio = this.tone.intervalToFrequencyRatio(note - 60);
-        bufferSource.playbackRate.value = ratio;
-
-        return new Promise(function (resolve) {
-            setTimeout( function () {
-                resolve();
-            }, 1000 * beats);
-        });
-    }
-*/
 };
 
-AudioEngine.prototype._midiToFreq = function (midiNote) {
+AudioPlayer.prototype._midiToFreq = function (midiNote) {
     var freq = this.tone.intervalToFrequencyRatio(midiNote - 60) * 261.63; // 60 is C4
     return freq;
 };
 
-AudioEngine.prototype.playDrumForBeats = function (drumNum) {
-    this.drumSamplers[drumNum].triggerAttack();
+AudioPlayer.prototype.playDrumForBeats = function () {
+    // this.drumSamplers[drumNum].triggerAttack();
 };
 
-AudioEngine.prototype.stopAllSounds = function () {
+AudioPlayer.prototype.stopAllSounds = function () {
     // stop drum notes
     // for (var i = 0; i<this.drumSamplers.length; i++) {
     //     this.drumSamplers[i].triggerRelease();
@@ -157,7 +148,7 @@ AudioEngine.prototype.stopAllSounds = function () {
     }
 };
 
-AudioEngine.prototype.setEffect = function (effect, value) {
+AudioPlayer.prototype.setEffect = function (effect, value) {
     switch (effect) {
     case 'PITCH':
         this.pitchEffect.set(value, this.soundPlayers);
@@ -166,24 +157,21 @@ AudioEngine.prototype.setEffect = function (effect, value) {
         this.panEffect.set(value);
         break;
     case 'ECHO':
-        this.echoEffect.set(value);
+        this.audioEngine.echoEffect.set(value);
         break;
     case 'REVERB':
-        this.reverbEffect.set(value);
+        this.audioEngine.reverbEffect.set(value);
         break;
     case 'FUZZ' :
-        this.fuzzEffect.set(value);
-        break;
-    case 'WOBBLE' :
-        this.wobbleEffect.set(value);
+        this.audioEngine.fuzzEffect.set(value);
         break;
     case 'ROBOTIC' :
-        this.roboticEffect.set(value);
+        this.audioEngine.roboticEffect.set(value);
         break;
     }
 };
 
-AudioEngine.prototype.changeEffect = function (effect, value) {
+AudioPlayer.prototype.changeEffect = function (effect, value) {
     switch (effect) {
     case 'PITCH':
         this.pitchEffect.changeBy(value, this.soundPlayers);
@@ -192,37 +180,33 @@ AudioEngine.prototype.changeEffect = function (effect, value) {
         this.panEffect.changeBy(value);
         break;
     case 'ECHO':
-        this.echoEffect.changeBy(value);
+        this.audioEngine.echoEffect.changeBy(value);
         break;
     case 'REVERB':
-        this.reverbEffect.changeBy(value);
+        this.audioEngine.reverbEffect.changeBy(value);
         break;
     case 'FUZZ' :
-        this.fuzzEffect.changeBy(value);
-        break;
-    case 'WOBBLE' :
-        this.wobbleEffect.changeBy(value);
+        this.audioEngine.fuzzEffect.changeBy(value);
         break;
     case 'ROBOTIC' :
-        this.roboticEffect.changeBy(value);
+        this.audioEngine.roboticEffect.changeBy(value);
         break;
 
     }
 };
 
-AudioEngine.prototype.clearEffects = function () {
-    this.echoEffect.set(0);
+AudioPlayer.prototype.clearEffects = function () {
     this.panEffect.set(0);
-    this.reverbEffect.set(0);
-    this.fuzzEffect.set(0);
-    this.roboticEffect.set(0);
-    this.wobbleEffect.set(0);
     this.pitchEffect.set(0, this.soundPlayers);
-
     this.effectsNode.gain.value = 1;
+
+    this.audioEngine.echoEffect.set(0);
+    this.audioEngine.reverbEffect.set(0);
+    this.audioEngine.fuzzEffect.set(0);
+    this.audioEngine.roboticEffect.set(0);
 };
 
-AudioEngine.prototype.setInstrument = function (instrumentNum) {
+AudioPlayer.prototype.setInstrument = function (instrumentNum) {
     this.instrumentNum = instrumentNum - 1;
 
     return Soundfont.instrument(Tone.context, this.instrumentNames[this.instrumentNum]).then(
@@ -233,29 +217,29 @@ AudioEngine.prototype.setInstrument = function (instrumentNum) {
     );
 };
 
-AudioEngine.prototype.setVolume = function (value) {
+AudioPlayer.prototype.setVolume = function (value) {
     var vol = this._clamp(value, 0, 100);
     vol /= 100;
     this.effectsNode.gain.value = vol;
 };
 
-AudioEngine.prototype.changeVolume = function (value) {
+AudioPlayer.prototype.changeVolume = function (value) {
     value /= 100;
     var newVol = this.effectsNode.gain.value + value;
     this.effectsNode.gain.value = this._clamp(newVol, 0, 1);
 };
 
-AudioEngine.prototype.setTempo = function (value) {
+AudioPlayer.prototype.setTempo = function (value) {
     var newTempo = this._clamp(value, 10, 1000);
     this.currentTempo = newTempo;
 };
 
-AudioEngine.prototype.changeTempo = function (value) {
+AudioPlayer.prototype.changeTempo = function (value) {
     var newTempo = this._clamp(this.currentTempo + value, 10, 1000);
     this.currentTempo = newTempo;
 };
 
-AudioEngine.prototype._clamp = function (input, min, max) {
+AudioPlayer.prototype._clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);
 };
 
