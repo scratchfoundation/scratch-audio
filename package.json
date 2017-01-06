@@ -1,5 +1,5 @@
 {
-  "name": "scratch-audioengine",
+  "name": "scratch-audio",
   "version": "0.1.0",
   "description": "audio engine for scratch 3.0",
   "main": "dist.js",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LLK/scratch-audioengine.git"
+    "url": "git+https://github.com/LLK/scratch-audio.git"
   },
   "author": "Massachusetts Institute of Technology",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/LLK/scratch-audioengine/issues"
+    "url": "https://github.com/LLK/scratch-audio/issues"
   },
-  "homepage": "https://github.com/LLK/scratch-audioengine#readme",
+  "homepage": "https://github.com/LLK/scratch-audio#readme",
   "devDependencies": {
     "babel-core": "6.17.0",
     "babel-eslint": "7.0.0",
