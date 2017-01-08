@@ -108,6 +108,8 @@ AudioPlayer.prototype.loadSounds = function (sounds) {
 };
 
 AudioPlayer.prototype.playSound = function (index) {
+    if (!this.soundPlayers[index]) return;
+
     this.soundPlayers[index].start();
 
     var storedContext = this;
