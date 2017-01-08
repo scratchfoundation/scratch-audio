@@ -52,7 +52,7 @@ function AudioPlayer (audioEngine) {
     // reset effects to their default parameters
     this.clearEffects();
 
-    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'WOBBLE', 'ROBOTIC'];
+    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'ROBOT'];
 
     // soundfont instrument setup
 
@@ -169,7 +169,7 @@ AudioPlayer.prototype.setEffect = function (effect, value) {
     case 'FUZZ' :
         this.audioEngine.fuzzEffect.set(value);
         break;
-    case 'ROBOTIC' :
+    case 'ROBOT' :
         this.audioEngine.roboticEffect.set(value);
         break;
     }
@@ -192,7 +192,7 @@ AudioPlayer.prototype.changeEffect = function (effect, value) {
     case 'FUZZ' :
         this.audioEngine.fuzzEffect.changeBy(value);
         break;
-    case 'ROBOTIC' :
+    case 'ROBOT' :
         this.audioEngine.roboticEffect.changeBy(value);
         break;
 
