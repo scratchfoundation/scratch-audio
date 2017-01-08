@@ -126,15 +126,21 @@ AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
     this.instrument.play(
         note, Tone.context.currentTime, {duration : Number(beats)}
     );
+    return this.waitForBeats(beats);
 };
 
-AudioPlayer.prototype._midiToFreq = function (midiNote) {
-    var freq = this.tone.intervalToFrequencyRatio(midiNote - 60) * 261.63; // 60 is C4
-    return freq;
-};
-
-AudioPlayer.prototype.playDrumForBeats = function () {
+AudioPlayer.prototype.playDrumForBeats = function (beats) {
     // this.drumSamplers[drumNum].triggerAttack();
+    return this.waitForBeats(beats);
+};
+
+AudioPlayer.prototype.waitForBeats = function (beats) {
+    var storedContext = this;
+    return new Promise(function (resolve) {
+        setTimeout(function () {
+            resolve();
+        }, ((60 / storedContext.currentTempo) * 1000  * beats));
+    });
 };
 
 AudioPlayer.prototype.stopAllSounds = function () {
