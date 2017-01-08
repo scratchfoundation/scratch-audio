@@ -3,6 +3,7 @@ var Tone = require('tone');
 
 var PitchEffect = require('./effects/PitchEffect');
 var PanEffect = require('./effects/PanEffect');
+
 var RoboticEffect = require('./effects/RoboticEffect');
 var FuzzEffect = require('./effects/FuzzEffect');
 var EchoEffect = require('./effects/EchoEffect');
@@ -24,6 +25,7 @@ function AudioEngine () {
         Tone.Master
     );
 
+    // alternate version without effects:
     // this.input = new Tone.Gain();
     // this.input.connect(Tone.Master);
 
