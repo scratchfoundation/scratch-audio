@@ -71,6 +71,8 @@ function AudioPlayer (audioEngine) {
     // default is 60bpm
 
     this.currentTempo = 60;
+
+    this.currentVolume = 100;
 }
 
 AudioPlayer.prototype.loadSounds = function (sounds) {
@@ -222,15 +224,12 @@ AudioPlayer.prototype.setInstrument = function (instrumentNum) {
 };
 
 AudioPlayer.prototype.setVolume = function (value) {
-    var vol = this._clamp(value, 0, 100);
-    vol /= 100;
-    this.effectsNode.gain.value = vol;
+    this.currentVolume = this._clamp(value, 0, 100);
+    this.effectsNode.gain.value = this.currentVolume / 100;
 };
 
 AudioPlayer.prototype.changeVolume = function (value) {
-    value /= 100;
-    var newVol = this.effectsNode.gain.value + value;
-    this.effectsNode.gain.value = this._clamp(newVol, 0, 1);
+    this.setVolume(this.currentVolume + value);
 };
 
 AudioPlayer.prototype.setTempo = function (value) {
