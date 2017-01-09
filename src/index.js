@@ -14,11 +14,14 @@ var Soundfont = require('soundfont-player');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 
 function AudioEngine () {
+
+    // create the global audio effects
     this.roboticEffect = new RoboticEffect();
     this.fuzzEffect = new FuzzEffect();
     this.echoEffect = new EchoEffect();
     this.reverbEffect = new ReverbEffect();
 
+    // chain the global effects to the output
     this.input = new Tone.Gain();
     this.input.chain (
         this.roboticEffect, this.fuzzEffect, this.echoEffect, this.reverbEffect,
@@ -43,9 +46,9 @@ function AudioPlayer (audioEngine) {
     this.pitchEffect = new PitchEffect();
     this.panEffect = new PanEffect();
 
-    // the effects are chained to an effects node for this player, then to the master output
-    // so audio is sent from each player or instrument, through the effects in order, then out
-    // note that the pitch effect works differently - it sets the playback rate for each player
+    // the effects are chained to an effects node for this player, then to the main audio engine
+    // audio is sent from each soundplayer, through the effects in order, then to the global effects
+    // note that the pitch effect works differently - it sets the playback rate for each soundplayer
     this.effectsNode = new Tone.Gain();
     this.effectsNode.chain(this.panEffect, this.audioEngine.input);
 
