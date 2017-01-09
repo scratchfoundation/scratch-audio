@@ -32,6 +32,8 @@ function AudioEngine () {
     // this.input = new Tone.Gain();
     // this.input.connect(Tone.Master);
 
+    // global tempo in bpm (beats per minute)
+    this.currentTempo = 60;
 }
 
 AudioEngine.prototype.createPlayer = function () {
@@ -69,11 +71,6 @@ function AudioPlayer (audioEngine) {
 
     this.instrumentNum;
     this.setInstrument(1);
-
-    // tempo in bpm (beats per minute)
-    // default is 60bpm
-
-    this.currentTempo = 60;
 
     this.currentVolume = 100;
 }
@@ -142,7 +139,7 @@ AudioPlayer.prototype.waitForBeats = function (beats) {
     return new Promise(function (resolve) {
         setTimeout(function () {
             resolve();
-        }, ((60 / storedContext.currentTempo) * 1000  * beats));
+        }, ((60 / storedContext.audioEngine.currentTempo) * 1000  * beats));
     });
 };
 
@@ -243,12 +240,12 @@ AudioPlayer.prototype.changeVolume = function (value) {
 
 AudioPlayer.prototype.setTempo = function (value) {
     var newTempo = this._clamp(value, 10, 1000);
-    this.currentTempo = newTempo;
+    this.audioEngine.currentTempo = newTempo;
 };
 
 AudioPlayer.prototype.changeTempo = function (value) {
     var newTempo = this._clamp(this.currentTempo + value, 10, 1000);
-    this.currentTempo = newTempo;
+    this.audioEngine.currentTempo = newTempo;
 };
 
 AudioPlayer.prototype._clamp = function (input, min, max) {
