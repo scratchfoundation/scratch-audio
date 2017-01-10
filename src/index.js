@@ -227,7 +227,7 @@ AudioPlayer.prototype.setTempo = function (value) {
 };
 
 AudioPlayer.prototype.changeTempo = function (value) {
-    var newTempo = this._clamp(this.currentTempo + value, 10, 1000);
+    var newTempo = this._clamp(this.audioEngine.currentTempo + value, 10, 1000);
     this.audioEngine.currentTempo = newTempo;
 };
 
