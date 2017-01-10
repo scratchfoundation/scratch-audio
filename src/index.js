@@ -148,7 +148,7 @@ AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
 };
 
 AudioPlayer.prototype.playDrumForBeats = function (drum, beats) {
-    this.audioEngine.drumPlayer.start();
+    this.audioEngine.drumPlayer.play(drum, this.effectsNode);
     return this.waitForBeats(beats);
 };
 

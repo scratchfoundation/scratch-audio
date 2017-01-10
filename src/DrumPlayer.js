@@ -4,13 +4,43 @@ var Tone = require('tone');
 function DrumPlayer (outputNode) {
     this.outputNode = outputNode;
 
-    this.snare = new SoundPlayer(this.outputNode);
-    var snareUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/SnareDrum(1)_22k.wav';
-    this.snare.setBuffer(new Tone.Buffer(snareUrl));
+    var baseUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/';
+    var fileNames = [
+        'SnareDrum(1)',
+        'BassDrum(1b)',
+        'SideStick(1)',
+        'Crash(2)',
+        'HiHatOpen(2)',
+        'HiHatClosed(1)',
+        'Tambourine(3)',
+        'Clap(1)',
+        'Claves(1)',
+        'WoodBlock(1)',
+        'Cowbell(3)',
+        'Triangle(1)',
+        'Bongo',
+        'Conga(1)',
+        'Cabasa(1)',
+        'GuiroLong(1)',
+        'Vibraslap(1)',
+        'Cuica(2)'
+    ];
+
+    this.drumSounds = [];
+
+    for (var i=0; i<fileNames.length; i++) {
+        var url = baseUrl + fileNames[i] + '_22k.wav';
+        this.drumSounds[i] = new SoundPlayer(this.outputNode);
+        this.drumSounds[i].setBuffer(new Tone.Buffer(url));
+    }
 }
 
-DrumPlayer.prototype.start = function () {
-    this.snare.start();
+DrumPlayer.prototype.play = function (drum, outputNode) {
+    var drumNum = drum - 1;
+    this.drumSounds[drumNum].outputNode = outputNode;
+    this.drumSounds[drumNum].start();
+};
+
 DrumPlayer.prototype.stopAll = function () {
     for (var i=0; i<this.drumSounds.length; i++) {
         this.drumSounds[i].stop();
