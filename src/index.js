@@ -14,6 +14,13 @@ var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 var InstrumentPlayer = require('./InstrumentPlayer');
 var DrumPlayer = require('./DrumPlayer');
 
+/* Audio Engine
+
+The Scratch runtime has a single audio engine that handles global audio properties and effects,
+and creates the instrument player and a drum player, used by all play note and play drum blocks
+
+*/
+
 function AudioEngine () {
 
     // create the global audio effects
@@ -44,6 +51,15 @@ function AudioEngine () {
 AudioEngine.prototype.createPlayer = function () {
     return new AudioPlayer(this);
 };
+
+/* Audio Player
+
+Each sprite has an audio player
+Clones receive a reference to their parent's audio player
+the audio player currently handles sound loading and playback, sprite-specific effects
+(pitch and pan) and volume
+
+*/
 
 function AudioPlayer (audioEngine) {
 

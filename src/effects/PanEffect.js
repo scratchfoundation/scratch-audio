@@ -2,7 +2,7 @@
 
 A Pan effect
 
--100 puts the audio on the left channel, 0 centers it, 100 makes puts it on the right.
+-100 puts the audio on the left channel, 0 centers it, 100 puts it on the right.
 
 Clamped -100 to 100
 
