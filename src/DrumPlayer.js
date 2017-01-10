@@ -11,6 +11,10 @@ function DrumPlayer (outputNode) {
 
 DrumPlayer.prototype.start = function () {
     this.snare.start();
+DrumPlayer.prototype.stopAll = function () {
+    for (var i=0; i<this.drumSounds.length; i++) {
+        this.drumSounds[i].stop();
+    }
 };
 
 module.exports = DrumPlayer;

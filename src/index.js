@@ -141,20 +141,17 @@ AudioPlayer.prototype.beatsToSec = function (beats) {
 };
 
 AudioPlayer.prototype.stopAllSounds = function () {
-    // stop drum notes
-    // for (var i = 0; i<this.drumSamplers.length; i++) {
-    //     this.drumSamplers[i].triggerRelease();
-    // }
-
-    // stop sounds triggered with playSound
+    // stop all sound players
     for (var i=0; i<this.soundPlayers.length; i++) {
         this.soundPlayers[i].stop();
     }
 
-    // stop soundfont notes
-    // if (this.instrument) {
-    //     this.instrument.stop();
-    // }
+    // stop all instruments
+    this.audioEngine.instrumentPlayer.stopAll();
+
+    // stop drum notes
+    this.audioEngine.drumPlayer.stopAll();
+
 };
 
 AudioPlayer.prototype.setEffect = function (effect, value) {

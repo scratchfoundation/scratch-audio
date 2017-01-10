@@ -36,4 +36,12 @@ InstrumentPlayer.prototype.loadInstrument = function (instrumentNum) {
     }
 };
 
+InstrumentPlayer.prototype.stopAll = function () {
+    for (var i=0; i<this.instruments.length; i++) {
+        if (this.instruments[i]) {
+            this.instruments[i].stop();
+        }
+    }
+};
+
 module.exports = InstrumentPlayer;
