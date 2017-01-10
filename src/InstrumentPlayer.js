@@ -1,7 +1,5 @@
 var Tone = require('tone');
 var Soundfont = require('soundfont-player');
-var log = require('./log');
-
 
 function InstrumentPlayer (outputNode) {
     this.outputNode = outputNode;
@@ -24,11 +22,11 @@ InstrumentPlayer.prototype.playNoteForBeatsWithInstrument = function (note, beat
                 note, Tone.context.currentTime, {duration : Number(beats)} // todo: need to use tempo here
             );
         });
-}
+};
 
 InstrumentPlayer.prototype.loadInstrument = function (instrumentNum) {
     if (this.instruments[instrumentNum]) {
-       return Promise.resolve();
+        return Promise.resolve();
     } else {
         return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum])
             .then((inst) => {
