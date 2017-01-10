@@ -10,8 +10,8 @@ var EchoEffect = require('./effects/EchoEffect');
 var ReverbEffect = require('./effects/ReverbEffect');
 
 var SoundPlayer = require('./SoundPlayer');
-var Soundfont = require('soundfont-player');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
+var InstrumentPlayer = require('./InstrumentPlayer');
 
 function AudioEngine () {
 
@@ -34,6 +34,8 @@ function AudioEngine () {
 
     // global tempo in bpm (beats per minute)
     this.currentTempo = 60;
+
+    this.instrumentPlayer = new InstrumentPlayer(this.input);
 }
 
 AudioEngine.prototype.createPlayer = function () {
@@ -59,20 +61,9 @@ function AudioPlayer (audioEngine) {
 
     this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'ROBOT'];
 
-    // soundfont instrument setup
-
-    // instrument names used by Musyng Kite soundfont, in order to
-    // match scratch instruments
-    this.instrumentNames = ['acoustic_grand_piano', 'electric_piano_1',
-        'drawbar_organ', 'acoustic_guitar_nylon', 'electric_guitar_clean',
-         'acoustic_bass', 'pizzicato_strings', 'cello', 'trombone', 'clarinet',
-         'tenor_sax', 'flute', 'pan_flute', 'bassoon', 'choir_aahs', 'vibraphone',
-         'music_box', 'steel_drums', 'marimba', 'lead_1_square', 'fx_4_atmosphere'];
-
-    this.instrumentNum;
-    this.setInstrument(1);
-
     this.currentVolume = 100;
+
+    this.currentInstrument = 0;
 }
 
 AudioPlayer.prototype.loadSounds = function (sounds) {
@@ -123,9 +114,7 @@ AudioPlayer.prototype.playSound = function (index) {
 };
 
 AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
-    this.instrument.play(
-        note, Tone.context.currentTime, {duration : Number(beats)}
-    );
+    this.audioEngine.instrumentPlayer.playNoteForBeatsWithInstrument(note, beats, this.currentInstrument);
     return this.waitForBeats(beats);
 };
 
@@ -155,9 +144,9 @@ AudioPlayer.prototype.stopAllSounds = function () {
     }
 
     // stop soundfont notes
-    if (this.instrument) {
-        this.instrument.stop();
-    }
+    // if (this.instrument) {
+    //     this.instrument.stop();
+    // }
 };
 
 AudioPlayer.prototype.setEffect = function (effect, value) {
@@ -219,14 +208,8 @@ AudioPlayer.prototype.clearEffects = function () {
 };
 
 AudioPlayer.prototype.setInstrument = function (instrumentNum) {
-    this.instrumentNum = instrumentNum - 1;
-
-    return Soundfont.instrument(Tone.context, this.instrumentNames[this.instrumentNum]).then(
-        function (inst) {
-            this.instrument = inst;
-            this.instrument.connect(this.effectsNode);
-        }.bind(this)
-    );
+    this.currentInstrument = instrumentNum;
+    return this.audioEngine.instrumentPlayer.loadInstrument(this.currentInstrument);
 };
 
 AudioPlayer.prototype.setVolume = function (value) {
