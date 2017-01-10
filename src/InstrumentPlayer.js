@@ -15,11 +15,11 @@ function InstrumentPlayer (outputNode) {
     this.instruments = [];
 }
 
-InstrumentPlayer.prototype.playNoteForBeatsWithInstrument = function (note, beats, instrumentNum) {
+InstrumentPlayer.prototype.playNoteForSecsWithInst = function (note, sec, instrumentNum) {
     this.loadInstrument(instrumentNum)
         .then(() => {
             this.instruments[instrumentNum].play(
-                note, Tone.context.currentTime, {duration : Number(beats)} // todo: need to use tempo here
+                note, Tone.context.currentTime, {duration : sec}
             );
         });
 };
