@@ -38,6 +38,8 @@ function AudioEngine () {
 
     // global tempo in bpm (beats per minute)
     this.currentTempo = 60;
+    this.minTempo = 10;
+    this.maxTempo = 1000;
 
     // instrument player for play note blocks
     this.instrumentPlayer = new InstrumentPlayer(this.input);
@@ -45,6 +47,15 @@ function AudioEngine () {
     // drum player for play drum blocks
     this.drumPlayer = new DrumPlayer(this.input);
 }
+
+AudioEngine.prototype.setTempo = function (value) {
+    // var newTempo = this._clamp(value, this.minTempo, this.maxTempo);
+    this.currentTempo = value;
+};
+
+AudioEngine.prototype.changeTempo = function (value) {
+    this.setTempo(this.currentTempo  + value);
+};
 
 AudioEngine.prototype.createPlayer = function () {
     return new AudioPlayer(this);
@@ -238,16 +249,6 @@ AudioPlayer.prototype.setVolume = function (value) {
 
 AudioPlayer.prototype.changeVolume = function (value) {
     this.setVolume(this.currentVolume + value);
-};
-
-AudioPlayer.prototype.setTempo = function (value) {
-    var newTempo = this._clamp(value, 10, 1000);
-    this.audioEngine.currentTempo = newTempo;
-};
-
-AudioPlayer.prototype.changeTempo = function (value) {
-    var newTempo = this._clamp(this.audioEngine.currentTempo + value, 10, 1000);
-    this.audioEngine.currentTempo = newTempo;
 };
 
 AudioPlayer.prototype._clamp = function (input, min, max) {
