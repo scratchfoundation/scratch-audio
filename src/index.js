@@ -43,8 +43,10 @@ function AudioEngine () {
     // global tempo in bpm (beats per minute)
     this.currentTempo = 60;
 
+    // instrument player for play note blocks
     this.instrumentPlayer = new InstrumentPlayer(this.input);
 
+    // drum player for play drum blocks
     this.drumPlayer = new DrumPlayer(this.input);
 }
 
