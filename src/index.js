@@ -36,10 +36,6 @@ function AudioEngine () {
         Tone.Master
     );
 
-    // alternate version without effects:
-    // this.input = new Tone.Gain();
-    // this.input.connect(Tone.Master);
-
     // global tempo in bpm (beats per minute)
     this.currentTempo = 60;
 
