@@ -12,6 +12,7 @@ var ReverbEffect = require('./effects/ReverbEffect');
 var SoundPlayer = require('./SoundPlayer');
 var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 var InstrumentPlayer = require('./InstrumentPlayer');
+var DrumPlayer = require('./DrumPlayer');
 
 function AudioEngine () {
 
@@ -36,6 +37,8 @@ function AudioEngine () {
     this.currentTempo = 60;
 
     this.instrumentPlayer = new InstrumentPlayer(this.input);
+
+    this.drumPlayer = new DrumPlayer(this.input);
 }
 
 AudioEngine.prototype.createPlayer = function () {
@@ -119,8 +122,8 @@ AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
     return this.waitForBeats(beats);
 };
 
-AudioPlayer.prototype.playDrumForBeats = function (beats) {
-    // this.drumSamplers[drumNum].triggerAttack();
+AudioPlayer.prototype.playDrumForBeats = function (drum, beats) {
+    this.audioEngine.drumPlayer.start();
     return this.waitForBeats(beats);
 };
 
