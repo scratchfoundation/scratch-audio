@@ -128,8 +128,12 @@ AudioPlayer.prototype.waitForBeats = function (beats) {
     return new Promise(function (resolve) {
         setTimeout(function () {
             resolve();
-        }, ((60 / storedContext.audioEngine.currentTempo) * 1000  * beats));
+        }, storedContext.beatsToSec(beats) * 1000);
     });
+};
+
+AudioPlayer.prototype.beatsToSec = function (beats) {
+    return (60 / this.audioEngine.currentTempo) * beats;
 };
 
 AudioPlayer.prototype.stopAllSounds = function () {
