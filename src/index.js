@@ -115,7 +115,7 @@ AudioPlayer.prototype.playSound = function (index) {
 
 AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
     var sec = this.beatsToSec(beats);
-    this.audioEngine.instrumentPlayer.playNoteForSecsWithInst(note, sec, this.currentInstrument);
+    this.audioEngine.instrumentPlayer.playNoteForSecWithInst(note, sec, this.currentInstrument);
     return this.waitForBeats(beats);
 };
 

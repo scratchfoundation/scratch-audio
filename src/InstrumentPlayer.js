@@ -15,7 +15,7 @@ function InstrumentPlayer (outputNode) {
     this.instruments = [];
 }
 
-InstrumentPlayer.prototype.playNoteForSecsWithInst = function (note, sec, instrumentNum) {
+InstrumentPlayer.prototype.playNoteForSecWithInst = function (note, sec, instrumentNum) {
     this.loadInstrument(instrumentNum)
         .then(() => {
             this.instruments[instrumentNum].play(
