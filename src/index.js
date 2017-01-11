@@ -43,9 +43,11 @@ function AudioEngine () {
 
     // instrument player for play note blocks
     this.instrumentPlayer = new InstrumentPlayer(this.input);
+    this.numInstruments = this.instrumentPlayer.instrumentNames.length;
 
     // drum player for play drum blocks
     this.drumPlayer = new DrumPlayer(this.input);
+    this.numDrums = this.drumPlayer.drumSounds.length;
 }
 
 AudioEngine.prototype.setTempo = function (value) {
