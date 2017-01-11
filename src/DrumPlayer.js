@@ -36,9 +36,8 @@ function DrumPlayer (outputNode) {
 }
 
 DrumPlayer.prototype.play = function (drum, outputNode) {
-    var drumNum = drum - 1;
-    this.drumSounds[drumNum].outputNode = outputNode;
-    this.drumSounds[drumNum].start();
+    this.drumSounds[drum].outputNode = outputNode;
+    this.drumSounds[drum].start();
 };
 
 DrumPlayer.prototype.stopAll = function () {
