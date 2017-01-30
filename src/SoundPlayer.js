@@ -6,7 +6,6 @@ function SoundPlayer () {
     this.buffer; // a Tone.Buffer
     this.bufferSource;
     this.playbackRate = 1;
-    this.isPlaying = false;
 }
 SoundPlayer.prototype.connect = function (node) {
     this.outputNode = node;
@@ -24,7 +23,7 @@ SoundPlayer.prototype.setPlaybackRate = function (playbackRate) {
 };
 
 SoundPlayer.prototype.stop = function () {
-    if (this.isPlaying){
+    if (this.bufferSource) {
         this.bufferSource.stop();
     }
 };
@@ -35,20 +34,19 @@ SoundPlayer.prototype.start = function () {
         return;
     }
 
-    this.stop();
-
     this.bufferSource = new Tone.BufferSource(this.buffer.get());
     this.bufferSource.playbackRate.value = this.playbackRate;
     this.bufferSource.connect(this.outputNode);
     this.bufferSource.start();
-    this.isPlaying = true;
 };
 
-SoundPlayer.prototype.onEnded = function (callback) {
-    this.bufferSource.onended = function () {
-        this.isPlaying = false;
-        callback();
-    };
+SoundPlayer.prototype.finished = function () {
+    var storedContext = this;
+    return new Promise(function (resolve) {
+        storedContext.bufferSource.onended = function () {
+            resolve();
+        };
+    });
 };
 
 module.exports = SoundPlayer;
