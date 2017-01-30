@@ -38,8 +38,6 @@ function AudioEngine () {
 
     // global tempo in bpm (beats per minute)
     this.currentTempo = 60;
-    this.minTempo = 10;
-    this.maxTempo = 1000;
 
     // instrument player for play note blocks
     this.instrumentPlayer = new InstrumentPlayer(this.input);
@@ -82,8 +80,27 @@ AudioEngine.prototype.loadSounds = function (sounds) {
         }
     }
 };
+
+AudioEngine.prototype.playNoteForBeatsWithInst = function (note, beats, inst) {
+    var sec = this.beatsToSec(beats);
+    this.instrumentPlayer.playNoteForSecWithInst(note, sec, inst);
+    return this.waitForBeats(beats);
+};
+
+AudioEngine.prototype.beatsToSec = function (beats) {
+    return (60 / this.currentTempo) * beats;
+};
+
+AudioEngine.prototype.waitForBeats = function (beats) {
+    var storedContext = this;
+    return new Promise(function (resolve) {
+        setTimeout(function () {
+            resolve();
+        }, storedContext.beatsToSec(beats) * 1000);
+    });
+};
+
 AudioEngine.prototype.setTempo = function (value) {
-    // var newTempo = this._clamp(value, this.minTempo, this.maxTempo);
     this.currentTempo = value;
 };
 
@@ -153,28 +170,9 @@ AudioPlayer.prototype.playSound = function (md5) {
     });
 };
 
-AudioPlayer.prototype.playNoteForBeats = function (note, beats) {
-    var sec = this.beatsToSec(beats);
-    this.audioEngine.instrumentPlayer.playNoteForSecWithInst(note, sec, this.currentInstrument);
-    return this.waitForBeats(beats);
-};
-
 AudioPlayer.prototype.playDrumForBeats = function (drum, beats) {
     this.audioEngine.drumPlayer.play(drum, this.effectsNode);
-    return this.waitForBeats(beats);
-};
-
-AudioPlayer.prototype.waitForBeats = function (beats) {
-    var storedContext = this;
-    return new Promise(function (resolve) {
-        setTimeout(function () {
-            resolve();
-        }, storedContext.beatsToSec(beats) * 1000);
-    });
-};
-
-AudioPlayer.prototype.beatsToSec = function (beats) {
-    return (60 / this.audioEngine.currentTempo) * beats;
+    return this.audioEngine.waitForBeats(beats);
 };
 
 AudioPlayer.prototype.stopAllSounds = function () {
