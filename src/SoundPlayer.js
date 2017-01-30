@@ -1,13 +1,16 @@
 var Tone = require('tone');
 var log = require('./log');
 
-function SoundPlayer (outputNode) {
-    this.outputNode = outputNode;
+function SoundPlayer () {
+    this.outputNode;
     this.buffer; // a Tone.Buffer
     this.bufferSource;
     this.playbackRate = 1;
     this.isPlaying = false;
 }
+SoundPlayer.prototype.connect = function (node) {
+    this.outputNode = node;
+};
 
 SoundPlayer.prototype.setBuffer = function (buffer) {
     this.buffer = buffer;
