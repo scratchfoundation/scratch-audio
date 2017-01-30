@@ -27,6 +27,7 @@ SoundPlayer.prototype.stop = function () {
     if (this.bufferSource) {
         this.bufferSource.stop();
     }
+    this.isPlaying = false;
 };
 
 SoundPlayer.prototype.start = function () {
@@ -39,12 +40,15 @@ SoundPlayer.prototype.start = function () {
     this.bufferSource.playbackRate.value = this.playbackRate;
     this.bufferSource.connect(this.outputNode);
     this.bufferSource.start();
+
+    this.isPlaying = true;
 };
 
 SoundPlayer.prototype.finished = function () {
     var storedContext = this;
     return new Promise(function (resolve) {
         storedContext.bufferSource.onended = function () {
+            this.isPlaying = false;
             resolve();
         };
     });
