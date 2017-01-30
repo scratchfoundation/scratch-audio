@@ -181,7 +181,10 @@ AudioPlayer.prototype.stopAllSounds = function () {
 
     // stop drum notes
     this.audioEngine.drumPlayer.stopAll();
+};
 
+AudioPlayer.prototype.setPitchEffect = function (value) {
+    this.pitchEffect.set(value, this.activeSoundPlayers);
 };
 
 AudioPlayer.prototype.setEffect = function (effect, value) {
@@ -233,7 +236,7 @@ AudioPlayer.prototype.changeEffect = function (effect, value) {
 
 AudioPlayer.prototype.clearEffects = function () {
     this.panEffect.set(0);
-    this.pitchEffect.set(0, this.soundPlayers);
+    this.pitchEffect.set(0, this.activeSoundPlayers);
     this.effectsNode.gain.value = 1;
 
     this.audioEngine.echoEffect.set(0);
