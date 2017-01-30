@@ -138,11 +138,6 @@ function AudioPlayer (audioEngine) {
     // reset effects to their default parameters
     this.clearEffects();
 
-    this.effectNames = ['PITCH', 'PAN', 'ECHO', 'REVERB', 'FUZZ', 'ROBOT'];
-
-    this.currentVolume = 100;
-
-    this.currentInstrument = 0;
     // sound players that are currently playing, indexed by the sound's md5
     this.activeSoundPlayers = Object.create({});
 }
