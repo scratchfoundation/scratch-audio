@@ -247,11 +247,6 @@ AudioPlayer.prototype.clearEffects = function () {
     this.audioEngine.roboticEffect.set(0);
 };
 
-AudioPlayer.prototype.setInstrument = function (instrumentNum) {
-    this.currentInstrument = instrumentNum;
-    return this.audioEngine.instrumentPlayer.loadInstrument(this.currentInstrument);
-};
-
 AudioPlayer.prototype.setVolume = function (value) {
     this.currentVolume = this._clamp(value, 0, 100);
     this.effectsNode.gain.value = this.currentVolume / 100;
