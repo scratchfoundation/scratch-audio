@@ -189,48 +189,24 @@ AudioPlayer.prototype.setPitchEffect = function (value) {
 
 AudioPlayer.prototype.setEffect = function (effect, value) {
     switch (effect) {
-    case 'PITCH':
-        this.pitchEffect.set(value, this.soundPlayers);
+    case 'pitch':
+        this.pitchEffect.set(value, this.activeSoundPlayers);
         break;
-    case 'PAN':
+    case 'pan':
         this.panEffect.set(value);
         break;
-    case 'ECHO':
+    case 'echo':
         this.audioEngine.echoEffect.set(value);
         break;
-    case 'REVERB':
+    case 'reverb':
         this.audioEngine.reverbEffect.set(value);
         break;
-    case 'FUZZ' :
+    case 'fuzz' :
         this.audioEngine.fuzzEffect.set(value);
         break;
-    case 'ROBOT' :
+    case 'robot' :
         this.audioEngine.roboticEffect.set(value);
         break;
-    }
-};
-
-AudioPlayer.prototype.changeEffect = function (effect, value) {
-    switch (effect) {
-    case 'PITCH':
-        this.pitchEffect.changeBy(value, this.soundPlayers);
-        break;
-    case 'PAN':
-        this.panEffect.changeBy(value);
-        break;
-    case 'ECHO':
-        this.audioEngine.echoEffect.changeBy(value);
-        break;
-    case 'REVERB':
-        this.audioEngine.reverbEffect.changeBy(value);
-        break;
-    case 'FUZZ' :
-        this.audioEngine.fuzzEffect.changeBy(value);
-        break;
-    case 'ROBOT' :
-        this.audioEngine.roboticEffect.changeBy(value);
-        break;
-
     }
 };
 
