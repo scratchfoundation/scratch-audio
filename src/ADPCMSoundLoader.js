@@ -56,7 +56,7 @@ ADPCMSoundLoader.prototype.load = function (url) {
 
             var samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
 
-            // this line is the only place Tone is used here, should be possible to remove
+            // todo: this line is the only place Tone is used here, should be possible to remove
             var buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
 
             // todo: optimize this? e.g. replace the divide by storing 1/32768 and multiply?
