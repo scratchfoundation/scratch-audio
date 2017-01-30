@@ -144,7 +144,6 @@ function AudioPlayer (audioEngine) {
 
 AudioPlayer.prototype.playSound = function (md5) {
     // if this sprite or clone is already playing this sound, stop it first
-    // (this is not working, not sure why)
     if (this.activeSoundPlayers[md5]) {
         this.activeSoundPlayers[md5].stop();
     }
@@ -159,10 +158,14 @@ AudioPlayer.prototype.playSound = function (md5) {
     // add it to the list of active sound players
     this.activeSoundPlayers[md5] = player;
 
-    // when the sound completes, remove it from the list of active sound players
-    return player.finished().then(() => {
-        delete this.activeSoundPlayers[md5];
-    });
+    // remove sounds that are not playing from the active sound players array
+    for (var id in this.activeSoundPlayers) {
+        if (!this.activeSoundPlayers[id].isPlaying) {
+            delete this.activeSoundPlayers[id];
+        }
+    }
+
+    return player.finished();
 };
 
 AudioPlayer.prototype.playDrumForBeats = function (drum, beats) {

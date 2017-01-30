@@ -6,6 +6,7 @@ function SoundPlayer () {
     this.buffer; // a Tone.Buffer
     this.bufferSource;
     this.playbackRate = 1;
+    this.isPlaying = false;
 }
 SoundPlayer.prototype.connect = function (node) {
     this.outputNode = node;
