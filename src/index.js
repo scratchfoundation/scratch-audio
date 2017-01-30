@@ -48,8 +48,40 @@ function AudioEngine () {
     // drum player for play drum blocks
     this.drumPlayer = new DrumPlayer(this.input);
     this.numDrums = this.drumPlayer.drumSounds.length;
+
+    // a map of md5s to audio buffers, holding sounds for all sprites
+    this.audioBuffers = {};
 }
 
+AudioEngine.prototype.loadSounds = function (sounds) {
+    // most sounds decode natively, but for adpcm sounds we use our own decoder
+    var storedContext = this;
+    for (var i=0; i<sounds.length; i++) {
+
+        var md5 = sounds[i].md5;
+        var buffer = new Tone.Buffer();
+        this.audioBuffers[md5] = buffer;
+
+        if (sounds[i].format == 'squeak') {
+            log.warn('unable to load sound in squeak format');
+            continue;
+        }
+        if (sounds[i].format == 'adpcm') {
+            log.warn('loading sound in adpcm format');
+            // create a closure to store the sound md5, to use when the
+            // decoder completes and resolves the promise
+            (function () {
+                var storedMd5 = sounds[i].md5;
+                var loader = new ADPCMSoundLoader();
+                loader.load(sounds[i].fileUrl).then(function (audioBuffer) {
+                    storedContext.audioBuffers[storedMd5] = new Tone.Buffer(audioBuffer);
+                });
+            }());
+        } else {
+            this.audioBuffers[md5] = new Tone.Buffer(sounds[i].fileUrl);
+        }
+    }
+};
 AudioEngine.prototype.setTempo = function (value) {
     // var newTempo = this._clamp(value, this.minTempo, this.maxTempo);
     this.currentTempo = value;
@@ -94,52 +126,30 @@ function AudioPlayer (audioEngine) {
     this.currentVolume = 100;
 
     this.currentInstrument = 0;
+    // sound players that are currently playing, indexed by the sound's md5
+    this.activeSoundPlayers = Object.create({});
 }
 
-AudioPlayer.prototype.loadSounds = function (sounds) {
-
-    this.soundPlayers = [];
-
-    // create a set of empty sound player objects
-    // the sound buffers will be added asynchronously as they load
-    for (var i=0; i<sounds.length; i++){
-        this.soundPlayers[i] = new SoundPlayer(this.effectsNode);
+AudioPlayer.prototype.playSound = function (md5) {
+    // if this sprite or clone is already playing this sound, stop it first
+    // (this is not working, not sure why)
+    if (this.activeSoundPlayers[md5]) {
+        this.activeSoundPlayers[md5].stop();
     }
 
-    // load the sounds
-    // most sounds decode natively, but for adpcm sounds we use our own decoder
-    var storedContext = this;
-    for (var index=0; index<sounds.length; index++) {
-        if (sounds[index].format == 'squeak') {
-            log.warn('unable to load sound in squeak format');
-            continue;
-        }
-        if (sounds[index].format == 'adpcm') {
-            log.warn('loading sound in adpcm format');
-            // create a closure to store the sound index, to use when the
-            // decoder completes and resolves the promise
-            (function () {
-                var storedIndex = index;
-                var loader = new ADPCMSoundLoader();
-                loader.load(sounds[storedIndex].fileUrl).then(function (audioBuffer) {
-                    storedContext.soundPlayers[storedIndex].setBuffer(new Tone.Buffer(audioBuffer));
-                });
-            }());
-        } else {
-            this.soundPlayers[index].setBuffer(new Tone.Buffer(sounds[index].fileUrl));
-        }
-    }
+    // create a new soundplayer to play the sound
+    var player = new SoundPlayer();
+    player.setBuffer(this.audioEngine.audioBuffers[md5]);
+    player.connect(this.effectsNode);
+    this.pitchEffect.updatePlayer(player);
+    player.start();
 
-};
+    // add it to the list of active sound players
+    this.activeSoundPlayers[md5] = player;
 
-AudioPlayer.prototype.playSound = function (index) {
-    if (!this.soundPlayers[index]) return;
-
-    this.soundPlayers[index].start();
-
-    var storedContext = this;
-    return new Promise(function (resolve) {
-        storedContext.soundPlayers[index].onEnded(resolve);
+    // when the sound completes, remove it from the list of active sound players
+    return player.finished().then(() => {
+        delete this.activeSoundPlayers[md5];
     });
 };
 
@@ -168,9 +178,9 @@ AudioPlayer.prototype.beatsToSec = function (beats) {
 };
 
 AudioPlayer.prototype.stopAllSounds = function () {
-    // stop all sound players
-    for (var i=0; i<this.soundPlayers.length; i++) {
-        this.soundPlayers[i].stop();
+    // stop all active sound players
+    for (var md5 in this.activeSoundPlayers) {
+        this.activeSoundPlayers[md5].stop();
     }
 
     // stop all instruments
