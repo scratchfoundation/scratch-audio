@@ -186,10 +186,6 @@ AudioPlayer.prototype.stopAllSounds = function () {
     this.audioEngine.drumPlayer.stopAll();
 };
 
-AudioPlayer.prototype.setPitchEffect = function (value) {
-    this.pitchEffect.set(value, this.activeSoundPlayers);
-};
-
 AudioPlayer.prototype.setEffect = function (effect, value) {
     switch (effect) {
     case 'pitch':
