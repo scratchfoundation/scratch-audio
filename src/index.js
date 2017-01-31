@@ -143,6 +143,11 @@ function AudioPlayer (audioEngine) {
 }
 
 AudioPlayer.prototype.playSound = function (md5) {
+    // if this sound is not in the audio engine, return
+    if (!this.audioEngine.audioBuffers[md5]) {
+        return;
+    }
+
     // if this sprite or clone is already playing this sound, stop it first
     if (this.activeSoundPlayers[md5]) {
         this.activeSoundPlayers[md5].stop();
