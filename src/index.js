@@ -116,8 +116,8 @@ AudioEngine.prototype.createPlayer = function () {
 /* Audio Player
 
 Each sprite or clone has an audio player
-the audio player handles sound playback and the sprite-specific audio effects
-pitch and pan, and volume
+the audio player handles sound playback, volume, and the sprite-specific audio effects:
+pitch and pan
 
 */
 
