@@ -221,16 +221,7 @@ AudioPlayer.prototype.clearEffects = function () {
 };
 
 AudioPlayer.prototype.setVolume = function (value) {
-    this.currentVolume = this._clamp(value, 0, 100);
-    this.effectsNode.gain.value = this.currentVolume / 100;
-};
-
-AudioPlayer.prototype.changeVolume = function (value) {
-    this.setVolume(this.currentVolume + value);
-};
-
-AudioPlayer.prototype._clamp = function (input, min, max) {
-    return Math.min(Math.max(input, min), max);
+    this.effectsNode.gain.value = value / 100;
 };
 
 module.exports = AudioEngine;
