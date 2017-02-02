@@ -139,7 +139,7 @@ function AudioPlayer (audioEngine) {
     this.clearEffects();
 
     // sound players that are currently playing, indexed by the sound's md5
-    this.activeSoundPlayers = Object.create({});
+    this.activeSoundPlayers = Object.create(null);
 }
 
 AudioPlayer.prototype.playSound = function (md5) {
