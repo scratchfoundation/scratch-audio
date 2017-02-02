@@ -79,7 +79,7 @@ SoundPlayer.prototype.finished = function () {
         storedContext.bufferSource.onended = function () {
             this.isPlaying = false;
             resolve();
-        };
+        }.bind(storedContext);
     });
 };
 
