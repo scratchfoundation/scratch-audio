@@ -2,9 +2,9 @@ var Tone = require('tone');
 var log = require('./log');
 
 function SoundPlayer () {
-    this.outputNode;
-    this.buffer; // a Tone.Buffer
-    this.bufferSource;
+    this.outputNode = null;
+    this.buffer = new Tone.Buffer();
+    this.bufferSource = null;
     this.playbackRate = 1;
     this.isPlaying = false;
 }
