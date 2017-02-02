@@ -16,7 +16,7 @@ var DrumPlayer = require('./DrumPlayer');
 
 /**
  * @fileOverview Scratch Audio is divided into a single AudioEngine,
- * that handles global functionality, and AudioPlayers belonging to individual sprites and clones.
+ * that handles global functionality, and AudioPlayers, belonging to individual sprites and clones.
  */
 
 /**
