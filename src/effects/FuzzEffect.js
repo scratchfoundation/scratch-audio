@@ -1,15 +1,10 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
-* An fuzz effect (aka 'distortion effect' in audio terms)
+* A fuzz effect (aka 'distortion effect' in audio terms)
 * Effect value controls the wet/dry amount:
 * 0 passes through none of the effect, 100 passes through all effect
 * Clamped 0-100
-*/
-
-/**
-* Initialize and chain the effect
 * @constructor
 */
 function FuzzEffect () {

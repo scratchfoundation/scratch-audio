@@ -1,16 +1,11 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
 * An echo effect (aka 'delay effect' in audio terms)
 * Effect value of 0 mutes the effect
 * Values up to 100 set the echo feedback amount,
 * increasing the time it takes the echo to fade away
 * Clamped 0-100
-*/
-
-/**
-* Initialize and chain the effect
 * @constructor
 */
 function EchoEffect () {

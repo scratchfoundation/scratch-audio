@@ -1,15 +1,10 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
 * A reverb effect, simulating reverberation in a room
 * Effect value controls the wet/dry amount:
 * 0 passes through none of the effect, 100 passes through all effect
 * Clamped 0 to 100
-*/
-
-/**
-* Initialize and chain the effect
 * @constructor
 */
 function ReverbEffect () {

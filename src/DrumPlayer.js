@@ -1,6 +1,11 @@
 var SoundPlayer = require('./SoundPlayer');
 var Tone = require('tone');
 
+/**
+ * A prototype for the drum sound functionality that can load drum sounds, play, and stop them.
+ * @param {Tone.Gain} outputNode - a webAudio node that the drum sounds will send their output to
+ * @constructor
+ */
 function DrumPlayer (outputNode) {
     this.outputNode = outputNode;
 
@@ -35,11 +40,21 @@ function DrumPlayer (outputNode) {
     }
 }
 
+/**
+ * Play a drum sound.
+ * The parameter for output node allows sprites or clones to send the drum sound
+ * to their individual audio effect chains.
+ * @param  {number} drum - the drum number to play (0-indexed)
+ * @param  {Tone.Gain} outputNode - a node to send the output to
+ */
 DrumPlayer.prototype.play = function (drum, outputNode) {
     this.drumSounds[drum].outputNode = outputNode;
     this.drumSounds[drum].start();
 };
 
+/**
+ * Stop all drum sounds.
+ */
 DrumPlayer.prototype.stopAll = function () {
     for (var i=0; i<this.drumSounds.length; i++) {
         this.drumSounds[i].stop();

@@ -2,7 +2,6 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
 * A "robotic" effect that adds a low-pitched buzzing to the sound, reminiscent of the
 * voice of the daleks from Dr. Who.
 * In audio terms it is a feedback comb filter with a short delay time.
@@ -11,10 +10,6 @@ var Tone = require('tone');
 * Other values change the pitch of the effect, in units of 10 steps per semitone.
 * The effect value is not clamped (but probably should be).
 * Exterminate.
-*/
-
-/**
-* Initialize and chain the effect
 * @constructor
 */
 function RoboticEffect () {

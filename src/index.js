@@ -14,14 +14,17 @@ var ADPCMSoundLoader = require('./ADPCMSoundLoader');
 var InstrumentPlayer = require('./InstrumentPlayer');
 var DrumPlayer = require('./DrumPlayer');
 
-/* Audio Engine
+/**
+ * @fileOverview Scratch Audio is divided into a single AudioEngine,
+ * that handles global functionality, and AudioPlayers belonging to individual sprites and clones.
+ */
 
-The Scratch runtime has a single audio engine that handles global audio properties and effects,
-loads all the audio buffers for sounds belonging to sprites, and creates a single instrument player
-and a drum player, used by all play note and play drum blocks
-
-*/
-
+/**
+ * There is a single instance of the AudioEngine. It handles global audio properties and effects,
+ * loads all the audio buffers for sounds belonging to sprites, and creates a single instrument player
+ * and a drum player, used by all play note and play drum blocks.
+ * @constructor
+ */
 function AudioEngine () {
 
     // create the global audio effects
@@ -52,8 +55,11 @@ function AudioEngine () {
     this.audioBuffers = {};
 }
 
+/**
+ * Load all sounds for a sprite and store them in the audioBuffers dictionary, indexed by md5
+ * @param  {Object} sounds - an array of objects containing metadata for sound files of a sprite
+ */
 AudioEngine.prototype.loadSounds = function (sounds) {
-    // most sounds decode natively, but for adpcm sounds we use our own decoder
     var storedContext = this;
     for (var i=0; i<sounds.length; i++) {
 
@@ -61,10 +67,12 @@ AudioEngine.prototype.loadSounds = function (sounds) {
         var buffer = new Tone.Buffer();
         this.audioBuffers[md5] = buffer;
 
+        // Squeak sound format (not implemented yet)
         if (sounds[i].format == 'squeak') {
             log.warn('unable to load sound in squeak format');
             continue;
         }
+        // most sounds decode natively, but for adpcm sounds we use our own decoder
         if (sounds[i].format == 'adpcm') {
             log.warn('loading sound in adpcm format');
             // create a closure to store the sound md5, to use when the
@@ -82,16 +90,33 @@ AudioEngine.prototype.loadSounds = function (sounds) {
     }
 };
 
+/**
+ * Play a note for a duration on an instrument
+ * @param  {number} note - a MIDI note number
+ * @param  {number} beats - a duration in beats
+ * @param  {number} inst - an instrument number (0-indexed)
+ * @return {Promise} a Promise that resolves after the duration has elapsed
+ */
 AudioEngine.prototype.playNoteForBeatsWithInst = function (note, beats, inst) {
     var sec = this.beatsToSec(beats);
     this.instrumentPlayer.playNoteForSecWithInst(note, sec, inst);
     return this.waitForBeats(beats);
 };
 
+/**
+ * Convert a number of beats to a number of seconds, using the current tempo
+ * @param  {number} beats
+ * @return {number} seconds
+ */
 AudioEngine.prototype.beatsToSec = function (beats) {
     return (60 / this.currentTempo) * beats;
 };
 
+/**
+ * Wait for some number of beats
+ * @param  {number} beats
+ * @return {Promise} a Promise that resolves after the duration has elapsed
+ */
 AudioEngine.prototype.waitForBeats = function (beats) {
     var storedContext = this;
     return new Promise(function (resolve) {
@@ -101,26 +126,40 @@ AudioEngine.prototype.waitForBeats = function (beats) {
     });
 };
 
+/**
+ * Set the global tempo in bpm (beats per minute)
+ * @param {number} value - the new tempo to set
+ */
 AudioEngine.prototype.setTempo = function (value) {
     this.currentTempo = value;
 };
 
+/**
+ * Change the tempo by some number of bpm (beats per minute)
+ * @param  {number} value - the number of bpm to change the tempo by
+ */
 AudioEngine.prototype.changeTempo = function (value) {
     this.setTempo(this.currentTempo  + value);
 };
 
+/**
+ * Create an AudioPlayer. Each sprite or clone has an AudioPlayer.
+ * It includes a reference to the AudioEngine so it can use global
+ * functionality such as playing notes.
+ * @return {AudioPlayer}
+ */
 AudioEngine.prototype.createPlayer = function () {
     return new AudioPlayer(this);
 };
 
-/* Audio Player
 
-Each sprite or clone has an audio player
-the audio player handles sound playback, volume, and the sprite-specific audio effects:
-pitch and pan
-
-*/
-
+/**
+ * Each sprite or clone has an audio player
+ * the audio player handles sound playback, volume, and the sprite-specific audio effects:
+ * pitch and pan
+ * @param {AudioEngine}
+ * @constructor
+ */
 function AudioPlayer (audioEngine) {
 
     this.audioEngine = audioEngine;
@@ -142,6 +181,11 @@ function AudioPlayer (audioEngine) {
     this.activeSoundPlayers = Object.create(null);
 }
 
+/**
+ * Play a sound
+ * @param  {string} md5 - the md5 id of a sound file
+ * @return {Promise} a Promise that resolves when the sound finishes playing
+ */
 AudioPlayer.prototype.playSound = function (md5) {
     // if this sound is not in the audio engine, return
     if (!this.audioEngine.audioBuffers[md5]) {
@@ -173,11 +217,21 @@ AudioPlayer.prototype.playSound = function (md5) {
     return player.finished();
 };
 
+/**
+ * Play a drum sound. The AudioEngine contains the DrumPlayer, but the AudioPlayer
+ * calls this function so that it can pass a reference to its own effects node.
+ * @param  {number} drum - a drum number (0-indexed)
+ * @param  {number} beats - a duration in beats
+ * @return {Promise} a Promise that resolves after the duration has elapsed
+ */
 AudioPlayer.prototype.playDrumForBeats = function (drum, beats) {
     this.audioEngine.drumPlayer.play(drum, this.effectsNode);
     return this.audioEngine.waitForBeats(beats);
 };
 
+/**
+ * Stop all sounds, notes and drums that are playing
+ */
 AudioPlayer.prototype.stopAllSounds = function () {
     // stop all active sound players
     for (var md5 in this.activeSoundPlayers) {
@@ -191,6 +245,11 @@ AudioPlayer.prototype.stopAllSounds = function () {
     this.audioEngine.drumPlayer.stopAll();
 };
 
+/**
+ * Set an audio effect to a value
+ * @param {string} effect - the name of the effect
+ * @param {number} value - the value to set the effect to
+ */
 AudioPlayer.prototype.setEffect = function (effect, value) {
     switch (effect) {
     case 'pitch':
@@ -214,6 +273,9 @@ AudioPlayer.prototype.setEffect = function (effect, value) {
     }
 };
 
+/**
+ * Clear all audio effects
+ */
 AudioPlayer.prototype.clearEffects = function () {
     this.panEffect.set(0);
     this.pitchEffect.set(0, this.activeSoundPlayers);
@@ -225,6 +287,10 @@ AudioPlayer.prototype.clearEffects = function () {
     this.audioEngine.roboticEffect.set(0);
 };
 
+/**
+ * Set the volume for sounds played by this AudioPlayer
+ * @param {number} value - the volume in range 0-100
+ */
 AudioPlayer.prototype.setVolume = function (value) {
     this.effectsNode.gain.value = value / 100;
 };

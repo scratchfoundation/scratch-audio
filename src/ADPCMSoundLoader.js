@@ -1,19 +1,24 @@
-/*
-
-ADPCMSoundLoader loads wav files that have been compressed with the ADPCM format
-
-based on code from Scratch-Flash:
-https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
-
-*/
-
 var ArrayBufferStream = require('./ArrayBufferStream');
 var Tone = require('tone');
 var log = require('./log');
 
+/*
+ * Load wav audio files that have been compressed with the ADPCM format.
+ * This is necessary because, while web browsers have native decoders for many audio
+ * formats, ADPCM is a non-standard format used by Scratch since its early days.
+ * This decoder is based on code from Scratch-Flash:
+ * https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
+ * @constructor
+ */
 function ADPCMSoundLoader () {
 }
 
+/**
+ * Load an ADPCM sound file from a URL, decode it, and return a promise
+ * with the audio buffer.
+ * @param  {string} url - a url pointing to the ADPCM wav file
+ * @return {Tone.Buffer}
+ */
 ADPCMSoundLoader.prototype.load = function (url) {
 
     return new Promise(function (resolve, reject) {
@@ -73,7 +78,10 @@ ADPCMSoundLoader.prototype.load = function (url) {
     }.bind(this));
 };
 
-
+/**
+ * Data used by the decompression algorithm
+ * @type {Array}
+ */
 ADPCMSoundLoader.prototype.stepTable = [
     7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
     50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
@@ -82,10 +90,20 @@ ADPCMSoundLoader.prototype.stepTable = [
     3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487,
     12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767];
 
+/**
+ * Data used by the decompression algorithm
+ * @type {Array}
+ */
 ADPCMSoundLoader.prototype.indexTable = [
     -1, -1, -1, -1, 2, 4, 6, 8,
     -1, -1, -1, -1, 2, 4, 6, 8];
 
+/**
+ * Extract a chunk of audio data from the stream, consisting of a set of audio data bytes
+ * @param  {string} chunkType - the type of chunk to extract. 'data' or 'fmt' (format)
+ * @param  {ArrayBufferStream} stream - an stream containing the audio data
+ * @return {ArrayBufferStream} a stream containing the desired chunk
+ */
 ADPCMSoundLoader.prototype.extractChunk = function (chunkType, stream) {
     stream.position = 12;
     while (stream.position < (stream.getLength() - 8)) {
@@ -100,9 +118,14 @@ ADPCMSoundLoader.prototype.extractChunk = function (chunkType, stream) {
     }
 };
 
+/**
+ * Decompress sample data using the IMA ADPCM algorithm.
+ * Note: Handles only one channel, 4-bits per sample.
+ * @param  {ArrayBufferStream} compressedData - a stream of compressed audio samples
+ * @param  {number} blockSize - the number of bytes in the stream
+ * @return {Int16Array} the uncompressed audio samples
+ */
 ADPCMSoundLoader.prototype.imaDecompress = function (compressedData, blockSize) {
-    // Decompress sample data using the IMA ADPCM algorithm.
-    // Note: Handles only one channel, 4-bits/sample.
     var sample, step, code, delta;
     var index = 0;
     var lastByte = -1; // -1 indicates that there is no saved lastByte

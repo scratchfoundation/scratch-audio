@@ -1,15 +1,10 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
-* An pan effect, which moves the sound to the left or right between the speakers
+* A pan effect, which moves the sound to the left or right between the speakers
 * Effect value of -100 puts the audio entirely on the left channel,
 * 0 centers it, 100 puts it on the right.
 * Clamped -100 to 100
-*/
-
-/**
-* Initialize and chain the effect
 * @constructor
 */
 function PanEffect () {

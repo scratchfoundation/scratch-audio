@@ -1,7 +1,6 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
 * A wobble effect. In audio terms, it sounds like tremolo.
 * It is implemented using a low frequency oscillator (LFO) controlling
 * a gain node, which causes the loudness of the signal passing through
@@ -10,10 +9,6 @@ var Tone = require('tone');
 * 0 passes through none of the effect, 100 passes through all effect
 * Effect value also controls the frequency of the LFO.
 * Clamped 0 to 100
-*/
-
-/**
-* Initialize and chain the effect
 * @constructor
 */
 function WobbleEffect () {

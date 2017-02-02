@@ -1,8 +1,7 @@
 var Tone = require('tone');
 
 /**
-* @fileoverview
-* An pitch change effect, which changes the playback rate of the sound in order
+* A pitch change effect, which changes the playback rate of the sound in order
 * to change its pitch: reducing the playback rate lowers the pitch, increasing the rate
 * raises the pitch. The duration of the sound is also changed.
 *
@@ -17,10 +16,6 @@ var Tone = require('tone');
 * Note that this effect functions differently from the other audio effects. It is
 * not part of a chain of audio nodes. Instead, it provides a way to set the playback
 * on one SoundPlayer or a group of them.
-*/
-
-/**
-* Initialize the effect
 * @constructor
 */
 function PitchEffect () {
