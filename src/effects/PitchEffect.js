@@ -72,7 +72,9 @@ PitchEffect.prototype.updatePlayers = function (players) {
     if (!players) return;
 
     for (var md5 in players) {
-        this.updatePlayer(players[md5]);
+        if (players.hasOwnProperty(md5)) {
+            this.updatePlayer(players[md5]);
+        }
     }
 };
 
