@@ -178,7 +178,7 @@ function AudioPlayer (audioEngine) {
     this.clearEffects();
 
     // sound players that are currently playing, indexed by the sound's md5
-    this.activeSoundPlayers = Object.create(null);
+    this.activeSoundPlayers = {};
 }
 
 /**
@@ -209,8 +209,10 @@ AudioPlayer.prototype.playSound = function (md5) {
 
     // remove sounds that are not playing from the active sound players array
     for (var id in this.activeSoundPlayers) {
-        if (!this.activeSoundPlayers[id].isPlaying) {
-            delete this.activeSoundPlayers[id];
+        if (this.activeSoundPlayers.hasOwnProperty(id)) {
+            if (!this.activeSoundPlayers[id].isPlaying) {
+                delete this.activeSoundPlayers[id];
+            }
         }
     }
 
