@@ -2,7 +2,7 @@ var ArrayBufferStream = require('./ArrayBufferStream');
 var Tone = require('tone');
 var log = require('./log');
 
-/*
+/**
  * Load wav audio files that have been compressed with the ADPCM format.
  * This is necessary because, while web browsers have native decoders for many audio
  * formats, ADPCM is a non-standard format used by Scratch since its early days.
