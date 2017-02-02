@@ -143,6 +143,20 @@ AudioEngine.prototype.changeTempo = function (value) {
 };
 
 /**
+ * Names of the audio effects.
+ * @readonly
+ * @enum {string}
+ */
+AudioEngine.prototype.EFFECT_NAMES = {
+    pitch: 'pitch',
+    pan: 'pan',
+    echo: 'echo',
+    reverb: 'reverb',
+    fuzz: 'fuzz',
+    robot: 'robot'
+};
+
+/**
  * Create an AudioPlayer. Each sprite or clone has an AudioPlayer.
  * It includes a reference to the AudioEngine so it can use global
  * functionality such as playing notes.
@@ -254,22 +268,22 @@ AudioPlayer.prototype.stopAllSounds = function () {
  */
 AudioPlayer.prototype.setEffect = function (effect, value) {
     switch (effect) {
-    case 'pitch':
+    case this.audioEngine.EFFECT_NAMES.pitch:
         this.pitchEffect.set(value, this.activeSoundPlayers);
         break;
-    case 'pan':
+    case this.audioEngine.EFFECT_NAMES.pan:
         this.panEffect.set(value);
         break;
-    case 'echo':
+    case this.audioEngine.EFFECT_NAMES.echo:
         this.audioEngine.echoEffect.set(value);
         break;
-    case 'reverb':
+    case this.audioEngine.EFFECT_NAMES.reverb:
         this.audioEngine.reverbEffect.set(value);
         break;
-    case 'fuzz' :
+    case this.audioEngine.EFFECT_NAMES.fuzz:
         this.audioEngine.fuzzEffect.set(value);
         break;
-    case 'robot' :
+    case this.audioEngine.EFFECT_NAMES.robot:
         this.audioEngine.roboticEffect.set(value);
         break;
     }
