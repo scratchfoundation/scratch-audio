@@ -1,20 +1,17 @@
-/*
-
-A robot-voice effect
-
-A feedback comb filter with a short delay time creates a low-pitched buzzing
-The effect value controls the length of this delay time, changing the pitch
-
-0 mutes the effect
-
-Other values changes the pitch of the effect, in units of 10 steps per semitone
-
-Not clamped
-
-*/
 
 var Tone = require('tone');
 
+/**
+* A "robotic" effect that adds a low-pitched buzzing to the sound, reminiscent of the
+* voice of the daleks from Dr. Who.
+* In audio terms it is a feedback comb filter with a short delay time.
+* The effect value controls the length of this delay time, changing the pitch of the buzz
+* A value of 0 mutes the effect.
+* Other values change the pitch of the effect, in units of 10 steps per semitone.
+* The effect value is not clamped (but probably should be).
+* Exterminate.
+* @constructor
+*/
 function RoboticEffect () {
     Tone.Effect.call(this);
 
@@ -28,6 +25,10 @@ function RoboticEffect () {
 
 Tone.extend(RoboticEffect, Tone.Effect);
 
+/**
+* Set the effect value
+* @param {number} val - the new value to set the effect to
+*/
 RoboticEffect.prototype.set = function (val) {
     this.value = val;
 
@@ -43,13 +44,22 @@ RoboticEffect.prototype.set = function (val) {
     this.feedbackCombFilter.delayTime.rampTo(time, 1/60);
 };
 
+/**
+* Change the effect value
+* @param {number} val - the value to change the effect by
+*/
 RoboticEffect.prototype.changeBy = function (val) {
     this.set(this.value + val);
 };
 
+/**
+* Compute the delay time for an effect value.
+* Convert the effect value to a musical note (in units of 10 per semitone),
+* and return the period (single cycle duration) of the frequency of that note.
+* @param {number} val - the effect value
+* @returns {number} a delay time in seconds
+*/
 RoboticEffect.prototype._delayTimeForValue = function (val) {
-    // convert effect setting range, typically 0-100 but can be outside that,
-    // to a musical note, and return the period of the frequency of that note
     var midiNote = ((val - 100) / 10) + 36;
     var freq = Tone.Frequency(midiNote, 'midi').eval();
     return 1 / freq;
