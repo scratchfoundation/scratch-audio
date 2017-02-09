@@ -34,6 +34,7 @@ function InstrumentPlayer (outputNode) {
  * @param  {number} note - a MIDI note number
  * @param  {number} sec - a duration in seconds
  * @param  {number} instrumentNum - an instrument number (0-indexed)
+ * @param  {number} vol - a volume level (0-100%)
  */
 InstrumentPlayer.prototype.playNoteForSecWithInstAndVol = function (note, sec, instrumentNum, vol) {
     var gain = vol / 100;
