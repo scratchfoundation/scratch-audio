@@ -35,11 +35,15 @@ function InstrumentPlayer (outputNode) {
  * @param  {number} sec - a duration in seconds
  * @param  {number} instrumentNum - an instrument number (0-indexed)
  */
-InstrumentPlayer.prototype.playNoteForSecWithInst = function (note, sec, instrumentNum) {
+InstrumentPlayer.prototype.playNoteForSecWithInstAndVol = function (note, sec, instrumentNum, vol) {
+    var gain = vol / 100;
     this.loadInstrument(instrumentNum)
         .then(() => {
             this.instruments[instrumentNum].play(
-                note, Tone.context.currentTime, {duration : sec}
+                note, Tone.context.currentTime, {
+                    duration : sec,
+                    gain : gain
+                }
             );
         });
 };

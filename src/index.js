@@ -97,9 +97,9 @@ AudioEngine.prototype.loadSounds = function (sounds) {
  * @param  {number} inst - an instrument number (0-indexed)
  * @return {Promise} a Promise that resolves after the duration has elapsed
  */
-AudioEngine.prototype.playNoteForBeatsWithInst = function (note, beats, inst) {
+AudioEngine.prototype.playNoteForBeatsWithInstAndVol = function (note, beats, inst, vol) {
     var sec = this.beatsToSec(beats);
-    this.instrumentPlayer.playNoteForSecWithInst(note, sec, inst);
+    this.instrumentPlayer.playNoteForSecWithInstAndVol(note, sec, inst, vol);
     return this.waitForBeats(beats);
 };
 
