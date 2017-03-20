@@ -53,6 +53,10 @@ function AudioEngine () {
 
     // a map of md5s to audio buffers, holding sounds for all sprites
     this.audioBuffers = {};
+
+    // microphone, for measuring loudness, with a level meter analyzer
+    this.mic = null;
+    this.micMeter = null;
 }
 
 /**
@@ -141,6 +145,25 @@ AudioEngine.prototype.setTempo = function (value) {
  */
 AudioEngine.prototype.changeTempo = function (value) {
     this.setTempo(this.currentTempo  + value);
+};
+
+/**
+ * Get the current loudness of sound received by the microphone.
+ * Sound is measured in RMS and smoothed.
+ * @return {number} loudness scaled 0 to 100
+ */
+AudioEngine.prototype.getLoudness = function () {
+    if (!this.mic) {
+        this.mic = new Tone.UserMedia();
+        this.micMeter = new Tone.Meter('level', 0.5);
+        this.mic.open();
+        this.mic.connect(this.micMeter);
+    }
+    if (this.mic && this.mic.state == 'started') {
+        return this.micMeter.value * 100;
+    } else {
+        return 0;
+    }
 };
 
 /**
