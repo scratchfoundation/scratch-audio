@@ -3,78 +3,66 @@ var Tone = require('tone');
 var log = require('./log');
 
 /**
- * Load wav audio files that have been compressed with the ADPCM format.
+ * Decode wav audio files that have been compressed with the ADPCM format.
  * This is necessary because, while web browsers have native decoders for many audio
  * formats, ADPCM is a non-standard format used by Scratch since its early days.
  * This decoder is based on code from Scratch-Flash:
  * https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
  * @constructor
  */
-function ADPCMSoundLoader () {
+function ADPCMSoundDecoder () {
 }
 
 /**
- * Load an ADPCM sound file from a URL, decode it, and return a promise
- * with the audio buffer.
- * @param  {string} url - a url pointing to the ADPCM wav file
+ * Decode an ADPCM sound stored in an ArrayBuffer and return a promise
+ * with the decoded audio buffer.
+ * @param  {ArrayBuffer} audioData - containing ADPCM encoded wav audio
  * @return {Tone.Buffer}
  */
-ADPCMSoundLoader.prototype.load = function (url) {
+ADPCMSoundDecoder.prototype.decode = function (audioData) {
 
     return new Promise(function (resolve, reject) {
+        var stream = new ArrayBufferStream(audioData);
 
-        var request = new XMLHttpRequest();
-        request.open('GET', url, true);
-        request.responseType = 'arraybuffer';
+        var riffStr = stream.readUint8String(4);
+        if (riffStr != 'RIFF') {
+            log.warn('incorrect adpcm wav header');
+            reject();
+        }
 
-        request.onload = function () {
-            var audioData = request.response;
-            var stream = new ArrayBufferStream(audioData);
+        var lengthInHeader = stream.readInt32();
+        if ((lengthInHeader + 8) != audioData.byteLength) {
+            log.warn('adpcm wav length in header: ' + lengthInHeader + ' is incorrect');
+        }
 
-            var riffStr = stream.readUint8String(4);
-            if (riffStr != 'RIFF') {
-                log.warn('incorrect adpcm wav header');
-                reject();
-            }
+        var wavStr = stream.readUint8String(4);
+        if (wavStr != 'WAVE') {
+            log.warn('incorrect adpcm wav header');
+            reject();
+        }
 
-            var lengthInHeader = stream.readInt32();
-            if ((lengthInHeader + 8) != audioData.byteLength) {
-                log.warn('adpcm wav length in header: ' + lengthInHeader + ' is incorrect');
-            }
+        var formatChunk = this.extractChunk('fmt ', stream);
+        this.encoding = formatChunk.readUint16();
+        this.channels = formatChunk.readUint16();
+        this.samplesPerSecond = formatChunk.readUint32();
+        this.bytesPerSecond = formatChunk.readUint32();
+        this.blockAlignment = formatChunk.readUint16();
+        this.bitsPerSample = formatChunk.readUint16();
+        formatChunk.position += 2;  // skip extra header byte count
+        this.samplesPerBlock = formatChunk.readUint16();
+        this.adpcmBlockSize = ((this.samplesPerBlock - 1) / 2) + 4; // block size in bytes
 
-            var wavStr = stream.readUint8String(4);
-            if (wavStr != 'WAVE') {
-                log.warn('incorrect adpcm wav header');
-                reject();
-            }
+        var samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
 
-            var formatChunk = this.extractChunk('fmt ', stream);
-            this.encoding = formatChunk.readUint16();
-            this.channels = formatChunk.readUint16();
-            this.samplesPerSecond = formatChunk.readUint32();
-            this.bytesPerSecond = formatChunk.readUint32();
-            this.blockAlignment = formatChunk.readUint16();
-            this.bitsPerSample = formatChunk.readUint16();
-            formatChunk.position += 2;  // skip extra header byte count
-            this.samplesPerBlock = formatChunk.readUint16();
-            this.adpcmBlockSize = ((this.samplesPerBlock - 1) / 2) + 4; // block size in bytes
+        // todo: this line is the only place Tone is used here, should be possible to remove
+        var buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
 
-            var samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
+        // todo: optimize this? e.g. replace the divide by storing 1/32768 and multiply?
+        for (var i=0; i<samples.length; i++) {
+            buffer.getChannelData(0)[i] = samples[i] / 32768;
+        }
 
-            // todo: this line is the only place Tone is used here, should be possible to remove
-            var buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
-
-            // todo: optimize this? e.g. replace the divide by storing 1/32768 and multiply?
-            for (var i=0; i<samples.length; i++) {
-                buffer.getChannelData(0)[i] = samples[i] / 32768;
-            }
-
-            resolve(buffer);
-
-        }.bind(this);
-
-        request.send();
-
+        resolve(buffer);
     }.bind(this));
 };
 
@@ -82,7 +70,7 @@ ADPCMSoundLoader.prototype.load = function (url) {
  * Data used by the decompression algorithm
  * @type {Array}
  */
-ADPCMSoundLoader.prototype.stepTable = [
+ADPCMSoundDecoder.prototype.stepTable = [
     7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
     50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
     253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
@@ -94,7 +82,7 @@ ADPCMSoundLoader.prototype.stepTable = [
  * Data used by the decompression algorithm
  * @type {Array}
  */
-ADPCMSoundLoader.prototype.indexTable = [
+ADPCMSoundDecoder.prototype.indexTable = [
     -1, -1, -1, -1, 2, 4, 6, 8,
     -1, -1, -1, -1, 2, 4, 6, 8];
 
@@ -104,7 +92,7 @@ ADPCMSoundLoader.prototype.indexTable = [
  * @param  {ArrayBufferStream} stream - an stream containing the audio data
  * @return {ArrayBufferStream} a stream containing the desired chunk
  */
-ADPCMSoundLoader.prototype.extractChunk = function (chunkType, stream) {
+ADPCMSoundDecoder.prototype.extractChunk = function (chunkType, stream) {
     stream.position = 12;
     while (stream.position < (stream.getLength() - 8)) {
         var typeStr = stream.readUint8String(4);
@@ -125,7 +113,7 @@ ADPCMSoundLoader.prototype.extractChunk = function (chunkType, stream) {
  * @param  {number} blockSize - the number of bytes in the stream
  * @return {Int16Array} the uncompressed audio samples
  */
-ADPCMSoundLoader.prototype.imaDecompress = function (compressedData, blockSize) {
+ADPCMSoundDecoder.prototype.imaDecompress = function (compressedData, blockSize) {
     var sample, step, code, delta;
     var index = 0;
     var lastByte = -1; // -1 indicates that there is no saved lastByte
@@ -175,4 +163,4 @@ ADPCMSoundLoader.prototype.imaDecompress = function (compressedData, blockSize) 
     return samples;
 };
 
-module.exports = ADPCMSoundLoader;
+module.exports = ADPCMSoundDecoder;

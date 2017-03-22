@@ -10,7 +10,7 @@ var EchoEffect = require('./effects/EchoEffect');
 var ReverbEffect = require('./effects/ReverbEffect');
 
 var SoundPlayer = require('./SoundPlayer');
-var ADPCMSoundLoader = require('./ADPCMSoundLoader');
+var ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
 var InstrumentPlayer = require('./InstrumentPlayer');
 var DrumPlayer = require('./DrumPlayer');
 
