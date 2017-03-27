@@ -62,33 +62,32 @@ function AudioEngine () {
  */
 AudioEngine.prototype.decodeSound = function (sound) {
 
+    var loaderPromise = null;
+
+    switch (sound.format) {
+    case '':
+        loaderPromise = Tone.context.decodeAudioData(sound.data.buffer);
+        break;
+    case 'adpcm':
+        loaderPromise = (new ADPCMSoundDecoder()).decode(sound.data.buffer);
+        break;
+    default:
+        return log.warn('unknown sound format', sound.format);
+    }
+
     var storedContext = this;
 
-    // if the format string is empty, assume the sound is a wav file and use the native decoder
-    if (sound.format === '') {
-        Tone.context.decodeAudioData(sound.data.buffer).then(
-            function (decodedAudio) {
-                storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
-            },
-            function (error) {
-                log.warn('audio data could not be decoded', error);
-            }
-        );
-    }
-
-    // if the format is adpcm, we use a custom decoder
-    if (sound.format === 'adpcm') {
-        var loader = new ADPCMSoundDecoder();
-        loader.decode(sound.data.buffer).then(
-            function (decodedAudio) {
-                storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
-            },
-            function (error) {
-                log.warn('adpcm audio data could not be decoded', error);
-            }
-        );
-    }
+    loaderPromise.then(
+        function (decodedAudio) {
+            storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
+        },
+        function (error) {
+            log.warn('audio data could not be decoded', error);
+        }
+    );
 };
+
+
 
 /**
  * Play a note for a duration on an instrument with a volume
