@@ -162,7 +162,7 @@ AudioEngine.prototype.getLoudness = function () {
     if (this.mic && this.mic.state == 'started') {
         return this.micMeter.value * 100;
     } else {
-        return 0;
+        return -1;
     }
 };
 
