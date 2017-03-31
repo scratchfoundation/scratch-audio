@@ -10,7 +10,7 @@ var EchoEffect = require('./effects/EchoEffect');
 var ReverbEffect = require('./effects/ReverbEffect');
 
 var SoundPlayer = require('./SoundPlayer');
-var ADPCMSoundLoader = require('./ADPCMSoundLoader');
+var ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
 var InstrumentPlayer = require('./InstrumentPlayer');
 var DrumPlayer = require('./DrumPlayer');
 
@@ -56,38 +56,44 @@ function AudioEngine () {
 }
 
 /**
- * Load all sounds for a sprite and store them in the audioBuffers dictionary, indexed by md5
- * @param  {Object} sounds - an array of objects containing metadata for sound files of a sprite
+ * Decode a sound, decompressing it into audio samples.
+ * Store a reference to it the sound in the audioBuffers dictionary, indexed by md5
+ * @param  {Object} sound - an object containing audio data and metadata for a sound
  */
-AudioEngine.prototype.loadSounds = function (sounds) {
-    var storedContext = this;
-    for (var i=0; i<sounds.length; i++) {
+AudioEngine.prototype.decodeSound = function (sound) {
 
-        var md5 = sounds[i].md5;
-        var buffer = new Tone.Buffer();
-        this.audioBuffers[md5] = buffer;
+    var loaderPromise = null;
 
-        // Squeak sound format (not implemented yet)
-        if (sounds[i].format == 'squeak') {
-            log.warn('unable to load sound in squeak format');
-            continue;
-        }
-        // most sounds decode natively, but for adpcm sounds we use our own decoder
-        if (sounds[i].format == 'adpcm') {
-            log.warn('loading sound in adpcm format');
-            // create a closure to store the sound md5, to use when the
-            // decoder completes and resolves the promise
-            (function () {
-                var storedMd5 = sounds[i].md5;
-                var loader = new ADPCMSoundLoader();
-                loader.load(sounds[i].fileUrl).then(function (audioBuffer) {
-                    storedContext.audioBuffers[storedMd5] = new Tone.Buffer(audioBuffer);
-                });
-            }());
-        } else {
-            this.audioBuffers[md5] = new Tone.Buffer(sounds[i].fileUrl);
-        }
+    switch (sound.format) {
+    case '':
+        loaderPromise = Tone.context.decodeAudioData(sound.data.buffer);
+        break;
+    case 'adpcm':
+        loaderPromise = (new ADPCMSoundDecoder()).decode(sound.data.buffer);
+        break;
+    default:
+        return log.warn('unknown sound format', sound.format);
     }
+
+    var storedContext = this;
+
+    loaderPromise.then(
+        function (decodedAudio) {
+            storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
+        },
+        function (error) {
+            log.warn('audio data could not be decoded', error);
+        }
+    );
+};
+
+/**
+ * An older version of the AudioEngine had this function to load all sounds
+ * This is a stub to provide a warning when it is called
+ * @todo remove this
+ */
+AudioEngine.prototype.loadSounds = function () {
+    log.warn('The loadSounds function is no longer available. Please use Scratch Storage.');
 };
 
 /**
