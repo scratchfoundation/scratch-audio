@@ -87,7 +87,14 @@ AudioEngine.prototype.decodeSound = function (sound) {
     );
 };
 
-
+/**
+ * An older version of the AudioEngine had this function to load all sounds
+ * This is a stub to provide a warning when it is called
+ * @todo remove this
+ */
+AudioEngine.prototype.loadSounds = function () {
+    log.warn('The loadSounds function is no longer available. Please use Scratch Storage.');
+};
 
 /**
  * Play a note for a duration on an instrument with a volume
