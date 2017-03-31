@@ -59,6 +59,10 @@ function AudioEngine () {
  * Decode a sound, decompressing it into audio samples.
  * Store a reference to it the sound in the audioBuffers dictionary, indexed by md5
  * @param  {Object} sound - an object containing audio data and metadata for a sound
+ * @property {Buffer} data - sound data loaded from scratch-storage.
+ * @property {string} format - format type, either empty or adpcm.
+ * @property {string} md5 - the MD5 and extension of the sound.
+ * @returns {?Promise} - a promise which will resolve after the audio buffer is stored, or null on error.
  */
 AudioEngine.prototype.decodeSound = function (sound) {
 
