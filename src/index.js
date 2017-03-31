@@ -76,8 +76,7 @@ AudioEngine.prototype.decodeSound = function (sound) {
     }
 
     var storedContext = this;
-
-    loaderPromise.then(
+    return loaderPromise.then(
         function (decodedAudio) {
             storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
         },
@@ -319,4 +318,3 @@ AudioPlayer.prototype.setVolume = function (value) {
 };
 
 module.exports = AudioEngine;
-
