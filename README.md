@@ -1,6 +1,8 @@
 # scratch-audio
 #### Scratch audio engine is for playing sounds, instruments and audio effects in Scratch 3.0 projects
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/LLK/scratch-audio.svg)](https://greenkeeper.io/)
+
 #### Please note this project is at an early stage and we are not ready for pull requests
 
 [![Build Status](https://travis-ci.org/LLK/scratch-audio.svg?branch=develop)](https://travis-ci.org/LLK/scratch-audio)
