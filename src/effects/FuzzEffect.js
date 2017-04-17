@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A fuzz effect (aka 'distortion effect' in audio terms)
@@ -49,4 +49,3 @@ FuzzEffect.prototype.clamp = function (input, min, max) {
 };
 
 module.exports = FuzzEffect;
-

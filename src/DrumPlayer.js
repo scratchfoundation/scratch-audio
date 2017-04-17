@@ -1,5 +1,5 @@
-var SoundPlayer = require('./SoundPlayer');
-var Tone = require('tone');
+const SoundPlayer = require('./SoundPlayer');
+const Tone = require('tone');
 
 /**
  * A prototype for the drum sound functionality that can load drum sounds, play, and stop them.
@@ -9,8 +9,8 @@ var Tone = require('tone');
 function DrumPlayer (outputNode) {
     this.outputNode = outputNode;
 
-    var baseUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/';
-    var fileNames = [
+    const baseUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/';
+    const fileNames = [
         'SnareDrum(1)',
         'BassDrum(1b)',
         'SideStick(1)',
@@ -33,8 +33,8 @@ function DrumPlayer (outputNode) {
 
     this.drumSounds = [];
 
-    for (var i=0; i<fileNames.length; i++) {
-        var url = baseUrl + fileNames[i] + '_22k.wav';
+    for (let i = 0; i < fileNames.length; i++) {
+        const url = `${baseUrl + fileNames[i]}_22k.wav`;
         this.drumSounds[i] = new SoundPlayer(this.outputNode);
         this.drumSounds[i].setBuffer(new Tone.Buffer(url));
     }
@@ -56,7 +56,7 @@ DrumPlayer.prototype.play = function (drum, outputNode) {
  * Stop all drum sounds.
  */
 DrumPlayer.prototype.stopAll = function () {
-    for (var i=0; i<this.drumSounds.length; i++) {
+    for (let i = 0; i < this.drumSounds.length; i++) {
         this.drumSounds[i].stop();
     }
 };

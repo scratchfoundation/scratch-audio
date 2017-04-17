@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A pan effect, which moves the sound to the left or right between the speakers
@@ -50,4 +50,3 @@ PanEffect.prototype.clamp = function (input, min, max) {
 };
 
 module.exports = PanEffect;
-

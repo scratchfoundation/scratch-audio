@@ -1,5 +1,5 @@
-var Tone = require('tone');
-var log = require('./log');
+const Tone = require('tone');
+const log = require('./log');
 
 /**
  * A SoundPlayer stores an audio buffer, and plays it
@@ -74,8 +74,8 @@ SoundPlayer.prototype.start = function () {
  * @return {Promise} a Promise that resolves when the sound finishes playing
  */
 SoundPlayer.prototype.finished = function () {
-    var storedContext = this;
-    return new Promise(function (resolve) {
+    const storedContext = this;
+    return new Promise(resolve => {
         storedContext.bufferSource.onended = function () {
             this.isPlaying = false;
             resolve();

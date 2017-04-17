@@ -19,8 +19,8 @@ function ArrayBufferStream (arrayBuffer) {
  * @return {ArrayBufferStream} the extracted stream
  */
 ArrayBufferStream.prototype.extract = function (length) {
-    var slicedArrayBuffer = this.arrayBuffer.slice(this.position, this.position+length);
-    var newStream = new ArrayBufferStream(slicedArrayBuffer);
+    const slicedArrayBuffer = this.arrayBuffer.slice(this.position, this.position + length);
+    const newStream = new ArrayBufferStream(slicedArrayBuffer);
     return newStream;
 };
 
@@ -43,7 +43,7 @@ ArrayBufferStream.prototype.getBytesAvailable = function () {
  * @return {number}
  */
 ArrayBufferStream.prototype.readUint8 = function () {
-    var val = new Uint8Array(this.arrayBuffer, this.position, 1)[0];
+    const val = new Uint8Array(this.arrayBuffer, this.position, 1)[0];
     this.position += 1;
     return val;
 };
@@ -55,10 +55,10 @@ ArrayBufferStream.prototype.readUint8 = function () {
  * @return {String} a String made by concatenating the chars in the input
  */
 ArrayBufferStream.prototype.readUint8String = function (length) {
-    var arr = new Uint8Array(this.arrayBuffer, this.position, length);
+    const arr = new Uint8Array(this.arrayBuffer, this.position, length);
     this.position += length;
-    var str = '';
-    for (var i=0; i<arr.length; i++) {
+    let str = '';
+    for (let i = 0; i < arr.length; i++) {
         str += String.fromCharCode(arr[i]);
     }
     return str;
@@ -69,7 +69,7 @@ ArrayBufferStream.prototype.readUint8String = function (length) {
  * @return {number}
  */
 ArrayBufferStream.prototype.readInt16 = function () {
-    var val = new Int16Array(this.arrayBuffer, this.position, 1)[0];
+    const val = new Int16Array(this.arrayBuffer, this.position, 1)[0];
     this.position += 2; // one 16 bit int is 2 bytes
     return val;
 };
@@ -79,7 +79,7 @@ ArrayBufferStream.prototype.readInt16 = function () {
  * @return {number}
  */
 ArrayBufferStream.prototype.readUint16 = function () {
-    var val = new Uint16Array(this.arrayBuffer, this.position, 1)[0];
+    const val = new Uint16Array(this.arrayBuffer, this.position, 1)[0];
     this.position += 2; // one 16 bit int is 2 bytes
     return val;
 };
@@ -89,7 +89,7 @@ ArrayBufferStream.prototype.readUint16 = function () {
  * @return {number}
  */
 ArrayBufferStream.prototype.readInt32 = function () {
-    var val = new Int32Array(this.arrayBuffer, this.position, 1)[0];
+    const val = new Int32Array(this.arrayBuffer, this.position, 1)[0];
     this.position += 4; // one 32 bit int is 4 bytes
     return val;
 };
@@ -99,7 +99,7 @@ ArrayBufferStream.prototype.readInt32 = function () {
  * @return {number}
  */
 ArrayBufferStream.prototype.readUint32 = function () {
-    var val = new Uint32Array(this.arrayBuffer, this.position, 1)[0];
+    const val = new Uint32Array(this.arrayBuffer, this.position, 1)[0];
     this.position += 4; // one 32 bit int is 4 bytes
     return val;
 };

@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A reverb effect, simulating reverberation in a room
@@ -50,4 +50,3 @@ ReverbEffect.prototype.clamp = function (input, min, max) {
 };
 
 module.exports = ReverbEffect;
-

@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A wobble effect. In audio terms, it sounds like tremolo.
@@ -36,7 +36,7 @@ WobbleEffect.prototype.set = function (val) {
 
     this.wet.value = this.value / 100;
 
-    this.wobbleLFO.frequency.rampTo(this.value / 10, 1/60);
+    this.wobbleLFO.frequency.rampTo(this.value / 10, 1 / 60);
 };
 
 /**
@@ -58,4 +58,3 @@ WobbleEffect.prototype.clamp = function (input, min, max) {
 };
 
 module.exports = WobbleEffect;
-

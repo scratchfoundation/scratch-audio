@@ -1,18 +1,18 @@
-var log = require('./log');
-var Tone = require('tone');
+const log = require('./log');
+const Tone = require('tone');
 
-var PitchEffect = require('./effects/PitchEffect');
-var PanEffect = require('./effects/PanEffect');
+const PitchEffect = require('./effects/PitchEffect');
+const PanEffect = require('./effects/PanEffect');
 
-var RoboticEffect = require('./effects/RoboticEffect');
-var FuzzEffect = require('./effects/FuzzEffect');
-var EchoEffect = require('./effects/EchoEffect');
-var ReverbEffect = require('./effects/ReverbEffect');
+const RoboticEffect = require('./effects/RoboticEffect');
+const FuzzEffect = require('./effects/FuzzEffect');
+const EchoEffect = require('./effects/EchoEffect');
+const ReverbEffect = require('./effects/ReverbEffect');
 
-var SoundPlayer = require('./SoundPlayer');
-var ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
-var InstrumentPlayer = require('./InstrumentPlayer');
-var DrumPlayer = require('./DrumPlayer');
+const SoundPlayer = require('./SoundPlayer');
+const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
+const InstrumentPlayer = require('./InstrumentPlayer');
+const DrumPlayer = require('./DrumPlayer');
 
 /**
  * @fileOverview Scratch Audio is divided into a single AudioEngine,
@@ -35,7 +35,7 @@ function AudioEngine () {
 
     // chain the global effects to the output
     this.input = new Tone.Gain();
-    this.input.chain (
+    this.input.chain(
         this.roboticEffect, this.fuzzEffect, this.echoEffect, this.reverbEffect,
         Tone.Master
     );
@@ -70,7 +70,7 @@ function AudioEngine () {
  */
 AudioEngine.prototype.decodeSound = function (sound) {
 
-    var loaderPromise = null;
+    let loaderPromise = null;
 
     switch (sound.format) {
     case '':
@@ -83,12 +83,12 @@ AudioEngine.prototype.decodeSound = function (sound) {
         return log.warn('unknown sound format', sound.format);
     }
 
-    var storedContext = this;
+    const storedContext = this;
     return loaderPromise.then(
-        function (decodedAudio) {
+        decodedAudio => {
             storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
         },
-        function (error) {
+        error => {
             log.warn('audio data could not be decoded', error);
         }
     );
@@ -112,7 +112,7 @@ AudioEngine.prototype.loadSounds = function () {
  * @return {Promise} a Promise that resolves after the duration has elapsed
  */
 AudioEngine.prototype.playNoteForBeatsWithInstAndVol = function (note, beats, inst, vol) {
-    var sec = this.beatsToSec(beats);
+    const sec = this.beatsToSec(beats);
     this.instrumentPlayer.playNoteForSecWithInstAndVol(note, sec, inst, vol);
     return this.waitForBeats(beats);
 };
@@ -132,9 +132,9 @@ AudioEngine.prototype.beatsToSec = function (beats) {
  * @return {Promise} a Promise that resolves after the duration has elapsed
  */
 AudioEngine.prototype.waitForBeats = function (beats) {
-    var storedContext = this;
-    return new Promise(function (resolve) {
-        setTimeout(function () {
+    const storedContext = this;
+    return new Promise(resolve => {
+        setTimeout(() => {
             resolve();
         }, storedContext.beatsToSec(beats) * 1000);
     });
@@ -153,7 +153,7 @@ AudioEngine.prototype.setTempo = function (value) {
  * @param  {number} value - the number of bpm to change the tempo by
  */
 AudioEngine.prototype.changeTempo = function (value) {
-    this.setTempo(this.currentTempo  + value);
+    this.setTempo(this.currentTempo + value);
 };
 
 /**
@@ -170,9 +170,9 @@ AudioEngine.prototype.getLoudness = function () {
     }
     if (this.mic && this.mic.state == 'started') {
         return this.micMeter.value * 100;
-    } else {
-        return -1;
     }
+    return -1;
+    
 };
 
 /**
@@ -245,7 +245,7 @@ AudioPlayer.prototype.playSound = function (md5) {
     }
 
     // create a new soundplayer to play the sound
-    var player = new SoundPlayer();
+    const player = new SoundPlayer();
     player.setBuffer(this.audioEngine.audioBuffers[md5]);
     player.connect(this.effectsNode);
     this.pitchEffect.updatePlayer(player);
@@ -255,7 +255,7 @@ AudioPlayer.prototype.playSound = function (md5) {
     this.activeSoundPlayers[md5] = player;
 
     // remove sounds that are not playing from the active sound players array
-    for (var id in this.activeSoundPlayers) {
+    for (const id in this.activeSoundPlayers) {
         if (this.activeSoundPlayers.hasOwnProperty(id)) {
             if (!this.activeSoundPlayers[id].isPlaying) {
                 delete this.activeSoundPlayers[id];
@@ -283,7 +283,7 @@ AudioPlayer.prototype.playDrumForBeats = function (drum, beats) {
  */
 AudioPlayer.prototype.stopAllSounds = function () {
     // stop all active sound players
-    for (var md5 in this.activeSoundPlayers) {
+    for (const md5 in this.activeSoundPlayers) {
         this.activeSoundPlayers[md5].stop();
     }
 

@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * An echo effect (aka 'delay effect' in audio terms)
@@ -36,8 +36,8 @@ EchoEffect.prototype.set = function (val) {
         this.wet.value = 0.5;
     }
 
-    var feedback = (this.value / 100) * 0.75;
-    this.delay.feedback.rampTo(feedback, 1/60);
+    const feedback = (this.value / 100) * 0.75;
+    this.delay.feedback.rampTo(feedback, 1 / 60);
 };
 
 /**
@@ -59,4 +59,3 @@ EchoEffect.prototype.clamp = function (input, min, max) {
 };
 
 module.exports = EchoEffect;
-

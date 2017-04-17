@@ -1,6 +1,6 @@
-var ArrayBufferStream = require('./ArrayBufferStream');
-var Tone = require('tone');
-var log = require('./log');
+const ArrayBufferStream = require('./ArrayBufferStream');
+const Tone = require('tone');
+const log = require('./log');
 
 /**
  * Decode wav audio files that have been compressed with the ADPCM format.
@@ -21,27 +21,27 @@ function ADPCMSoundDecoder () {
  */
 ADPCMSoundDecoder.prototype.decode = function (audioData) {
 
-    return new Promise(function (resolve, reject) {
-        var stream = new ArrayBufferStream(audioData);
+    return new Promise((resolve, reject) => {
+        const stream = new ArrayBufferStream(audioData);
 
-        var riffStr = stream.readUint8String(4);
+        const riffStr = stream.readUint8String(4);
         if (riffStr != 'RIFF') {
             log.warn('incorrect adpcm wav header');
             reject();
         }
 
-        var lengthInHeader = stream.readInt32();
+        const lengthInHeader = stream.readInt32();
         if ((lengthInHeader + 8) != audioData.byteLength) {
-            log.warn('adpcm wav length in header: ' + lengthInHeader + ' is incorrect');
+            log.warn(`adpcm wav length in header: ${lengthInHeader} is incorrect`);
         }
 
-        var wavStr = stream.readUint8String(4);
+        const wavStr = stream.readUint8String(4);
         if (wavStr != 'WAVE') {
             log.warn('incorrect adpcm wav header');
             reject();
         }
 
-        var formatChunk = this.extractChunk('fmt ', stream);
+        const formatChunk = this.extractChunk('fmt ', stream);
         this.encoding = formatChunk.readUint16();
         this.channels = formatChunk.readUint16();
         this.samplesPerSecond = formatChunk.readUint32();
@@ -52,18 +52,18 @@ ADPCMSoundDecoder.prototype.decode = function (audioData) {
         this.samplesPerBlock = formatChunk.readUint16();
         this.adpcmBlockSize = ((this.samplesPerBlock - 1) / 2) + 4; // block size in bytes
 
-        var samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
+        const samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
 
         // todo: this line is the only place Tone is used here, should be possible to remove
-        var buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
+        const buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
 
         // todo: optimize this? e.g. replace the divide by storing 1/32768 and multiply?
-        for (var i=0; i<samples.length; i++) {
+        for (let i = 0; i < samples.length; i++) {
             buffer.getChannelData(0)[i] = samples[i] / 32768;
         }
 
         resolve(buffer);
-    }.bind(this));
+    });
 };
 
 /**
@@ -95,14 +95,14 @@ ADPCMSoundDecoder.prototype.indexTable = [
 ADPCMSoundDecoder.prototype.extractChunk = function (chunkType, stream) {
     stream.position = 12;
     while (stream.position < (stream.getLength() - 8)) {
-        var typeStr = stream.readUint8String(4);
-        var chunkSize = stream.readInt32();
+        const typeStr = stream.readUint8String(4);
+        const chunkSize = stream.readInt32();
         if (typeStr == chunkType) {
-            var chunk = stream.extract(chunkSize);
+            const chunk = stream.extract(chunkSize);
             return chunk;
-        } else {
-            stream.position += chunkSize;
         }
+        stream.position += chunkSize;
+        
     }
 };
 
@@ -114,17 +114,17 @@ ADPCMSoundDecoder.prototype.extractChunk = function (chunkType, stream) {
  * @return {Int16Array} the uncompressed audio samples
  */
 ADPCMSoundDecoder.prototype.imaDecompress = function (compressedData, blockSize) {
-    var sample, step, code, delta;
-    var index = 0;
-    var lastByte = -1; // -1 indicates that there is no saved lastByte
-    var out = [];
+    let sample, step, code, delta;
+    let index = 0;
+    let lastByte = -1; // -1 indicates that there is no saved lastByte
+    const out = [];
 
     // Bail and return no samples if we have no data
     if (!compressedData) return out;
 
     compressedData.position = 0;
-    var a = 0;
-    while (a==0) {
+    const a = 0;
+    while (a == 0) {
         if (((compressedData.position % blockSize) == 0) && (lastByte < 0)) { // read block header
             if (compressedData.getBytesAvailable() == 0) break;
             sample = compressedData.readInt16();
@@ -159,7 +159,7 @@ ADPCMSoundDecoder.prototype.imaDecompress = function (compressedData, blockSize)
             out.push(sample);
         }
     }
-    var samples = Int16Array.from(out);
+    const samples = Int16Array.from(out);
     return samples;
 };
 

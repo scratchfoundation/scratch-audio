@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A pitch change effect, which changes the playback rate of the sound in order
@@ -71,7 +71,7 @@ PitchEffect.prototype.updatePlayer = function (player) {
 PitchEffect.prototype.updatePlayers = function (players) {
     if (!players) return;
 
-    for (var md5 in players) {
+    for (const md5 in players) {
         if (players.hasOwnProperty(md5)) {
             this.updatePlayer(players[md5]);
         }
@@ -79,4 +79,3 @@ PitchEffect.prototype.updatePlayers = function (players) {
 };
 
 module.exports = PitchEffect;
-
