@@ -8,10 +8,10 @@
  * @param {ArrayBuffer} arrayBuffer - array to use as a stream
  * @constructor
  */
-function ArrayBufferStream (arrayBuffer) {
+const ArrayBufferStream = function (arrayBuffer) {
     this.arrayBuffer = arrayBuffer;
     this.position = 0;
-}
+};
 
 /**
  * Return a new ArrayBufferStream that is a slice of the existing one
@@ -40,7 +40,7 @@ ArrayBufferStream.prototype.getBytesAvailable = function () {
 
 /**
  * Read an unsigned 8 bit integer from the stream
- * @return {number}
+ * @return {number} the next 8 bit integer in the stream
  */
 ArrayBufferStream.prototype.readUint8 = function () {
     const val = new Uint8Array(this.arrayBuffer, this.position, 1)[0];
@@ -52,7 +52,7 @@ ArrayBufferStream.prototype.readUint8 = function () {
  * Read a sequence of bytes of the given length and convert to a string.
  * This is a convenience method for use with short strings.
  * @param {number} length - the number of bytes to convert
- * @return {String} a String made by concatenating the chars in the input
+ * @return {string} a String made by concatenating the chars in the input
  */
 ArrayBufferStream.prototype.readUint8String = function (length) {
     const arr = new Uint8Array(this.arrayBuffer, this.position, length);
@@ -66,7 +66,7 @@ ArrayBufferStream.prototype.readUint8String = function (length) {
 
 /**
  * Read a 16 bit integer from the stream
- * @return {number}
+ * @return {number} the next 16 bit integer in the stream
  */
 ArrayBufferStream.prototype.readInt16 = function () {
     const val = new Int16Array(this.arrayBuffer, this.position, 1)[0];
@@ -76,7 +76,7 @@ ArrayBufferStream.prototype.readInt16 = function () {
 
 /**
  * Read an unsigned 16 bit integer from the stream
- * @return {number}
+ * @return {number} the next unsigned 16 bit integer in the stream
  */
 ArrayBufferStream.prototype.readUint16 = function () {
     const val = new Uint16Array(this.arrayBuffer, this.position, 1)[0];
@@ -86,7 +86,7 @@ ArrayBufferStream.prototype.readUint16 = function () {
 
 /**
  * Read a 32 bit integer from the stream
- * @return {number}
+ * @return {number} the next 32 bit integer in the stream
  */
 ArrayBufferStream.prototype.readInt32 = function () {
     const val = new Int32Array(this.arrayBuffer, this.position, 1)[0];
@@ -96,7 +96,7 @@ ArrayBufferStream.prototype.readInt32 = function () {
 
 /**
  * Read an unsigned 32 bit integer from the stream
- * @return {number}
+ * @return {number} the next unsigned 32 bit integer in the stream
  */
 ArrayBufferStream.prototype.readUint32 = function () {
     const val = new Uint32Array(this.arrayBuffer, this.position, 1)[0];

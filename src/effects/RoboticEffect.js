@@ -11,7 +11,7 @@ const Tone = require('tone');
 * Exterminate.
 * @constructor
 */
-function RoboticEffect () {
+const RoboticEffect = function () {
     Tone.Effect.call(this);
 
     this.value = 0;
@@ -20,7 +20,7 @@ function RoboticEffect () {
     this.feedbackCombFilter = new Tone.FeedbackCombFilter(time, 0.9);
 
     this.effectSend.chain(this.feedbackCombFilter, this.effectReturn);
-}
+};
 
 Tone.extend(RoboticEffect, Tone.Effect);
 
@@ -32,7 +32,7 @@ RoboticEffect.prototype.set = function (val) {
     this.value = val;
 
     // mute the effect if value is 0
-    if (this.value == 0) {
+    if (this.value === 0) {
         this.wet.value = 0;
     } else {
         this.wet.value = 1;

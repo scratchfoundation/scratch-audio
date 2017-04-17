@@ -10,14 +10,13 @@ const log = require('./log');
  * https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
  * @constructor
  */
-function ADPCMSoundDecoder () {
-}
+const ADPCMSoundDecoder = function () {};
 
 /**
  * Decode an ADPCM sound stored in an ArrayBuffer and return a promise
  * with the decoded audio buffer.
  * @param  {ArrayBuffer} audioData - containing ADPCM encoded wav audio
- * @return {Tone.Buffer}
+ * @return {Tone.Buffer} the decoded audio buffer
  */
 ADPCMSoundDecoder.prototype.decode = function (audioData) {
 
@@ -25,18 +24,18 @@ ADPCMSoundDecoder.prototype.decode = function (audioData) {
         const stream = new ArrayBufferStream(audioData);
 
         const riffStr = stream.readUint8String(4);
-        if (riffStr != 'RIFF') {
+        if (riffStr !== 'RIFF') {
             log.warn('incorrect adpcm wav header');
             reject();
         }
 
         const lengthInHeader = stream.readInt32();
-        if ((lengthInHeader + 8) != audioData.byteLength) {
+        if ((lengthInHeader + 8) !== audioData.byteLength) {
             log.warn(`adpcm wav length in header: ${lengthInHeader} is incorrect`);
         }
 
         const wavStr = stream.readUint8String(4);
-        if (wavStr != 'WAVE') {
+        if (wavStr !== 'WAVE') {
             log.warn('incorrect adpcm wav header');
             reject();
         }
@@ -54,10 +53,10 @@ ADPCMSoundDecoder.prototype.decode = function (audioData) {
 
         const samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
 
-        // todo: this line is the only place Tone is used here, should be possible to remove
+        // @todo this line is the only place Tone is used here, should be possible to remove
         const buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
 
-        // todo: optimize this? e.g. replace the divide by storing 1/32768 and multiply?
+        // @todo optimize this? e.g. replace the divide by storing 1/32768 and multiply?
         for (let i = 0; i < samples.length; i++) {
             buffer.getChannelData(0)[i] = samples[i] / 32768;
         }
@@ -97,12 +96,12 @@ ADPCMSoundDecoder.prototype.extractChunk = function (chunkType, stream) {
     while (stream.position < (stream.getLength() - 8)) {
         const typeStr = stream.readUint8String(4);
         const chunkSize = stream.readInt32();
-        if (typeStr == chunkType) {
+        if (typeStr === chunkType) {
             const chunk = stream.extract(chunkSize);
             return chunk;
         }
         stream.position += chunkSize;
-        
+
     }
 };
 
@@ -114,7 +113,10 @@ ADPCMSoundDecoder.prototype.extractChunk = function (chunkType, stream) {
  * @return {Int16Array} the uncompressed audio samples
  */
 ADPCMSoundDecoder.prototype.imaDecompress = function (compressedData, blockSize) {
-    let sample, step, code, delta;
+    let sample;
+    let step;
+    let code;
+    let delta;
     let index = 0;
     let lastByte = -1; // -1 indicates that there is no saved lastByte
     const out = [];
@@ -124,9 +126,9 @@ ADPCMSoundDecoder.prototype.imaDecompress = function (compressedData, blockSize)
 
     compressedData.position = 0;
     const a = 0;
-    while (a == 0) {
-        if (((compressedData.position % blockSize) == 0) && (lastByte < 0)) { // read block header
-            if (compressedData.getBytesAvailable() == 0) break;
+    while (a === 0) {
+        if (((compressedData.position % blockSize) === 0) && (lastByte < 0)) { // read block header
+            if (compressedData.getBytesAvailable() === 0) break;
             sample = compressedData.readInt16();
             index = compressedData.readUint8();
             compressedData.position++; // skip extra header byte
@@ -135,7 +137,7 @@ ADPCMSoundDecoder.prototype.imaDecompress = function (compressedData, blockSize)
         } else {
             // read 4-bit code and compute delta from previous sample
             if (lastByte < 0) {
-                if (compressedData.getBytesAvailable() == 0) break;
+                if (compressedData.getBytesAvailable() === 0) break;
                 lastByte = compressedData.readUint8();
                 code = lastByte & 0xF;
             } else {

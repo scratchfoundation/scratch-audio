@@ -12,7 +12,7 @@ const Soundfont = require('soundfont-player');
  * @param {Tone.Gain} outputNode - a webAudio node that the instrument will send its output to
  * @constructor
  */
-function InstrumentPlayer (outputNode) {
+const InstrumentPlayer = function (outputNode) {
     this.outputNode = outputNode;
 
     // Instrument names used by Musyng Kite soundfont, in order to
@@ -24,7 +24,7 @@ function InstrumentPlayer (outputNode) {
         'music_box', 'steel_drums', 'marimba', 'lead_1_square', 'fx_4_atmosphere'];
 
     this.instruments = [];
-}
+};
 
 /**
  * Play a note for some number of seconds with a particular instrument.
@@ -63,7 +63,7 @@ InstrumentPlayer.prototype.loadInstrument = function (instrumentNum) {
                 inst.connect(this.outputNode);
                 this.instruments[instrumentNum] = inst;
             });
-    
+
 };
 
 /**

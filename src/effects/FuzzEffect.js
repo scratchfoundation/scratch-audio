@@ -7,7 +7,7 @@ const Tone = require('tone');
 * Clamped 0-100
 * @constructor
 */
-function FuzzEffect () {
+const FuzzEffect = function () {
     Tone.Effect.call(this);
 
     this.value = 0;
@@ -15,7 +15,7 @@ function FuzzEffect () {
     this.distortion = new Tone.Distortion(1);
 
     this.effectSend.chain(this.distortion, this.effectReturn);
-}
+};
 
 Tone.extend(FuzzEffect, Tone.Effect);
 
@@ -43,6 +43,7 @@ FuzzEffect.prototype.changeBy = function (val) {
 * @param {number} input - the input to clamp
 * @param {number} min - the min value to clamp to
 * @param {number} max - the max value to clamp to
+* @return {number} the clamped value
 */
 FuzzEffect.prototype.clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);

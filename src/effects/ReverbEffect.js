@@ -7,7 +7,7 @@ const Tone = require('tone');
 * Clamped 0 to 100
 * @constructor
 */
-function ReverbEffect () {
+const ReverbEffect = function () {
     Tone.Effect.call(this);
 
     this.value = 0;
@@ -15,7 +15,7 @@ function ReverbEffect () {
     this.reverb = new Tone.Freeverb();
 
     this.effectSend.chain(this.reverb, this.effectReturn);
-}
+};
 
 Tone.extend(ReverbEffect, Tone.Effect);
 
@@ -44,6 +44,7 @@ ReverbEffect.prototype.changeBy = function (val) {
 * @param {number} input - the input to clamp
 * @param {number} min - the min value to clamp to
 * @param {number} max - the max value to clamp to
+* @return {number} the clamped value
 */
 ReverbEffect.prototype.clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);

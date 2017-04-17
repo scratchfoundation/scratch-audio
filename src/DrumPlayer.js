@@ -6,7 +6,7 @@ const Tone = require('tone');
  * @param {Tone.Gain} outputNode - a webAudio node that the drum sounds will send their output to
  * @constructor
  */
-function DrumPlayer (outputNode) {
+const DrumPlayer = function (outputNode) {
     this.outputNode = outputNode;
 
     const baseUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/';
@@ -38,7 +38,7 @@ function DrumPlayer (outputNode) {
         this.drumSounds[i] = new SoundPlayer(this.outputNode);
         this.drumSounds[i].setBuffer(new Tone.Buffer(url));
     }
-}
+};
 
 /**
  * Play a drum sound.

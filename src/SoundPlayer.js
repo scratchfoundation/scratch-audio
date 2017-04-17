@@ -5,13 +5,13 @@ const log = require('./log');
  * A SoundPlayer stores an audio buffer, and plays it
  * @constructor
  */
-function SoundPlayer () {
+const SoundPlayer = function () {
     this.outputNode = null;
     this.buffer = new Tone.Buffer();
     this.bufferSource = null;
     this.playbackRate = 1;
     this.isPlaying = false;
-}
+};
 
 /**
  * Connect the SoundPlayer to an output node
@@ -23,7 +23,7 @@ SoundPlayer.prototype.connect = function (node) {
 
 /**
  * Set an audio buffer
- * @param {Tone.Buffer} buffer
+ * @param {Tone.Buffer} buffer Buffer to set
  */
 SoundPlayer.prototype.setBuffer = function (buffer) {
     this.buffer = buffer;

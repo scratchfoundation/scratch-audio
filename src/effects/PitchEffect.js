@@ -18,12 +18,12 @@ const Tone = require('tone');
 * on one SoundPlayer or a group of them.
 * @constructor
 */
-function PitchEffect () {
+const PitchEffect = function () {
     this.value = 0; // effect value
     this.ratio = 1; // the playback rate ratio
 
     this.tone = new Tone();
-}
+};
 
 /**
 * Set the effect value
@@ -39,7 +39,7 @@ PitchEffect.prototype.set = function (val, players) {
 /**
 * Change the effect value
 * @param {number} val - the value to change the effect by
-* @param {Object} players - a dictionary of SoundPlayer objects indexed by md5
+* @param {object} players - a dictionary of SoundPlayer objects indexed by md5
 */
 PitchEffect.prototype.changeBy = function (val, players) {
     this.set(this.value + val, players);
@@ -58,7 +58,7 @@ PitchEffect.prototype.getRatio = function (val) {
 
 /**
 * Update a sound player's playback rate using the current ratio for the effect
-* @param {Object} player - a SoundPlayer object
+* @param {object} player - a SoundPlayer object
 */
 PitchEffect.prototype.updatePlayer = function (player) {
     player.setPlaybackRate(this.ratio);
