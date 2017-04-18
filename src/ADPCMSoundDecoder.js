@@ -129,8 +129,9 @@ class ADPCMSoundDecoder {
         if (!compressedData) return out;
 
         compressedData.position = 0;
-        const a = 0;
-        while (a === 0) {
+
+        // @todo Update this loop ported from Scratch 2.0 to use a condition or a for loop.
+        while (true) { // eslint-disable-line no-constant-condition
             if (((compressedData.position % blockSize) === 0) && (lastByte < 0)) { // read block header
                 if (compressedData.getBytesAvailable() === 0) break;
                 sample = compressedData.readInt16();
