@@ -60,7 +60,8 @@ class SoundPlayer {
             return;
         }
 
-        this.bufferSource = new Tone.BufferSource(this.buffer.get());
+        this.bufferSource = Tone.context.createBufferSource();
+        this.bufferSource.buffer = this.buffer.get();
         this.bufferSource.playbackRate.value = this.playbackRate;
         this.bufferSource.connect(this.outputNode);
         this.bufferSource.start();
