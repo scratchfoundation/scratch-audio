@@ -14,7 +14,7 @@ class ADPCMSoundDecoder {
      * Data used by the decompression algorithm
      * @type {Array}
      */
-    static get stepTable () {
+    static get STEP_TABLE () {
         return [
             7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
             50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
@@ -29,7 +29,7 @@ class ADPCMSoundDecoder {
      * Data used by the decompression algorithm
      * @type {Array}
      */
-    static get indexTable () {
+    static get INDEX_TABLE () {
         return [
             -1, -1, -1, -1, 2, 4, 6, 8,
             -1, -1, -1, -1, 2, 4, 6, 8
@@ -148,14 +148,14 @@ class ADPCMSoundDecoder {
                     code = (lastByte >> 4) & 0xF;
                     lastByte = -1;
                 }
-                step = this.stepTable[index];
+                step = ADPCMSoundDecoder.STEP_TABLE[index];
                 delta = 0;
                 if (code & 4) delta += step;
                 if (code & 2) delta += step >> 1;
                 if (code & 1) delta += step >> 2;
                 delta += step >> 3;
                 // compute next index
-                index += this.indexTable[code];
+                index += ADPCMSoundDecoder.INDEX_TABLE[code];
                 if (index > 88) index = 88;
                 if (index < 0) index = 0;
                 // compute and output sample

@@ -208,7 +208,7 @@ class AudioEngine {
      * Names of the audio effects.
      * @enum {string}
      */
-    static get EFFECT_NAMES () {
+    get EFFECT_NAMES () {
         return {
             pitch: 'pitch',
             pan: 'pan',
