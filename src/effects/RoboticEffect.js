@@ -1,5 +1,4 @@
-
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A "robotic" effect that adds a low-pitched buzzing to the sound, reminiscent of the
@@ -12,16 +11,16 @@ var Tone = require('tone');
 * Exterminate.
 * @constructor
 */
-function RoboticEffect () {
+const RoboticEffect = function () {
     Tone.Effect.call(this);
 
     this.value = 0;
 
-    var time = this._delayTimeForValue(100);
+    const time = this._delayTimeForValue(100);
     this.feedbackCombFilter = new Tone.FeedbackCombFilter(time, 0.9);
 
     this.effectSend.chain(this.feedbackCombFilter, this.effectReturn);
-}
+};
 
 Tone.extend(RoboticEffect, Tone.Effect);
 
@@ -33,15 +32,15 @@ RoboticEffect.prototype.set = function (val) {
     this.value = val;
 
     // mute the effect if value is 0
-    if (this.value == 0) {
+    if (this.value === 0) {
         this.wet.value = 0;
     } else {
         this.wet.value = 1;
     }
 
     // set delay time using the value
-    var time = this._delayTimeForValue(this.value);
-    this.feedbackCombFilter.delayTime.rampTo(time, 1/60);
+    const time = this._delayTimeForValue(this.value);
+    this.feedbackCombFilter.delayTime.rampTo(time, 1 / 60);
 };
 
 /**
@@ -60,10 +59,9 @@ RoboticEffect.prototype.changeBy = function (val) {
 * @returns {number} a delay time in seconds
 */
 RoboticEffect.prototype._delayTimeForValue = function (val) {
-    var midiNote = ((val - 100) / 10) + 36;
-    var freq = Tone.Frequency(midiNote, 'midi').eval();
+    const midiNote = ((val - 100) / 10) + 36;
+    const freq = Tone.Frequency(midiNote, 'midi').eval();
     return 1 / freq;
 };
 
 module.exports = RoboticEffect;
-

@@ -1,5 +1,5 @@
-var Tone = require('tone');
-var Soundfont = require('soundfont-player');
+const Tone = require('tone');
+const Soundfont = require('soundfont-player');
 
 /**
  * A prototype for the instrument sound functionality that can play notes.
@@ -12,7 +12,7 @@ var Soundfont = require('soundfont-player');
  * @param {Tone.Gain} outputNode - a webAudio node that the instrument will send its output to
  * @constructor
  */
-function InstrumentPlayer (outputNode) {
+const InstrumentPlayer = function (outputNode) {
     this.outputNode = outputNode;
 
     // Instrument names used by Musyng Kite soundfont, in order to
@@ -24,7 +24,7 @@ function InstrumentPlayer (outputNode) {
         'music_box', 'steel_drums', 'marimba', 'lead_1_square', 'fx_4_atmosphere'];
 
     this.instruments = [];
-}
+};
 
 /**
  * Play a note for some number of seconds with a particular instrument.
@@ -37,13 +37,13 @@ function InstrumentPlayer (outputNode) {
  * @param  {number} vol - a volume level (0-100%)
  */
 InstrumentPlayer.prototype.playNoteForSecWithInstAndVol = function (note, sec, instrumentNum, vol) {
-    var gain = vol / 100;
+    const gain = vol / 100;
     this.loadInstrument(instrumentNum)
         .then(() => {
             this.instruments[instrumentNum].play(
                 note, Tone.context.currentTime, {
-                    duration : sec,
-                    gain : gain
+                    duration: sec,
+                    gain: gain
                 }
             );
         });
@@ -57,20 +57,20 @@ InstrumentPlayer.prototype.playNoteForSecWithInstAndVol = function (note, sec, i
 InstrumentPlayer.prototype.loadInstrument = function (instrumentNum) {
     if (this.instruments[instrumentNum]) {
         return Promise.resolve();
-    } else {
-        return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum])
-            .then((inst) => {
+    }
+    return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum])
+            .then(inst => {
                 inst.connect(this.outputNode);
                 this.instruments[instrumentNum] = inst;
             });
-    }
+
 };
 
 /**
  * Stop all notes being played on all instruments
  */
 InstrumentPlayer.prototype.stopAll = function () {
-    for (var i=0; i<this.instruments.length; i++) {
+    for (let i = 0; i < this.instruments.length; i++) {
         if (this.instruments[i]) {
             this.instruments[i].stop();
         }

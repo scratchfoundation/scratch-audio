@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * An echo effect (aka 'delay effect' in audio terms)
@@ -8,7 +8,7 @@ var Tone = require('tone');
 * Clamped 0-100
 * @constructor
 */
-function EchoEffect () {
+const EchoEffect = function () {
     Tone.Effect.call(this);
 
     this.value = 0;
@@ -16,7 +16,7 @@ function EchoEffect () {
     this.delay = new Tone.FeedbackDelay(0.25, 0.5);
 
     this.effectSend.chain(this.delay, this.effectReturn);
-}
+};
 
 Tone.extend(EchoEffect, Tone.Effect);
 
@@ -30,14 +30,14 @@ EchoEffect.prototype.set = function (val) {
     this.value = this.clamp(this.value, 0, 100);
 
     // mute the effect if value is 0
-    if (this.value == 0) {
+    if (this.value === 0) {
         this.wet.value = 0;
     } else {
         this.wet.value = 0.5;
     }
 
-    var feedback = (this.value / 100) * 0.75;
-    this.delay.feedback.rampTo(feedback, 1/60);
+    const feedback = (this.value / 100) * 0.75;
+    this.delay.feedback.rampTo(feedback, 1 / 60);
 };
 
 /**
@@ -53,10 +53,10 @@ EchoEffect.prototype.changeBy = function (val) {
 * @param {number} input - the input to clamp
 * @param {number} min - the min value to clamp to
 * @param {number} max - the max value to clamp to
+* @return {number} the clamped value
 */
 EchoEffect.prototype.clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);
 };
 
 module.exports = EchoEffect;
-

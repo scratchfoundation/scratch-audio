@@ -2,7 +2,7 @@ var path = require('path');
 
 module.exports = {
     entry: {
-        'dist': './src/index.js'
+        dist: './src/index.js'
     },
     output: {
         path: __dirname,

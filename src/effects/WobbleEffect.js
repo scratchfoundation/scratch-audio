@@ -1,4 +1,4 @@
-var Tone = require('tone');
+const Tone = require('tone');
 
 /**
 * A wobble effect. In audio terms, it sounds like tremolo.
@@ -11,7 +11,7 @@ var Tone = require('tone');
 * Clamped 0 to 100
 * @constructor
 */
-function WobbleEffect () {
+const WobbleEffect = function () {
     Tone.Effect.call(this);
 
     this.value = 0;
@@ -21,7 +21,7 @@ function WobbleEffect () {
     this.wobbleLFO.connect(this.wobbleGain.gain);
 
     this.effectSend.chain(this.wobbleGain, this.effectReturn);
-}
+};
 
 Tone.extend(WobbleEffect, Tone.Effect);
 
@@ -36,7 +36,7 @@ WobbleEffect.prototype.set = function (val) {
 
     this.wet.value = this.value / 100;
 
-    this.wobbleLFO.frequency.rampTo(this.value / 10, 1/60);
+    this.wobbleLFO.frequency.rampTo(this.value / 10, 1 / 60);
 };
 
 /**
@@ -52,10 +52,10 @@ WobbleEffect.prototype.changeBy = function (val) {
 * @param {number} input - the input to clamp
 * @param {number} min - the min value to clamp to
 * @param {number} max - the max value to clamp to
+* @return {number} the clamped value
 */
 WobbleEffect.prototype.clamp = function (input, min, max) {
     return Math.min(Math.max(input, min), max);
 };
 
 module.exports = WobbleEffect;
-
