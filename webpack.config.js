@@ -1,6 +1,7 @@
 var path = require('path');
 
 module.exports = {
+    devtool: 'cheap-module-source-map',
     entry: {
         dist: './src/index.js'
     },
