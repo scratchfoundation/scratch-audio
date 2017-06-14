@@ -232,12 +232,15 @@ class AudioEngine {
 
         let loaderPromise = null;
 
+        // Make a copy of the buffer because decoding detaches the original buffer
+        var bufferCopy = sound.data.buffer.slice(0);
+
         switch (sound.format) {
         case '':
-            loaderPromise = Tone.context.decodeAudioData(sound.data.buffer);
+            loaderPromise = Tone.context.decodeAudioData(bufferCopy);
             break;
         case 'adpcm':
-            loaderPromise = (new ADPCMSoundDecoder()).decode(sound.data.buffer);
+            loaderPromise = (new ADPCMSoundDecoder()).decode(bufferCopy);
             break;
         default:
             return log.warn('unknown sound format', sound.format);
