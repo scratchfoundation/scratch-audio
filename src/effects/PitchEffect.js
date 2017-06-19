@@ -60,7 +60,7 @@ class PitchEffect {
     */
     intervalToFrequencyRatio (interval) {
         return Math.pow(2, (interval/12));
-    };
+    }
 
     /**
     * Update a sound player's playback rate using the current ratio for the effect
