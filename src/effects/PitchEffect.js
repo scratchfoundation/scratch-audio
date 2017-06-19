@@ -1,5 +1,3 @@
-const Tone = require('tone');
-
 /**
 * A pitch change effect, which changes the playback rate of the sound in order
 * to change its pitch: reducing the playback rate lowers the pitch, increasing the rate
@@ -21,7 +19,6 @@ class PitchEffect {
     constructor () {
         this.value = 0; // effect value
         this.ratio = 1; // the playback rate ratio
-        this.tone = new Tone();
     }
 
     /**
@@ -52,8 +49,18 @@ class PitchEffect {
     * @returns {number} a playback ratio
     */
     getRatio (val) {
-        return this.tone.intervalToFrequencyRatio(val / 10);
+        return intervalToFrequencyRatio(val / 10);
     }
+
+    /**
+    * Convert a musical interval to a frequency ratio.
+    * With thanks to Tone.js: https://github.com/Tonejs/Tone.js
+    * @param {number} interval - a musical interval, in semitones
+    * @returns {number} a frequency ratio
+    */
+    intervalToFrequencyRatio (interval) {
+        return Math.pow(2, (interval/12));
+    };
 
     /**
     * Update a sound player's playback rate using the current ratio for the effect
