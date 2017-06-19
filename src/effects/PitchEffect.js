@@ -49,7 +49,7 @@ class PitchEffect {
     * @returns {number} a playback ratio
     */
     getRatio (val) {
-        return intervalToFrequencyRatio(val / 10);
+        return this.intervalToFrequencyRatio(val / 10);
     }
 
     /**
