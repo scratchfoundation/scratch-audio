@@ -4,11 +4,6 @@ const Tone = require('tone');
 const PitchEffect = require('./effects/PitchEffect');
 const PanEffect = require('./effects/PanEffect');
 
-const RoboticEffect = require('./effects/RoboticEffect');
-const FuzzEffect = require('./effects/FuzzEffect');
-const EchoEffect = require('./effects/EchoEffect');
-const ReverbEffect = require('./effects/ReverbEffect');
-
 const SoundPlayer = require('./SoundPlayer');
 const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
 const InstrumentPlayer = require('./InstrumentPlayer');
@@ -126,18 +121,6 @@ class AudioPlayer {
         case this.audioEngine.EFFECT_NAMES.pan:
             this.panEffect.set(value);
             break;
-        case this.audioEngine.EFFECT_NAMES.echo:
-            this.audioEngine.echoEffect.set(value);
-            break;
-        case this.audioEngine.EFFECT_NAMES.reverb:
-            this.audioEngine.reverbEffect.set(value);
-            break;
-        case this.audioEngine.EFFECT_NAMES.fuzz:
-            this.audioEngine.fuzzEffect.set(value);
-            break;
-        case this.audioEngine.EFFECT_NAMES.robot:
-            this.audioEngine.roboticEffect.set(value);
-            break;
         }
     }
 
@@ -148,11 +131,6 @@ class AudioPlayer {
         this.panEffect.set(0);
         this.pitchEffect.set(0, this.activeSoundPlayers);
         this.effectsNode.gain.value = 1;
-
-        this.audioEngine.echoEffect.set(0);
-        this.audioEngine.reverbEffect.set(0);
-        this.audioEngine.fuzzEffect.set(0);
-        this.audioEngine.roboticEffect.set(0);
     }
 
     /**
@@ -172,18 +150,8 @@ class AudioPlayer {
  */
 class AudioEngine {
     constructor () {
-        // create the global audio effects
-        this.roboticEffect = new RoboticEffect();
-        this.fuzzEffect = new FuzzEffect();
-        this.echoEffect = new EchoEffect();
-        this.reverbEffect = new ReverbEffect();
-
-        // chain the global effects to the output
         this.input = new Tone.Gain();
-        this.input.chain(
-            this.roboticEffect, this.fuzzEffect, this.echoEffect, this.reverbEffect,
-            Tone.Master
-        );
+        this.input.connect(Tone.Master);
 
         // global tempo in bpm (beats per minute)
         this.currentTempo = 60;
@@ -211,11 +179,7 @@ class AudioEngine {
     get EFFECT_NAMES () {
         return {
             pitch: 'pitch',
-            pan: 'pan',
-            echo: 'echo',
-            reverb: 'reverb',
-            fuzz: 'fuzz',
-            robot: 'robot'
+            pan: 'pan'
         };
     }
 
