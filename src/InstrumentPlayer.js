@@ -1,4 +1,3 @@
-const Tone = require('tone');
 const Soundfont = require('soundfont-player');
 
 class InstrumentPlayer {
@@ -10,11 +9,12 @@ class InstrumentPlayer {
      * play note or set instrument block runs, causing a delay of a few seconds.
      * Using this library we don't have a way to set the volume, sustain the note beyond the sample
      * duration, or run it through the sprite-specific audio effects.
-     * @param {Tone.Gain} outputNode - a webAudio node that the instrument will send its output to
+     * @param {AudioNode} outputNode - a webAudio node that the instrument will send its output to
      * @constructor
      */
-    constructor (outputNode) {
-        this.outputNode = outputNode;
+    constructor (context) {
+        this.context = context;
+        this.outputNode = null;
 
         // Instrument names used by Musyng Kite soundfont, in order to
         // match scratch instruments
@@ -42,7 +42,7 @@ class InstrumentPlayer {
         this.loadInstrument(instrumentNum)
             .then(() => {
                 this.instruments[instrumentNum].play(
-                    note, Tone.context.currentTime, {
+                    note, this.context.currentTime, {
                         duration: sec,
                         gain: gain
                     }
@@ -59,7 +59,7 @@ class InstrumentPlayer {
         if (this.instruments[instrumentNum]) {
             return Promise.resolve();
         }
-        return Soundfont.instrument(Tone.context, this.instrumentNames[instrumentNum])
+        return Soundfont.instrument(this.context, this.instrumentNames[instrumentNum])
                 .then(inst => {
                     inst.connect(this.outputNode);
                     this.instruments[instrumentNum] = inst;

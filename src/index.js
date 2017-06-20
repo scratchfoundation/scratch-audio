@@ -1,5 +1,4 @@
 const log = require('./log');
-const Tone = require('tone');
 
 const PitchEffect = require('./effects/PitchEffect');
 const PanEffect = require('./effects/PanEffect');
@@ -25,15 +24,15 @@ class AudioPlayer {
     constructor (audioEngine) {
         this.audioEngine = audioEngine;
 
-        // effects setup
+        // Create the audio effects
         this.pitchEffect = new PitchEffect();
-        this.panEffect = new PanEffect();
+        this.panEffect = new PanEffect(this.audioEngine.context);
 
-        // the effects are chained to an effects node for this player, then to the main audio engine
-        // audio is sent from each soundplayer, through the effects in order, then to the global effects
-        // note that the pitch effect works differently - it sets the playback rate for each soundplayer
-        this.effectsNode = new Tone.Gain();
-        this.effectsNode.chain(this.panEffect, this.audioEngine.input);
+        // Chain the audio effects together
+        // effectsNode -> panEffect -> audioEngine.input -> destination (speakers)
+        this.effectsNode = this.audioEngine.context.createGain();
+        this.effectsNode.connect(this.panEffect.panner);
+        this.panEffect.connect(this.audioEngine.input);
 
         // reset effects to their default parameters
         this.clearEffects();
@@ -59,7 +58,7 @@ class AudioPlayer {
         }
 
         // create a new soundplayer to play the sound
-        const player = new SoundPlayer();
+        const player = new SoundPlayer(this.audioEngine.context);
         player.setBuffer(this.audioEngine.audioBuffers[md5]);
         player.connect(this.effectsNode);
         this.pitchEffect.updatePlayer(player);
@@ -150,18 +149,22 @@ class AudioPlayer {
  */
 class AudioEngine {
     constructor () {
-        this.input = new Tone.Gain();
-        this.input.connect(Tone.Master);
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.context = new AudioContext();
+
+        this.input = this.context.createGain();
+        this.input.connect(this.context.destination);
 
         // global tempo in bpm (beats per minute)
         this.currentTempo = 60;
 
         // instrument player for play note blocks
-        this.instrumentPlayer = new InstrumentPlayer(this.input);
+        this.instrumentPlayer = new InstrumentPlayer(this.context);
+        this.instrumentPlayer.outputNode = this.input;
         this.numInstruments = this.instrumentPlayer.instrumentNames.length;
 
         // drum player for play drum blocks
-        this.drumPlayer = new DrumPlayer(this.input);
+        this.drumPlayer = new DrumPlayer(this.context);
         this.numDrums = this.drumPlayer.drumSounds.length;
 
         // a map of md5s to audio buffers, holding sounds for all sprites
@@ -201,10 +204,10 @@ class AudioEngine {
 
         switch (sound.format) {
         case '':
-            loaderPromise = Tone.context.decodeAudioData(bufferCopy);
+            loaderPromise = this.context.decodeAudioData(bufferCopy);
             break;
         case 'adpcm':
-            loaderPromise = (new ADPCMSoundDecoder()).decode(bufferCopy);
+            loaderPromise = (new ADPCMSoundDecoder(this.context)).decode(bufferCopy);
             break;
         default:
             return log.warn('unknown sound format', sound.format);
@@ -213,7 +216,7 @@ class AudioEngine {
         const storedContext = this;
         return loaderPromise.then(
             decodedAudio => {
-                storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
+                storedContext.audioBuffers[sound.md5] = decodedAudio;
             },
             error => {
                 log.warn('audio data could not be decoded', error);
@@ -289,15 +292,15 @@ class AudioEngine {
      * @return {number} loudness scaled 0 to 100
      */
     getLoudness () {
-        if (!this.mic) {
-            this.mic = new Tone.UserMedia();
-            this.micMeter = new Tone.Meter('level', 0.5);
-            this.mic.open();
-            this.mic.connect(this.micMeter);
-        }
-        if (this.mic && this.mic.state === 'started') {
-            return this.micMeter.value * 100;
-        }
+        // if (!this.mic) {
+        //     this.mic = new Tone.UserMedia();
+        //     this.micMeter = new Tone.Meter('level', 0.5);
+        //     this.mic.open();
+        //     this.mic.connect(this.micMeter);
+        // }
+        // if (this.mic && this.mic.state === 'started') {
+        //     return this.micMeter.value * 100;
+        // }
         return -1;
 
     }
