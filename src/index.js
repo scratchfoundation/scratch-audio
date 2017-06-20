@@ -289,20 +289,47 @@ class AudioEngine {
     /**
      * Get the current loudness of sound received by the microphone.
      * Sound is measured in RMS and smoothed.
+     * Some code adapted from Tone.js: https://github.com/Tonejs/Tone.js
      * @return {number} loudness scaled 0 to 100
      */
     getLoudness () {
-        // if (!this.mic) {
-        //     this.mic = new Tone.UserMedia();
-        //     this.micMeter = new Tone.Meter('level', 0.5);
-        //     this.mic.open();
-        //     this.mic.connect(this.micMeter);
-        // }
-        // if (this.mic && this.mic.state === 'started') {
-        //     return this.micMeter.value * 100;
-        // }
-        return -1;
+        // the microphone has not been set up, try to connect to it
+        if (!this.mic && !this.connectingToMic) {
+            this.connectingToMic = true; // prevent multiple connection attempts
+            navigator.mediaDevices.getUserMedia({audio : true}).then(stream => {
+                this.mic = this.context.createMediaStreamSource(stream);
+                this.analyser = this.context.createAnalyser();
+                this.mic.connect(this.analyser);
+                this.micDataArray = new Float32Array(this.analyser.fftSize);
+            }).catch(err => {
+                log.warn(err)
+            });
+        }
 
+        // if the microphone is set up and active, measure the loudness
+        if (this.mic && this.mic.mediaStream.active) {
+            this.analyser.getFloatTimeDomainData(this.micDataArray);
+            let sum = 0;
+            // compute the RMS of the sound
+            for (let i = 0; i < this.micDataArray.length; i++){
+                sum += Math.pow(this.micDataArray[i], 2);
+            }
+            let rms = Math.sqrt(sum / this.micDataArray.length);
+            // smooth the value, if it is descending
+            if (this._lastValue) {
+                rms = Math.max(rms, this._lastValue * 0.5);
+            }
+            this._lastValue = rms;
+
+            // scale it
+            // @todo figure out why this magic number is needed and remove it!
+            rms *= 1.63;
+            // scale and round the output
+            return Math.round(Math.sqrt(rms) * 100);
+        }
+
+        // if there is no microphone input, return -1
+        return -1;
     }
 
     /**
