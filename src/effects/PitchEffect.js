@@ -59,7 +59,7 @@ class PitchEffect {
     * @returns {number} a frequency ratio
     */
     intervalToFrequencyRatio (interval) {
-        return Math.pow(2, (interval/12));
+        return Math.pow(2, (interval / 12));
     }
 
     /**

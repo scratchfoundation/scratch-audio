@@ -9,7 +9,7 @@ class InstrumentPlayer {
      * play note or set instrument block runs, causing a delay of a few seconds.
      * Using this library we don't have a way to set the volume, sustain the note beyond the sample
      * duration, or run it through the sprite-specific audio effects.
-     * @param {AudioNode} outputNode - a webAudio node that the instrument will send its output to
+     * @param {AudioContext} context - a webAudio context
      * @constructor
      */
     constructor (context) {

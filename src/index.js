@@ -149,7 +149,7 @@ class AudioPlayer {
  */
 class AudioEngine {
     constructor () {
-        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
         this.context = new AudioContext();
 
         this.input = this.context.createGain();
@@ -200,7 +200,7 @@ class AudioEngine {
         let loaderPromise = null;
 
         // Make a copy of the buffer because decoding detaches the original buffer
-        var bufferCopy = sound.data.buffer.slice(0);
+        const bufferCopy = sound.data.buffer.slice(0);
 
         switch (sound.format) {
         case '':
@@ -296,13 +296,14 @@ class AudioEngine {
         // the microphone has not been set up, try to connect to it
         if (!this.mic && !this.connectingToMic) {
             this.connectingToMic = true; // prevent multiple connection attempts
-            navigator.mediaDevices.getUserMedia({audio : true}).then(stream => {
+            navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
                 this.mic = this.context.createMediaStreamSource(stream);
                 this.analyser = this.context.createAnalyser();
                 this.mic.connect(this.analyser);
                 this.micDataArray = new Float32Array(this.analyser.fftSize);
-            }).catch(err => {
-                log.warn(err)
+            })
+            .catch(err => {
+                log.warn(err);
             });
         }
 

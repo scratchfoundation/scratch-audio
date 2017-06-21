@@ -38,7 +38,7 @@ class DrumPlayer {
 
             // download and decode the drum sounds
             // @todo: use scratch-storage to manage these sound files
-            const url = baseUrl + fileNames[i] + '_22k.wav';
+            const url = `${baseUrl}${fileNames[i]}_22k.wav`;
             const request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.responseType = 'arraybuffer';
