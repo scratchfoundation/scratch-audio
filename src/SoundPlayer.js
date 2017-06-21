@@ -75,12 +75,11 @@ class SoundPlayer {
      * @return {Promise} a Promise that resolves when the sound finishes playing
      */
     finished () {
-        const storedContext = this;
         return new Promise(resolve => {
-            storedContext.bufferSource.onended = function () {
+            this.bufferSource.onended = () => {
                 this.isPlaying = false;
                 resolve();
-            }.bind(storedContext);
+            };
         });
     }
 }
