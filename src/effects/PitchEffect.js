@@ -49,16 +49,8 @@ class PitchEffect {
     * @returns {number} a playback ratio
     */
     getRatio (val) {
-        return this.intervalToFrequencyRatio(val / 10);
-    }
-
-    /**
-    * Convert a musical interval to a frequency ratio.
-    * With thanks to Tone.js: https://github.com/Tonejs/Tone.js
-    * @param {number} interval - a musical interval, in semitones
-    * @returns {number} a frequency ratio
-    */
-    intervalToFrequencyRatio (interval) {
+        const interval = val / 10;
+        // Convert the musical interval in semitones to a frequency ratio
         return Math.pow(2, (interval / 12));
     }
 
