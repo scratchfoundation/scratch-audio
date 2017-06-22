@@ -4,8 +4,12 @@ const log = require('./log');
  * A SoundPlayer stores an audio buffer, and plays it
  */
 class SoundPlayer {
-    constructor (context) {
-        this.context = context;
+    /**
+     * @param {AudioContext} audioContext - a webAudio context
+     * @constructor
+     */
+    constructor (audioContext) {
+        this.audioContext = audioContext;
         this.outputNode = null;
         this.buffer = null;
         this.bufferSource = null;
@@ -60,7 +64,7 @@ class SoundPlayer {
             return;
         }
 
-        this.bufferSource = this.context.createBufferSource();
+        this.bufferSource = this.audioContext.createBufferSource();
         this.bufferSource.buffer = this.buffer;
         this.bufferSource.playbackRate.value = this.playbackRate;
         this.bufferSource.connect(this.outputNode);

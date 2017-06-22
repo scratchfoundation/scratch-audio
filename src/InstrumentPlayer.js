@@ -9,11 +9,11 @@ class InstrumentPlayer {
      * play note or set instrument block runs, causing a delay of a few seconds.
      * Using this library we don't have a way to set the volume, sustain the note beyond the sample
      * duration, or run it through the sprite-specific audio effects.
-     * @param {AudioContext} context - a webAudio context
+     * @param {AudioContext} audioContext - a webAudio context
      * @constructor
      */
-    constructor (context) {
-        this.context = context;
+    constructor (audioContext) {
+        this.audioContext = audioContext;
         this.outputNode = null;
 
         // Instrument names used by Musyng Kite soundfont, in order to
@@ -42,7 +42,7 @@ class InstrumentPlayer {
         this.loadInstrument(instrumentNum)
             .then(() => {
                 this.instruments[instrumentNum].play(
-                    note, this.context.currentTime, {
+                    note, this.audioContext.currentTime, {
                         duration: sec,
                         gain: gain
                     }
@@ -59,7 +59,7 @@ class InstrumentPlayer {
         if (this.instruments[instrumentNum]) {
             return Promise.resolve();
         }
-        return Soundfont.instrument(this.context, this.instrumentNames[instrumentNum])
+        return Soundfont.instrument(this.audioContext, this.instrumentNames[instrumentNum])
                 .then(inst => {
                     inst.connect(this.outputNode);
                     this.instruments[instrumentNum] = inst;

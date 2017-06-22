@@ -5,9 +5,13 @@
 * Clamped -100 to 100
 */
 class PanEffect {
-    constructor (context) {
-        this.context = context;
-        this.panner = this.context.createStereoPanner();
+     /**
+     * @param {AudioContext} audioContext - a webAudio context
+     * @constructor
+     */
+    constructor (audioContext) {
+        this.audioContext = audioContext;
+        this.panner = this.audioContext.createStereoPanner();
         this.value = 0;
     }
 

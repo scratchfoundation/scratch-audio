@@ -26,11 +26,11 @@ class AudioPlayer {
 
         // Create the audio effects
         this.pitchEffect = new PitchEffect();
-        this.panEffect = new PanEffect(this.audioEngine.context);
+        this.panEffect = new PanEffect(this.audioEngine.audioContext);
 
         // Chain the audio effects together
         // effectsNode -> panEffect -> audioEngine.input -> destination (speakers)
-        this.effectsNode = this.audioEngine.context.createGain();
+        this.effectsNode = this.audioEngine.audioContext.createGain();
         this.effectsNode.connect(this.panEffect.panner);
         this.panEffect.connect(this.audioEngine.input);
 
@@ -58,7 +58,7 @@ class AudioPlayer {
         }
 
         // create a new soundplayer to play the sound
-        const player = new SoundPlayer(this.audioEngine.context);
+        const player = new SoundPlayer(this.audioEngine.audioContext);
         player.setBuffer(this.audioEngine.audioBuffers[md5]);
         player.connect(this.effectsNode);
         this.pitchEffect.updatePlayer(player);
@@ -150,21 +150,21 @@ class AudioPlayer {
 class AudioEngine {
     constructor () {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        this.context = new AudioContext();
+        this.audioContext = new AudioContext();
 
-        this.input = this.context.createGain();
-        this.input.connect(this.context.destination);
+        this.input = this.audioContext.createGain();
+        this.input.connect(this.audioContext.destination);
 
         // global tempo in bpm (beats per minute)
         this.currentTempo = 60;
 
         // instrument player for play note blocks
-        this.instrumentPlayer = new InstrumentPlayer(this.context);
+        this.instrumentPlayer = new InstrumentPlayer(this.audioContext);
         this.instrumentPlayer.outputNode = this.input;
         this.numInstruments = this.instrumentPlayer.instrumentNames.length;
 
         // drum player for play drum blocks
-        this.drumPlayer = new DrumPlayer(this.context);
+        this.drumPlayer = new DrumPlayer(this.audioContext);
         this.numDrums = this.drumPlayer.drumSounds.length;
 
         // a map of md5s to audio buffers, holding sounds for all sprites
@@ -204,10 +204,10 @@ class AudioEngine {
 
         switch (sound.format) {
         case '':
-            loaderPromise = this.context.decodeAudioData(bufferCopy);
+            loaderPromise = this.audioContext.decodeAudioData(bufferCopy);
             break;
         case 'adpcm':
-            loaderPromise = (new ADPCMSoundDecoder(this.context)).decode(bufferCopy);
+            loaderPromise = (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy);
             break;
         default:
             return log.warn('unknown sound format', sound.format);
@@ -297,8 +297,8 @@ class AudioEngine {
         if (!this.mic && !this.connectingToMic) {
             this.connectingToMic = true; // prevent multiple connection attempts
             navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
-                this.mic = this.context.createMediaStreamSource(stream);
-                this.analyser = this.context.createAnalyser();
+                this.mic = this.audioContext.createMediaStreamSource(stream);
+                this.analyser = this.audioContext.createAnalyser();
                 this.mic.connect(this.analyser);
                 this.micDataArray = new Float32Array(this.analyser.fftSize);
             })

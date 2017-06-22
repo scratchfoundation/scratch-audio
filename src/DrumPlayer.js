@@ -3,11 +3,11 @@ const SoundPlayer = require('./SoundPlayer');
 class DrumPlayer {
     /**
      * A prototype for the drum sound functionality that can load drum sounds, play, and stop them.
-     * @param {AudioContext} context - a webAudio context
+     * @param {AudioContext} audioContext - a webAudio context
      * @constructor
      */
-    constructor (context) {
-        this.context = context;
+    constructor (audioContext) {
+        this.audioContext = audioContext;
 
         const baseUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/';
         const fileNames = [
@@ -34,7 +34,7 @@ class DrumPlayer {
         this.drumSounds = [];
 
         for (let i = 0; i < fileNames.length; i++) {
-            this.drumSounds[i] = new SoundPlayer(this.context);
+            this.drumSounds[i] = new SoundPlayer(this.audioContext);
 
             // download and decode the drum sounds
             // @todo: use scratch-storage to manage these sound files
@@ -44,7 +44,7 @@ class DrumPlayer {
             request.responseType = 'arraybuffer';
             request.onload = () => {
                 const audioData = request.response;
-                this.context.decodeAudioData(audioData).then(buffer => {
+                this.audioContext.decodeAudioData(audioData).then(buffer => {
                     this.drumSounds[i].setBuffer(buffer);
                 });
             };

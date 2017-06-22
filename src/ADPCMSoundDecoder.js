@@ -9,8 +9,12 @@ const log = require('./log');
  * https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
  */
 class ADPCMSoundDecoder {
-    constructor (context) {
-        this.context = context;
+    /**
+     * @param {AudioContext} audioContext - a webAudio context
+     * @constructor
+     */
+    constructor (audioContext) {
+        this.audioContext = audioContext;
     }
     /**
      * Data used by the decompression algorithm
@@ -79,7 +83,7 @@ class ADPCMSoundDecoder {
 
             const samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
 
-            const buffer = this.context.createBuffer(1, samples.length, this.samplesPerSecond);
+            const buffer = this.audioContext.createBuffer(1, samples.length, this.samplesPerSecond);
 
             // @todo optimize this? e.g. replace the divide by storing 1/32768 and multiply?
             for (let i = 0; i < samples.length; i++) {
