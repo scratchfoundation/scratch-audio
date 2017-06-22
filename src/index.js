@@ -29,7 +29,7 @@ class AudioPlayer {
         this.panEffect = new PanEffect(this.audioEngine.audioContext);
 
         // Chain the audio effects together
-        // effectsNode -> panEffect -> audioEngine.input -> destination (speakers)
+        // effectsNode -> panEffect -> audioEngine.input
         this.effectsNode = this.audioEngine.audioContext.createGain();
         this.effectsNode.connect(this.panEffect.panner);
         this.panEffect.connect(this.audioEngine.input);
