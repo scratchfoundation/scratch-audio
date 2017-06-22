@@ -172,7 +172,6 @@ class AudioEngine {
 
         // microphone, for measuring loudness, with a level meter analyzer
         this.mic = null;
-        this.micMeter = null;
     }
 
     /**
