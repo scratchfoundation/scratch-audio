@@ -1,14 +1,13 @@
 const SoundPlayer = require('./SoundPlayer');
-const Tone = require('tone');
 
 class DrumPlayer {
     /**
      * A prototype for the drum sound functionality that can load drum sounds, play, and stop them.
-     * @param {Tone.Gain} outputNode - a webAudio node that the drum sounds will send their output to
+     * @param {AudioContext} audioContext - a webAudio context
      * @constructor
      */
-    constructor (outputNode) {
-        this.outputNode = outputNode;
+    constructor (audioContext) {
+        this.audioContext = audioContext;
 
         const baseUrl = 'https://raw.githubusercontent.com/LLK/scratch-audio/develop/sound-files/drums/';
         const fileNames = [
@@ -35,9 +34,21 @@ class DrumPlayer {
         this.drumSounds = [];
 
         for (let i = 0; i < fileNames.length; i++) {
-            const url = `${baseUrl + fileNames[i]}_22k.wav`;
-            this.drumSounds[i] = new SoundPlayer(this.outputNode);
-            this.drumSounds[i].setBuffer(new Tone.Buffer(url));
+            this.drumSounds[i] = new SoundPlayer(this.audioContext);
+
+            // download and decode the drum sounds
+            // @todo: use scratch-storage to manage these sound files
+            const url = `${baseUrl}${fileNames[i]}_22k.wav`;
+            const request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'arraybuffer';
+            request.onload = () => {
+                const audioData = request.response;
+                this.audioContext.decodeAudioData(audioData).then(buffer => {
+                    this.drumSounds[i].setBuffer(buffer);
+                });
+            };
+            request.send();
         }
     }
 
@@ -46,10 +57,10 @@ class DrumPlayer {
      * The parameter for output node allows sprites or clones to send the drum sound
      * to their individual audio effect chains.
      * @param  {number} drum - the drum number to play (0-indexed)
-     * @param  {Tone.Gain} outputNode - a node to send the output to
+     * @param  {AudioNode} outputNode - a node to send the output to
      */
     play (drum, outputNode) {
-        this.drumSounds[drum].outputNode = outputNode;
+        this.drumSounds[drum].connect(outputNode);
         this.drumSounds[drum].start();
     }
 

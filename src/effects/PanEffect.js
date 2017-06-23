@@ -1,17 +1,18 @@
-const Tone = require('tone');
-
 /**
 * A pan effect, which moves the sound to the left or right between the speakers
 * Effect value of -100 puts the audio entirely on the left channel,
 * 0 centers it, 100 puts it on the right.
 * Clamped -100 to 100
 */
-class PanEffect extends Tone.Effect {
-    constructor () {
-        super();
+class PanEffect {
+     /**
+     * @param {AudioContext} audioContext - a webAudio context
+     * @constructor
+     */
+    constructor (audioContext) {
+        this.audioContext = audioContext;
+        this.panner = this.audioContext.createStereoPanner();
         this.value = 0;
-        this.panner = new Tone.Panner();
-        this.effectSend.chain(this.panner, this.effectReturn);
     }
 
     /**
@@ -21,6 +22,10 @@ class PanEffect extends Tone.Effect {
     set (val) {
         this.value = this.clamp(val, -100, 100);
         this.panner.pan.value = this.value / 100;
+    }
+
+    connect (node) {
+        this.panner.connect(node);
     }
 
     /**

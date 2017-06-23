@@ -1,5 +1,4 @@
 const log = require('./log');
-const Tone = require('tone');
 
 const PitchEffect = require('./effects/PitchEffect');
 const PanEffect = require('./effects/PanEffect');
@@ -25,15 +24,15 @@ class AudioPlayer {
     constructor (audioEngine) {
         this.audioEngine = audioEngine;
 
-        // effects setup
+        // Create the audio effects
         this.pitchEffect = new PitchEffect();
-        this.panEffect = new PanEffect();
+        this.panEffect = new PanEffect(this.audioEngine.audioContext);
 
-        // the effects are chained to an effects node for this player, then to the main audio engine
-        // audio is sent from each soundplayer, through the effects in order, then to the global effects
-        // note that the pitch effect works differently - it sets the playback rate for each soundplayer
-        this.effectsNode = new Tone.Gain();
-        this.effectsNode.chain(this.panEffect, this.audioEngine.input);
+        // Chain the audio effects together
+        // effectsNode -> panEffect -> audioEngine.input
+        this.effectsNode = this.audioEngine.audioContext.createGain();
+        this.effectsNode.connect(this.panEffect.panner);
+        this.panEffect.connect(this.audioEngine.input);
 
         // reset effects to their default parameters
         this.clearEffects();
@@ -59,7 +58,7 @@ class AudioPlayer {
         }
 
         // create a new soundplayer to play the sound
-        const player = new SoundPlayer();
+        const player = new SoundPlayer(this.audioEngine.audioContext);
         player.setBuffer(this.audioEngine.audioBuffers[md5]);
         player.connect(this.effectsNode);
         this.pitchEffect.updatePlayer(player);
@@ -150,18 +149,22 @@ class AudioPlayer {
  */
 class AudioEngine {
     constructor () {
-        this.input = new Tone.Gain();
-        this.input.connect(Tone.Master);
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new AudioContext();
+
+        this.input = this.audioContext.createGain();
+        this.input.connect(this.audioContext.destination);
 
         // global tempo in bpm (beats per minute)
         this.currentTempo = 60;
 
         // instrument player for play note blocks
-        this.instrumentPlayer = new InstrumentPlayer(this.input);
+        this.instrumentPlayer = new InstrumentPlayer(this.audioContext);
+        this.instrumentPlayer.outputNode = this.input;
         this.numInstruments = this.instrumentPlayer.instrumentNames.length;
 
         // drum player for play drum blocks
-        this.drumPlayer = new DrumPlayer(this.input);
+        this.drumPlayer = new DrumPlayer(this.audioContext);
         this.numDrums = this.drumPlayer.drumSounds.length;
 
         // a map of md5s to audio buffers, holding sounds for all sprites
@@ -169,7 +172,6 @@ class AudioEngine {
 
         // microphone, for measuring loudness, with a level meter analyzer
         this.mic = null;
-        this.micMeter = null;
     }
 
     /**
@@ -197,14 +199,14 @@ class AudioEngine {
         let loaderPromise = null;
 
         // Make a copy of the buffer because decoding detaches the original buffer
-        var bufferCopy = sound.data.buffer.slice(0);
+        const bufferCopy = sound.data.buffer.slice(0);
 
         switch (sound.format) {
         case '':
-            loaderPromise = Tone.context.decodeAudioData(bufferCopy);
+            loaderPromise = this.audioContext.decodeAudioData(bufferCopy);
             break;
         case 'adpcm':
-            loaderPromise = (new ADPCMSoundDecoder()).decode(bufferCopy);
+            loaderPromise = (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy);
             break;
         default:
             return log.warn('unknown sound format', sound.format);
@@ -213,7 +215,7 @@ class AudioEngine {
         const storedContext = this;
         return loaderPromise.then(
             decodedAudio => {
-                storedContext.audioBuffers[sound.md5] = new Tone.Buffer(decodedAudio);
+                storedContext.audioBuffers[sound.md5] = decodedAudio;
             },
             error => {
                 log.warn('audio data could not be decoded', error);
@@ -286,20 +288,51 @@ class AudioEngine {
     /**
      * Get the current loudness of sound received by the microphone.
      * Sound is measured in RMS and smoothed.
+     * Some code adapted from Tone.js: https://github.com/Tonejs/Tone.js
      * @return {number} loudness scaled 0 to 100
      */
     getLoudness () {
-        if (!this.mic) {
-            this.mic = new Tone.UserMedia();
-            this.micMeter = new Tone.Meter('level', 0.5);
-            this.mic.open();
-            this.mic.connect(this.micMeter);
+        // The microphone has not been set up, so try to connect to it
+        if (!this.mic && !this.connectingToMic) {
+            this.connectingToMic = true; // prevent multiple connection attempts
+            navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+                this.mic = this.audioContext.createMediaStreamSource(stream);
+                this.analyser = this.audioContext.createAnalyser();
+                this.mic.connect(this.analyser);
+                this.micDataArray = new Float32Array(this.analyser.fftSize);
+            })
+            .catch(err => {
+                log.warn(err);
+            });
         }
-        if (this.mic && this.mic.state === 'started') {
-            return this.micMeter.value * 100;
-        }
-        return -1;
 
+        // If the microphone is set up and active, measure the loudness
+        if (this.mic && this.mic.mediaStream.active) {
+            this.analyser.getFloatTimeDomainData(this.micDataArray);
+            let sum = 0;
+            // compute the RMS of the sound
+            for (let i = 0; i < this.micDataArray.length; i++){
+                sum += Math.pow(this.micDataArray[i], 2);
+            }
+            let rms = Math.sqrt(sum / this.micDataArray.length);
+            // smooth the value, if it is descending
+            if (this._lastValue) {
+                rms = Math.max(rms, this._lastValue * 0.6);
+            }
+            this._lastValue = rms;
+
+            // Scale the measurement so it's more sensitive to quieter sounds
+            rms *= 1.63;
+            rms = Math.sqrt(rms);
+            // Scale it up to 0-100 and round
+            rms = Math.round(rms * 100);
+            // Prevent it from going above 100
+            rms = Math.min(rms, 100);
+            return rms;
+        }
+
+        // if there is no microphone input, return -1
+        return -1;
     }
 
     /**

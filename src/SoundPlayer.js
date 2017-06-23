@@ -1,13 +1,17 @@
-const Tone = require('tone');
 const log = require('./log');
 
 /**
  * A SoundPlayer stores an audio buffer, and plays it
  */
 class SoundPlayer {
-    constructor () {
+    /**
+     * @param {AudioContext} audioContext - a webAudio context
+     * @constructor
+     */
+    constructor (audioContext) {
+        this.audioContext = audioContext;
         this.outputNode = null;
-        this.buffer = new Tone.Buffer();
+        this.buffer = null;
         this.bufferSource = null;
         this.playbackRate = 1;
         this.isPlaying = false;
@@ -15,7 +19,7 @@ class SoundPlayer {
 
     /**
      * Connect the SoundPlayer to an output node
-     * @param  {Tone.Gain} node - an output node to connect to
+     * @param {GainNode} node - an output node to connect to
      */
     connect (node) {
         this.outputNode = node;
@@ -23,7 +27,7 @@ class SoundPlayer {
 
     /**
      * Set an audio buffer
-     * @param {Tone.Buffer} buffer Buffer to set
+     * @param {AudioBuffer} buffer - Buffer to set
      */
     setBuffer (buffer) {
         this.buffer = buffer;
@@ -55,13 +59,13 @@ class SoundPlayer {
      * The web audio framework requires a new audio buffer source node for each playback
      */
     start () {
-        if (!this.buffer || !this.buffer.loaded) {
+        if (!this.buffer) {
             log.warn('tried to play a sound that was not loaded yet');
             return;
         }
 
-        this.bufferSource = Tone.context.createBufferSource();
-        this.bufferSource.buffer = this.buffer.get();
+        this.bufferSource = this.audioContext.createBufferSource();
+        this.bufferSource.buffer = this.buffer;
         this.bufferSource.playbackRate.value = this.playbackRate;
         this.bufferSource.connect(this.outputNode);
         this.bufferSource.start();
@@ -75,12 +79,11 @@ class SoundPlayer {
      * @return {Promise} a Promise that resolves when the sound finishes playing
      */
     finished () {
-        const storedContext = this;
         return new Promise(resolve => {
-            storedContext.bufferSource.onended = function () {
+            this.bufferSource.onended = () => {
                 this.isPlaying = false;
                 resolve();
-            }.bind(storedContext);
+            };
         });
     }
 }

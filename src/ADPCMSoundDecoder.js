@@ -1,5 +1,4 @@
 const ArrayBufferStream = require('./ArrayBufferStream');
-const Tone = require('tone');
 const log = require('./log');
 
 /**
@@ -10,6 +9,13 @@ const log = require('./log');
  * https://github.com/LLK/scratch-flash/blob/master/src/sound/WAVFile.as
  */
 class ADPCMSoundDecoder {
+    /**
+     * @param {AudioContext} audioContext - a webAudio context
+     * @constructor
+     */
+    constructor (audioContext) {
+        this.audioContext = audioContext;
+    }
     /**
      * Data used by the decompression algorithm
      * @type {Array}
@@ -40,7 +46,7 @@ class ADPCMSoundDecoder {
      * Decode an ADPCM sound stored in an ArrayBuffer and return a promise
      * with the decoded audio buffer.
      * @param  {ArrayBuffer} audioData - containing ADPCM encoded wav audio
-     * @return {Tone.Buffer} the decoded audio buffer
+     * @return {AudioBuffer} the decoded audio buffer
      */
     decode (audioData) {
 
@@ -77,8 +83,7 @@ class ADPCMSoundDecoder {
 
             const samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
 
-            // @todo this line is the only place Tone is used here, should be possible to remove
-            const buffer = Tone.context.createBuffer(1, samples.length, this.samplesPerSecond);
+            const buffer = this.audioContext.createBuffer(1, samples.length, this.samplesPerSecond);
 
             // @todo optimize this? e.g. replace the divide by storing 1/32768 and multiply?
             for (let i = 0; i < samples.length; i++) {

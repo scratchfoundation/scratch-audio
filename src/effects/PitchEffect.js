@@ -1,5 +1,3 @@
-const Tone = require('tone');
-
 /**
 * A pitch change effect, which changes the playback rate of the sound in order
 * to change its pitch: reducing the playback rate lowers the pitch, increasing the rate
@@ -21,7 +19,6 @@ class PitchEffect {
     constructor () {
         this.value = 0; // effect value
         this.ratio = 1; // the playback rate ratio
-        this.tone = new Tone();
     }
 
     /**
@@ -52,7 +49,9 @@ class PitchEffect {
     * @returns {number} a playback ratio
     */
     getRatio (val) {
-        return this.tone.intervalToFrequencyRatio(val / 10);
+        const interval = val / 10;
+        // Convert the musical interval in semitones to a frequency ratio
+        return Math.pow(2, (interval / 12));
     }
 
     /**
