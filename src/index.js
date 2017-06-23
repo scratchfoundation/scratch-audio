@@ -317,7 +317,7 @@ class AudioEngine {
             let rms = Math.sqrt(sum / this.micDataArray.length);
             // smooth the value, if it is descending
             if (this._lastValue) {
-                rms = Math.max(rms, this._lastValue * 0.5);
+                rms = Math.max(rms, this._lastValue * 0.6);
             }
             this._lastValue = rms;
 
