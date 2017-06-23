@@ -292,7 +292,7 @@ class AudioEngine {
      * @return {number} loudness scaled 0 to 100
      */
     getLoudness () {
-        // the microphone has not been set up, try to connect to it
+        // The microphone has not been set up, so try to connect to it
         if (!this.mic && !this.connectingToMic) {
             this.connectingToMic = true; // prevent multiple connection attempts
             navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
@@ -306,7 +306,7 @@ class AudioEngine {
             });
         }
 
-        // if the microphone is set up and active, measure the loudness
+        // If the microphone is set up and active, measure the loudness
         if (this.mic && this.mic.mediaStream.active) {
             this.analyser.getFloatTimeDomainData(this.micDataArray);
             let sum = 0;
