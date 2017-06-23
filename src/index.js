@@ -321,11 +321,14 @@ class AudioEngine {
             }
             this._lastValue = rms;
 
-            // scale it
-            // @todo figure out why this magic number is needed and remove it!
+            // Scale the measurement so it's more sensitive to quieter sounds
             rms *= 1.63;
-            // scale and round the output
-            return Math.round(Math.sqrt(rms) * 100);
+            rms = Math.sqrt(rms);
+            // Scale it up to 0-100 and round
+            rms = Math.round(rms * 100);
+            // Prevent it from going above 100
+            rms = Math.min(rms, 100);
+            return rms;
         }
 
         // if there is no microphone input, return -1
