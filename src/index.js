@@ -1,5 +1,7 @@
 const log = require('./log');
 
+const AudioContext = require('audio-context');
+
 const PitchEffect = require('./effects/PitchEffect');
 const PanEffect = require('./effects/PanEffect');
 
@@ -149,7 +151,6 @@ class AudioPlayer {
  */
 class AudioEngine {
     constructor () {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
         this.audioContext = new AudioContext();
 
         this.input = this.audioContext.createGain();
