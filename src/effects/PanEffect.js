@@ -33,7 +33,7 @@ class PanEffect {
         this.value = val;
 
         // Map the scratch effect value (-100 to 100) to (0 to 1)
-        const p =  (val + 100) / 200;
+        const p = (val + 100) / 200;
 
         // Use trig functions for equal-loudness panning
         // See e.g. https://docs.cycling74.com/max7/tutorials/13_panningchapter01
