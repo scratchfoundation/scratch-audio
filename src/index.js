@@ -203,7 +203,18 @@ class AudioEngine {
 
         switch (sound.format) {
         case '':
-            loaderPromise = this.audioContext.decodeAudioData(bufferCopy);
+            // Check for newer promise-based API
+            if (this.audioContext.decodeAudioData.length === 1) {
+                loaderPromise = this.audioContext.decodeAudioData(bufferCopy);
+            } else {
+                // Fall back to callback API
+                loaderPromise = new Promise((resolve, reject) => {
+                    this.audioContext.decodeAudioData(bufferCopy,
+                        decodedAudio => resolve(decodedAudio),
+                        error => reject(error)
+                    );
+                });
+            }
             break;
         case 'adpcm':
             loaderPromise = (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy);
