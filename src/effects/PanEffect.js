@@ -2,7 +2,6 @@
 * A pan effect, which moves the sound to the left or right between the speakers
 * Effect value of -100 puts the audio entirely on the left channel,
 * 0 centers it, 100 puts it on the right.
-* Clamped -100 to 100
 */
 class PanEffect {
      /**
@@ -11,8 +10,19 @@ class PanEffect {
      */
     constructor (audioContext) {
         this.audioContext = audioContext;
-        this.panner = this.audioContext.createStereoPanner();
         this.value = 0;
+
+        this.input = this.audioContext.createGain();
+        this.leftGain = this.audioContext.createGain();
+        this.rightGain = this.audioContext.createGain();
+        this.channelMerger = this.audioContext.createChannelMerger(2);
+
+        this.input.connect(this.leftGain);
+        this.input.connect(this.rightGain);
+        this.leftGain.connect(this.channelMerger, 0, 0);
+        this.rightGain.connect(this.channelMerger, 0, 1);
+
+        this.set(this.value);
     }
 
     /**
@@ -20,31 +30,23 @@ class PanEffect {
     * @param {number} val - the new value to set the effect to
     */
     set (val) {
-        this.value = this.clamp(val, -100, 100);
-        this.panner.pan.value = this.value / 100;
+        this.value = val;
+
+        // Map the scratch effect value (-100 to 100) to (0 to 1)
+        const p = (val + 100) / 200;
+
+        // Use trig functions for equal-loudness panning
+        // See e.g. https://docs.cycling74.com/max7/tutorials/13_panningchapter01
+        this.leftGain.gain.value = Math.cos(p * Math.PI / 2);
+        this.rightGain.gain.value = Math.sin(p * Math.PI / 2);
     }
 
+    /**
+     * Connnect this effect's output to another audio node
+     * @param {AudioNode} node - the node to connect to
+     */
     connect (node) {
-        this.panner.connect(node);
-    }
-
-    /**
-    * Change the effect value
-    * @param {number} val - the value to change the effect by
-    */
-    changeBy (val) {
-        this.set(this.value + val);
-    }
-
-    /**
-    * Clamp the input to a range
-    * @param {number} input - the input to clamp
-    * @param {number} min - the min value to clamp to
-    * @param {number} max - the max value to clamp to
-    * @return {number} the clamped value
-    */
-    clamp (input, min, max) {
-        return Math.min(Math.max(input, min), max);
+        this.channelMerger.connect(node);
     }
 }
 

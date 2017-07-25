@@ -33,7 +33,7 @@ class AudioPlayer {
         // Chain the audio effects together
         // effectsNode -> panEffect -> audioEngine.input
         this.effectsNode = this.audioEngine.audioContext.createGain();
-        this.effectsNode.connect(this.panEffect.panner);
+        this.effectsNode.connect(this.panEffect.input);
         this.panEffect.connect(this.audioEngine.input);
 
         // reset effects to their default parameters
