@@ -1,6 +1,7 @@
-const log = require('./log');
-
 const AudioContext = require('audio-context');
+
+const log = require('./log');
+const uid = require('./uid');
 
 const PitchEffect = require('./effects/PitchEffect');
 const PanEffect = require('./effects/PanEffect');
@@ -39,35 +40,35 @@ class AudioPlayer {
         // reset effects to their default parameters
         this.clearEffects();
 
-        // sound players that are currently playing, indexed by the sound's md5
+        // sound players that are currently playing, indexed by the sound's soundId
         this.activeSoundPlayers = {};
     }
 
     /**
      * Play a sound
-     * @param  {string} md5 - the md5 id of a sound file
+     * @param  {string} soundId - the soundId id of a sound file
      * @return {Promise} a Promise that resolves when the sound finishes playing
      */
-    playSound (md5) {
+    playSound (soundId) {
         // if this sound is not in the audio engine, return
-        if (!this.audioEngine.audioBuffers[md5]) {
+        if (!this.audioEngine.audioBuffers[soundId]) {
             return;
         }
 
         // if this sprite or clone is already playing this sound, stop it first
-        if (this.activeSoundPlayers[md5]) {
-            this.activeSoundPlayers[md5].stop();
+        if (this.activeSoundPlayers[soundId]) {
+            this.activeSoundPlayers[soundId].stop();
         }
 
         // create a new soundplayer to play the sound
         const player = new SoundPlayer(this.audioEngine.audioContext);
-        player.setBuffer(this.audioEngine.audioBuffers[md5]);
+        player.setBuffer(this.audioEngine.audioBuffers[soundId]);
         player.connect(this.effectsNode);
         this.pitchEffect.updatePlayer(player);
         player.start();
 
         // add it to the list of active sound players
-        this.activeSoundPlayers[md5] = player;
+        this.activeSoundPlayers[soundId] = player;
 
         // remove sounds that are not playing from the active sound players array
         for (const id in this.activeSoundPlayers) {
@@ -98,8 +99,8 @@ class AudioPlayer {
      */
     stopAllSounds () {
         // stop all active sound players
-        for (const md5 in this.activeSoundPlayers) {
-            this.activeSoundPlayers[md5].stop();
+        for (const soundId in this.activeSoundPlayers) {
+            this.activeSoundPlayers[soundId].stop();
         }
 
         // stop all instruments
@@ -168,7 +169,7 @@ class AudioEngine {
         this.drumPlayer = new DrumPlayer(this.audioContext);
         this.numDrums = this.drumPlayer.drumSounds.length;
 
-        // a map of md5s to audio buffers, holding sounds for all sprites
+        // a map of soundIds to audio buffers, holding sounds for all sprites
         this.audioBuffers = {};
 
         // microphone, for measuring loudness, with a level meter analyzer
@@ -188,15 +189,14 @@ class AudioEngine {
 
     /**
      * Decode a sound, decompressing it into audio samples.
-     * Store a reference to it the sound in the audioBuffers dictionary, indexed by md5
+     * Store a reference to it the sound in the audioBuffers dictionary, indexed by soundId
      * @param  {object} sound - an object containing audio data and metadata for a sound
      * @property {Buffer} data - sound data loaded from scratch-storage.
      * @property {string} format - format type, either empty or adpcm.
-     * @property {string} md5 - the MD5 and extension of the sound.
-     * @returns {?Promise} - a promise which will resolve after the audio buffer is stored, or null on error.
+     * @returns {?Promise} - a promise which will resolve to the soundId if decoded and stored.
      */
     decodeSound (sound) {
-
+        const soundId = uid();
         let loaderPromise = null;
 
         // Make a copy of the buffer because decoding detaches the original buffer
@@ -216,7 +216,8 @@ class AudioEngine {
         const storedContext = this;
         return loaderPromise.then(
             decodedAudio => {
-                storedContext.audioBuffers[sound.md5] = decodedAudio;
+                storedContext.audioBuffers[soundId] = decodedAudio;
+                return soundId;
             },
             error => {
                 log.warn('audio data could not be decoded', error);
