@@ -44,7 +44,20 @@ class DrumPlayer {
             request.responseType = 'arraybuffer';
             request.onload = () => {
                 const audioData = request.response;
-                this.audioContext.decodeAudioData(audioData).then(buffer => {
+                // Check for newer promise-based API
+                let loaderPromise;
+                if (this.audioContext.decodeAudioData.length === 1) {
+                    loaderPromise = this.audioContext.decodeAudioData(audioData);
+                } else {
+                    // Fall back to callback API
+                    loaderPromise = new Promise((resolve, reject) => {
+                        this.audioContext.decodeAudioData(audioData,
+                            decodedAudio => resolve(decodedAudio),
+                            error => reject(error)
+                        );
+                    });
+                }
+                loaderPromise.then(buffer => {
                     this.drumSounds[i].setBuffer(buffer);
                 });
             };
