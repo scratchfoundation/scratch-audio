@@ -230,8 +230,8 @@ class AudioEngine {
      * @param {!string} soundId - the id of the sound buffer to get
      * @return {AudioBuffer} the buffer corresponding to the given sound id.
      */
-    getSoundBuffer (soundId, newBuffer) {
-        return this.audioBuffers[soundId] = newBuffer;
+    getSoundBuffer (soundId) {
+        return this.audioBuffers[soundId];
     }
 
     /**
