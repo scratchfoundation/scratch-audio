@@ -226,6 +226,24 @@ class AudioEngine {
     }
 
     /**
+     * Retrieve the audio buffer as held in memory for a given sound id.
+     * @param {!string} soundId - the id of the sound buffer to get
+     * @return {AudioBuffer} the buffer corresponding to the given sound id.
+     */
+    getSoundBuffer (soundId, newBuffer) {
+        return this.audioBuffers[soundId] = newBuffer;
+    }
+
+    /**
+     * Update the in-memory audio buffer to a new one by soundId.
+     * @param {!string} soundId - the id of the sound buffer to update.
+     * @param {AudioBuffer} newBuffer - the new buffer to swap in.
+     */
+    updateSoundBuffer (soundId, newBuffer) {
+        this.audioBuffers[soundId] = newBuffer;
+    }
+
+    /**
      * An older version of the AudioEngine had this function to load all sounds
      * This is a stub to provide a warning when it is called
      * @todo remove this
