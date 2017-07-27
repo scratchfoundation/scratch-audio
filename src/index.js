@@ -1,3 +1,4 @@
+const StartAudioContext = require('startaudiocontext');
 const AudioContext = require('audio-context');
 
 const log = require('./log');
@@ -153,6 +154,7 @@ class AudioPlayer {
 class AudioEngine {
     constructor () {
         this.audioContext = new AudioContext();
+        StartAudioContext(this.audioContext);
 
         this.input = this.audioContext.createGain();
         this.input.connect(this.audioContext.destination);
