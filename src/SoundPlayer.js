@@ -48,7 +48,7 @@ class SoundPlayer {
      * Stop the sound
      */
     stop () {
-        if (this.bufferSource) {
+        if (this.bufferSource && this.isPlaying) {
             this.bufferSource.stop();
         }
         this.isPlaying = false;
