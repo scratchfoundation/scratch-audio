@@ -46,6 +46,14 @@ class AudioPlayer {
     }
 
     /**
+     * Get this sprite's input node, so that other objects can route sound through it.
+     * @return {AudioNode} the AudioNode for this sprite's input
+     */
+    getInputNode () {
+        return this.effectsNode;
+    }
+
+    /**
      * Play a sound
      * @param  {string} soundId - the soundId id of a sound file
      * @return {Promise} a Promise that resolves when the sound finishes playing
