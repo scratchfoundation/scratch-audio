@@ -9,8 +9,6 @@ const PanEffect = require('./effects/PanEffect');
 
 const SoundPlayer = require('./SoundPlayer');
 const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
-const InstrumentPlayer = require('./InstrumentPlayer');
-const DrumPlayer = require('./DrumPlayer');
 
 /**
  * @fileOverview Scratch Audio is divided into a single AudioEngine,
@@ -43,6 +41,8 @@ class AudioPlayer {
 
         // sound players that are currently playing, indexed by the sound's soundId
         this.activeSoundPlayers = {};
+
+        console.log('updated audio engine!');
     }
 
     /**
@@ -89,18 +89,6 @@ class AudioPlayer {
         }
 
         return player.finished();
-    }
-
-    /**
-     * Play a drum sound. The AudioEngine contains the DrumPlayer, but the AudioPlayer
-     * calls this function so that it can pass a reference to its own effects node.
-     * @param  {number} drum - a drum number (0-indexed)
-     * @param  {number} beats - a duration in beats
-     * @return {Promise} a Promise that resolves after the duration has elapsed
-     */
-    playDrumForBeats (drum, beats) {
-        this.audioEngine.drumPlayer.play(drum, this.effectsNode);
-        return this.audioEngine.waitForBeats(beats);
     }
 
     /**
@@ -156,8 +144,7 @@ class AudioPlayer {
 
 /**
  * There is a single instance of the AudioEngine. It handles global audio properties and effects,
- * loads all the audio buffers for sounds belonging to sprites, and creates a single instrument player
- * and a drum player, used by all play note and play drum blocks.
+ * loads all the audio buffers for sounds belonging to sprites.
  */
 class AudioEngine {
     constructor () {
@@ -166,18 +153,6 @@ class AudioEngine {
 
         this.input = this.audioContext.createGain();
         this.input.connect(this.audioContext.destination);
-
-        // global tempo in bpm (beats per minute)
-        this.currentTempo = 60;
-
-        // instrument player for play note blocks
-        this.instrumentPlayer = new InstrumentPlayer(this.audioContext);
-        this.instrumentPlayer.outputNode = this.input;
-        this.numInstruments = this.instrumentPlayer.instrumentNames.length;
-
-        // drum player for play drum blocks
-        this.drumPlayer = new DrumPlayer(this.audioContext);
-        this.numDrums = this.drumPlayer.drumSounds.length;
 
         // a map of soundIds to audio buffers, holding sounds for all sprites
         this.audioBuffers = {};
@@ -271,59 +246,6 @@ class AudioEngine {
      */
     loadSounds () {
         log.warn('The loadSounds function is no longer available. Please use Scratch Storage.');
-    }
-
-    /**
-     * Play a note for a duration on an instrument with a volume
-     * @param  {number} note - a MIDI note number
-     * @param  {number} beats - a duration in beats
-     * @param  {number} inst - an instrument number (0-indexed)
-     * @param  {number} vol - a volume level (0-100%)
-     * @return {Promise} a Promise that resolves after the duration has elapsed
-     */
-    playNoteForBeatsWithInstAndVol (note, beats, inst, vol) {
-        const sec = this.beatsToSec(beats);
-        this.instrumentPlayer.playNoteForSecWithInstAndVol(note, sec, inst, vol);
-        return this.waitForBeats(beats);
-    }
-
-    /**
-     * Convert a number of beats to a number of seconds, using the current tempo
-     * @param  {number} beats number of beats to convert to secs
-     * @return {number} seconds number of seconds `beats` will last
-     */
-    beatsToSec (beats) {
-        return (60 / this.currentTempo) * beats;
-    }
-
-    /**
-     * Wait for some number of beats
-     * @param  {number} beats number of beats to wait for
-     * @return {Promise} a Promise that resolves after the duration has elapsed
-     */
-    waitForBeats (beats) {
-        const storedContext = this;
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve();
-            }, storedContext.beatsToSec(beats) * 1000);
-        });
-    }
-
-    /**
-     * Set the global tempo in bpm (beats per minute)
-     * @param {number} value - the new tempo to set
-     */
-    setTempo (value) {
-        this.currentTempo = value;
-    }
-
-    /**
-     * Change the tempo by some number of bpm (beats per minute)
-     * @param  {number} value - the number of bpm to change the tempo by
-     */
-    changeTempo (value) {
-        this.setTempo(this.currentTempo + value);
     }
 
     /**
