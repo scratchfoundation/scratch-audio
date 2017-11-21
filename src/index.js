@@ -41,8 +41,6 @@ class AudioPlayer {
 
         // sound players that are currently playing, indexed by the sound's soundId
         this.activeSoundPlayers = {};
-
-        console.log('updated audio engine!');
     }
 
     /**
