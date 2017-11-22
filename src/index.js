@@ -90,19 +90,13 @@ class AudioPlayer {
     }
 
     /**
-     * Stop all sounds, notes and drums that are playing
+     * Stop all sounds that are playing
      */
     stopAllSounds () {
         // stop all active sound players
         for (const soundId in this.activeSoundPlayers) {
             this.activeSoundPlayers[soundId].stop();
         }
-
-        // stop all instruments
-        this.audioEngine.instrumentPlayer.stopAll();
-
-        // stop drum notes
-        this.audioEngine.drumPlayer.stopAll();
     }
 
     /**
