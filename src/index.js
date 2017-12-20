@@ -28,7 +28,7 @@ class AudioPlayer {
 
         // Create the audio effects
         this.pitchEffect = new PitchEffect();
-        this.panEffect = new PanEffect(this.audioEngine.audioContext);
+        this.panEffect = new PanEffect(this.audioEngine);
 
         // Chain the audio effects together
         // effectsNode -> panEffect -> audioEngine.input
@@ -121,7 +121,8 @@ class AudioPlayer {
     clearEffects () {
         this.panEffect.set(0);
         this.pitchEffect.set(0, this.activeSoundPlayers);
-        this.effectsNode.gain.value = 1;
+        if (this.audioEngine === null) return;
+        this.effectsNode.gain.setTargetAtTime(1.0, 0, this.audioEngine.DECAY_TIME);
     }
 
     /**
@@ -129,7 +130,8 @@ class AudioPlayer {
      * @param {number} value - the volume in range 0-100
      */
     setVolume (value) {
-        this.effectsNode.gain.value = value / 100;
+        if (this.audioEngine === null) return;
+        this.effectsNode.gain.setTargetAtTime(value / 100, 0, this.audioEngine.DECAY_TIME);
     }
 }
 
@@ -162,6 +164,16 @@ class AudioEngine {
             pitch: 'pitch',
             pan: 'pan'
         };
+    }
+
+    /**
+     * A short duration, for use as a time constant for exponential audio parameter transitions.
+     * See:
+     * https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime
+     * @const {number}
+     */
+    get DECAY_TIME () {
+        return 0.001;
     }
 
     /**
