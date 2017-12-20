@@ -5,11 +5,12 @@
 */
 class PanEffect {
      /**
-     * @param {AudioContext} audioContext - a webAudio context
+     * @param {AudioEngine} audioEngine - the audio engine.
      * @constructor
      */
-    constructor (audioContext) {
-        this.audioContext = audioContext;
+    constructor (audioEngine) {
+        this.audioEngine = audioEngine;
+        this.audioContext = this.audioEngine.audioContext;
         this.value = 0;
 
         this.input = this.audioContext.createGain();
@@ -37,8 +38,11 @@ class PanEffect {
 
         // Use trig functions for equal-loudness panning
         // See e.g. https://docs.cycling74.com/max7/tutorials/13_panningchapter01
-        this.leftGain.gain.value = Math.cos(p * Math.PI / 2);
-        this.rightGain.gain.value = Math.sin(p * Math.PI / 2);
+        const leftVal = Math.cos(p * Math.PI / 2);
+        const rightVal = Math.sin(p * Math.PI / 2);
+
+        this.leftGain.gain.setTargetAtTime(leftVal, 0, this.audioEngine.ONE_THIRD_FRAME);
+        this.rightGain.gain.setTargetAtTime(rightVal, 0, this.audioEngine.ONE_THIRD_FRAME);
     }
 
     /**
