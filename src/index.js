@@ -263,6 +263,7 @@ class AudioEngine {
         if (!this.mic && !this.connectingToMic) {
             this.connectingToMic = true; // prevent multiple connection attempts
             navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
+                this.audioStream = stream;
                 this.mic = this.audioContext.createMediaStreamSource(stream);
                 this.analyser = this.audioContext.createAnalyser();
                 this.mic.connect(this.analyser);
@@ -274,7 +275,7 @@ class AudioEngine {
         }
 
         // If the microphone is set up and active, measure the loudness
-        if (this.mic && this.mic.mediaStream.active) {
+        if (this.mic && this.audioStream.active) {
             this.analyser.getFloatTimeDomainData(this.micDataArray);
             let sum = 0;
             // compute the RMS of the sound
