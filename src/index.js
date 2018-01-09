@@ -133,6 +133,14 @@ class AudioPlayer {
         if (this.audioEngine === null) return;
         this.effectsNode.gain.setTargetAtTime(value / 100, 0, this.audioEngine.DECAY_TIME);
     }
+
+    /**
+     * Clean up and disconnect audio nodes.
+     */
+    dispose () {
+        this.panEffect.dispose();
+        this.effectsNode.disconnect();
+    }
 }
 
 
