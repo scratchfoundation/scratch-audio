@@ -52,6 +52,16 @@ class PanEffect {
     connect (node) {
         this.channelMerger.connect(node);
     }
+
+    /**
+     * Clean up and disconnect audio nodes.
+     */
+    dispose () {
+        this.input.disconnect();
+        this.leftGain.disconnect();
+        this.rightGain.disconnect();
+        this.channelMerger.disconnect();
+    }
 }
 
 module.exports = PanEffect;
