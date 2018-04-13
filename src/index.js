@@ -15,6 +15,27 @@ const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
  * that handles global functionality, and AudioPlayers, belonging to individual sprites and clones.
  */
 
+/**
+ * Wrapper to ensure that audioContext.decodeAudioData is a promise
+ * @param {object} audioContext The current AudioContext
+ * @param {ArrayBuffer} buffer Audio data buffer to decode
+ * @return {Promise} A promise that resolves to the decoded audio
+ */
+const decodeAudioData = function (audioContext, buffer) {
+    // Check for newer promise-based API
+    if (audioContext.decodeAudioData.length === 1) {
+        return audioContext.decodeAudioData(buffer);
+    }
+    // Fall back to callback API
+    return new Promise((resolve, reject) => {
+        audioContext.decodeAudioData(buffer,
+            decodedAudio => resolve(decodedAudio),
+            error => reject(error)
+        );
+    });
+};
+
+
 class AudioPlayer {
     /**
      * Each sprite or clone has an audio player
@@ -192,32 +213,18 @@ class AudioEngine {
      * @returns {?Promise} - a promise which will resolve to the soundId if decoded and stored.
      */
     decodeSound (sound) {
-        const soundId = uid();
-        let loaderPromise = null;
-
         // Make a copy of the buffer because decoding detaches the original buffer
         const bufferCopy1 = sound.data.buffer.slice(0);
 
-        // Attempt to decode the sound using the browser's native audio data decoder
-        // Check for newer promise-based API
-        if (this.audioContext.decodeAudioData.length === 1) {
-            loaderPromise = this.audioContext.decodeAudioData(bufferCopy1);
-        } else {
-            // Fall back to callback API
-            loaderPromise = new Promise((resolve, reject) => {
-                this.audioContext.decodeAudioData(bufferCopy1,
-                    decodedAudio => resolve(decodedAudio),
-                    error => reject(error)
-                );
-            });
-        }
+        const soundId = uid();
+        // Partially apply updateSoundBuffer function with the current
+        // soundId so that it's ready to be used on successfully decoded audio
+        const addDecodedAudio = this.updateSoundBuffer.bind(this, soundId);
 
-        const storedContext = this;
-        return loaderPromise.then(
-            decodedAudio => {
-                storedContext.updateSoundBuffer(soundId, decodedAudio);
-                return soundId;
-            },
+        // Attempt to decode the sound using the browser's native audio data decoder
+        // If that fails, attempt to decode as ADPCM
+        return decodeAudioData(this.audioContext, bufferCopy1).then(
+            addDecodedAudio,
             () => {
                 // The audio context failed to parse the sound data
                 // we gave it, so try to decode as 'adpcm'
@@ -227,10 +234,7 @@ class AudioEngine {
                 // Try decoding as adpcm
                 return (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy2)
                     .then(
-                        decodedAudio => {
-                            storedContext.updateSoundBuffer(soundId, decodedAudio);
-                            return soundId;
-                        },
+                        addDecodedAudio,
                         sndError => {
                             log.warn('audio data could not be decoded', sndError);
                         }
@@ -249,12 +253,14 @@ class AudioEngine {
     }
 
     /**
-     * Update the in-memory audio buffer to a new one by soundId.
+     * Add or update the in-memory audio buffer to a new one by soundId.
      * @param {!string} soundId - the id of the sound buffer to update.
      * @param {AudioBuffer} newBuffer - the new buffer to swap in.
+     * @return {string} The uid of the sound that was updated or added
      */
     updateSoundBuffer (soundId, newBuffer) {
         this.audioBuffers[soundId] = newBuffer;
+        return soundId;
     }
 
     /**
