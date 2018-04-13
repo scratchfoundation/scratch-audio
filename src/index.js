@@ -189,7 +189,6 @@ class AudioEngine {
      * Store a reference to it the sound in the audioBuffers dictionary, indexed by soundId
      * @param  {object} sound - an object containing audio data and metadata for a sound
      * @property {Buffer} data - sound data loaded from scratch-storage.
-     * @property {string} format - format type, either empty or adpcm.
      * @returns {?Promise} - a promise which will resolve to the soundId if decoded and stored.
      */
     decodeSound (sound) {
@@ -197,38 +196,45 @@ class AudioEngine {
         let loaderPromise = null;
 
         // Make a copy of the buffer because decoding detaches the original buffer
-        const bufferCopy = sound.data.buffer.slice(0);
+        const bufferCopy1 = sound.data.buffer.slice(0);
 
-        switch (sound.format) {
-        case '':
-            // Check for newer promise-based API
-            if (this.audioContext.decodeAudioData.length === 1) {
-                loaderPromise = this.audioContext.decodeAudioData(bufferCopy);
-            } else {
-                // Fall back to callback API
-                loaderPromise = new Promise((resolve, reject) => {
-                    this.audioContext.decodeAudioData(bufferCopy,
-                        decodedAudio => resolve(decodedAudio),
-                        error => reject(error)
-                    );
-                });
-            }
-            break;
-        case 'adpcm':
-            loaderPromise = (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy);
-            break;
-        default:
-            return log.warn('unknown sound format', sound.format);
+        // Attempt to decode the sound using the browser's native audio data decoder
+        // Check for newer promise-based API
+        if (this.audioContext.decodeAudioData.length === 1) {
+            loaderPromise = this.audioContext.decodeAudioData(bufferCopy1);
+        } else {
+            // Fall back to callback API
+            loaderPromise = new Promise((resolve, reject) => {
+                this.audioContext.decodeAudioData(bufferCopy1,
+                    decodedAudio => resolve(decodedAudio),
+                    error => reject(error)
+                );
+            });
         }
 
         const storedContext = this;
         return loaderPromise.then(
             decodedAudio => {
-                storedContext.audioBuffers[soundId] = decodedAudio;
+                storedContext.updateSoundBuffer(soundId, decodedAudio);
                 return soundId;
             },
-            error => {
-                log.warn('audio data could not be decoded', error);
+            () => {
+                // The audio context failed to parse the sound data
+                // we gave it, so try to decode as 'adpcm'
+
+                // First we need to create another copy of our original data
+                const bufferCopy2 = sound.data.buffer.slice(0);
+                // Try decoding as adpcm
+                return (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy2)
+                    .then(
+                        decodedAudio => {
+                            storedContext.updateSoundBuffer(soundId, decodedAudio);
+                            return soundId;
+                        },
+                        sndError => {
+                            log.warn('audio data could not be decoded', sndError);
+                        }
+                    );
             }
         );
     }
