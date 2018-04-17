@@ -235,8 +235,8 @@ class AudioEngine {
                 return (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy2)
                     .then(
                         addDecodedAudio,
-                        sndError => {
-                            log.warn('audio data could not be decoded', sndError);
+                        error => {
+                            log.warn('audio data could not be decoded', error);
                         }
                     );
             }
