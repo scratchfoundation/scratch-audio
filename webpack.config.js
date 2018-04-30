@@ -20,5 +20,10 @@ module.exports = {
                 presets: ['es2015']
             }
         }]
+    },
+    externals: {
+        'audio-context': true,
+        'minilog': true,
+        'startaudiocontext': true
     }
 };

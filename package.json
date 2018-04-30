@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "audio engine for scratch 3.0",
   "main": "dist.js",
+  "browser": "./src/index.js",
   "scripts": {
     "test": "npm run lint && npm run build",
     "build": "webpack --bail",
@@ -20,8 +21,12 @@
     "url": "https://github.com/LLK/scratch-audio/issues"
   },
   "homepage": "https://github.com/LLK/scratch-audio#readme",
-  "devDependencies": {
+  "dependencies": {
     "audio-context": "1.0.1",
+    "minilog": "^3.0.1",
+    "startaudiocontext": "1.2.1"
+  },
+  "devDependencies": {
     "babel-core": "^6.24.1",
     "babel-eslint": "^7.2.2",
     "babel-loader": "^6.4.1",
@@ -29,9 +34,6 @@
     "eslint": "^3.19.0",
     "eslint-config-scratch": "^3.1.0",
     "json": "^9.0.6",
-    "minilog": "^3.0.1",
-    "soundfont-player": "0.10.5",
-    "startaudiocontext": "1.2.1",
     "travis-after-all": "^1.4.4",
     "webpack": "2.4.0"
   }
