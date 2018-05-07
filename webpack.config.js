@@ -1,6 +1,7 @@
 var path = require('path');
 
 module.exports = {
+    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     devtool: 'cheap-module-source-map',
     entry: {
         dist: './src/index.js'
@@ -12,11 +13,11 @@ module.exports = {
         filename: '[name].js'
     },
     module: {
-        loaders: [{
+        rules: [{
             test: /\.js$/,
-            loader: 'babel-loader',
             include: path.resolve(__dirname, 'src'),
-            query: {
+            loader: 'babel-loader',
+            options: {
                 presets: ['es2015']
             }
         }]
