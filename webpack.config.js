@@ -18,7 +18,7 @@ module.exports = {
             include: path.resolve(__dirname, 'src'),
             loader: 'babel-loader',
             options: {
-                presets: ['es2015']
+                presets: [['env', {targets: {browsers: ['last 3 versions', 'Safari >= 8', 'iOS >= 8']}}]]
             }
         }]
     }
