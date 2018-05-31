@@ -21,5 +21,10 @@ module.exports = {
                 presets: [['env', {targets: {browsers: ['last 3 versions', 'Safari >= 8', 'iOS >= 8']}}]]
             }
         }]
+    },
+    externals: {
+        'audio-context': true,
+        'minilog': true,
+        'startaudiocontext': true
     }
 };
