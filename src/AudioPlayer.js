@@ -26,8 +26,8 @@ class AudioPlayer {
 
         // Chain the effects and player together with the audio engine.
         // outputNode -> "pitchEffect" -> panEffect -> audioEngine.input
-        panEffect.connect(this.audioEngine.inputNode);
-        pitchEffect.connect(panEffect.inputNode);
+        panEffect.connect(this.audioEngine);
+        pitchEffect.connect(panEffect);
 
         // reset effects to their default parameters
         this.clearEffects();
@@ -137,8 +137,12 @@ class AudioPlayer {
         this.outputNode.gain.setTargetAtTime(value / 100, 0, this.audioEngine.DECAY_TIME);
     }
 
-    connect (node) {
-        this.outputNode.connect(node);
+    /**
+     * Connnect this player's output to another audio node
+     * @param {object} target - target whose node to should be connected
+     */
+    connect (target) {
+        this.outputNode.connect(target.getInputNode());
     }
 
     /**

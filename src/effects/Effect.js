@@ -89,8 +89,8 @@ class Effect {
 
         // Connect or disconnect from the graph if this now applies or no longer
         // applies an effect.
-        if (this._isPatch !== _isPatch && this.targetNode !== null) {
-            this.connect(this.targetNode);
+        if (this._isPatch !== _isPatch && this.target !== null) {
+            this.connect(this.target);
         }
     }
 
@@ -117,18 +117,16 @@ class Effect {
             return;
         }
 
-        const targetNode = target.getInputNode();
-
-        let nextNode = targetNode;
+        let nextTarget = target;
         if (this._isPatch) {
-            nextNode = this.inputNode;
-            this.outputNode.connect(targetNode);
+            nextTarget = this;
+            this.outputNode.connect(target.getInputNode());
         }
 
         if (this.lastEffect === null) {
-            this.audioPlayer.connect(nextNode);
+            this.audioPlayer.connect(nextTarget);
         } else {
-            this.lastEffect.connect(nextNode);
+            this.lastEffect.connect(nextTarget);
         }
     }
 
