@@ -14,20 +14,26 @@ class AudioPlayer {
     constructor (audioEngine) {
         this.audioEngine = audioEngine;
 
-        // Create the audio effects
-        this.pitchEffect = new PitchEffect();
-        this.panEffect = new PanEffect(this.audioEngine);
+        this.outputNode = this.audioEngine.audioContext.createGain();
 
-        // Chain the audio effects together
-        // effectsNode -> panEffect -> audioEngine.input
-        this.effectsNode = this.audioEngine.audioContext.createGain();
-        this.effectsNode.connect(this.panEffect.input);
-        this.panEffect.connect(this.audioEngine.input);
+        // Create the audio effects
+        const pitchEffect = new PitchEffect(this.audioEngine, this, null);
+        const panEffect = new PanEffect(this.audioEngine, this, pitchEffect);
+        this.effects = {
+            pitch: pitchEffect,
+            pan: panEffect
+        };
+
+        // Chain the effects and player together with the audio engine.
+        // outputNode -> "pitchEffect" -> panEffect -> audioEngine.input
+        panEffect.connect(this.audioEngine.inputNode);
+        pitchEffect.connect(panEffect.inputNode);
 
         // reset effects to their default parameters
         this.clearEffects();
 
-        // sound players that are currently playing, indexed by the sound's soundId
+        // sound players that are currently playing, indexed by the sound's
+        // soundId
         this.activeSoundPlayers = {};
     }
 
@@ -36,7 +42,16 @@ class AudioPlayer {
      * @return {AudioNode} the AudioNode for this sprite's input
      */
     getInputNode () {
-        return this.effectsNode;
+        return this.outputNode;
+    }
+
+    /**
+     * Get all the sound players owned by this audio player.
+     * @return {object<string, SoundPlayer>} mapping of sound ids to sound
+     *     players
+     */
+    getSoundPlayers () {
+        return this.activeSoundPlayers;
     }
 
     /**
@@ -58,14 +73,17 @@ class AudioPlayer {
         // create a new soundplayer to play the sound
         const player = new SoundPlayer(this.audioEngine.audioContext);
         player.setBuffer(this.audioEngine.audioBuffers[soundId]);
-        player.connect(this.effectsNode);
-        this.pitchEffect.updatePlayer(player);
+        player.connect(this.outputNode);
         player.start();
 
         // add it to the list of active sound players
         this.activeSoundPlayers[soundId] = player;
+        for (const effectName in this.effects) {
+            this.effects[effectName].update();
+        }
 
-        // remove sounds that are not playing from the active sound players array
+        // remove sounds that are not playing from the active sound players
+        // array
         for (const id in this.activeSoundPlayers) {
             if (this.activeSoundPlayers.hasOwnProperty(id)) {
                 if (!this.activeSoundPlayers[id].isPlaying) {
@@ -93,13 +111,8 @@ class AudioPlayer {
      * @param {number} value - the value to set the effect to
      */
     setEffect (effect, value) {
-        switch (effect) {
-        case this.audioEngine.EFFECT_NAMES.pitch:
-            this.pitchEffect.set(value, this.activeSoundPlayers);
-            break;
-        case this.audioEngine.EFFECT_NAMES.pan:
-            this.panEffect.set(value);
-            break;
+        if (this.effects.hasOwnProperty(effect)) {
+            this.effects[effect].set(value);
         }
     }
 
@@ -107,10 +120,12 @@ class AudioPlayer {
      * Clear all audio effects
      */
     clearEffects () {
-        this.panEffect.set(0);
-        this.pitchEffect.set(0, this.activeSoundPlayers);
+        for (const effectName in this.effects) {
+            this.effects[effectName].clear();
+        }
+
         if (this.audioEngine === null) return;
-        this.effectsNode.gain.setTargetAtTime(1.0, 0, this.audioEngine.DECAY_TIME);
+        this.outputNode.gain.setTargetAtTime(1.0, 0, this.audioEngine.DECAY_TIME);
     }
 
     /**
@@ -119,15 +134,22 @@ class AudioPlayer {
      */
     setVolume (value) {
         if (this.audioEngine === null) return;
-        this.effectsNode.gain.setTargetAtTime(value / 100, 0, this.audioEngine.DECAY_TIME);
+        this.outputNode.gain.setTargetAtTime(value / 100, 0, this.audioEngine.DECAY_TIME);
+    }
+
+    connect (node) {
+        this.outputNode.connect(node);
     }
 
     /**
      * Clean up and disconnect audio nodes.
      */
     dispose () {
-        this.panEffect.dispose();
-        this.effectsNode.disconnect();
+        this.effects.pitch.dispose();
+        this.effects.pan.dispose();
+
+        this.outputNode.disconnect();
+        this.outputNode = null;
     }
 }
 

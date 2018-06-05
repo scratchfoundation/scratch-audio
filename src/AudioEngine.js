@@ -49,8 +49,8 @@ class AudioEngine {
          * will change the volume for all sounds.
          * @type {GainNode}
          */
-        this.input = this.audioContext.createGain();
-        this.input.connect(this.audioContext.destination);
+        this.inputNode = this.audioContext.createGain();
+        this.inputNode.connect(this.audioContext.destination);
 
         /**
          * a map of soundIds to audio buffers, holding sounds for all sprites

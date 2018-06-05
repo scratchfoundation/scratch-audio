@@ -24,7 +24,8 @@
   "dependencies": {
     "audio-context": "1.0.1",
     "minilog": "^3.0.1",
-    "startaudiocontext": "1.2.1"
+    "startaudiocontext": "1.2.1",
+    "tap": "^12.0.1"
   },
   "devDependencies": {
     "babel-core": "^6.24.1",
