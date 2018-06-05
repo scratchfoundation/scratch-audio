@@ -36,15 +36,27 @@ class PitchEffect extends Effect {
     }
 
     /**
-     * Does the effect currently affect the player's graph.
-     * The pitch effect is always neutral. Instead of affecting the graph it
-     * affects the player directly.
-     * @returns {boolean} is the effect affecting the graph?
+     * Should the effect be connected to the audio graph?
+     * @return {boolean} is the effect affecting the graph?
      */
-    get isNeutral () {
-        return true;
+    get _isPatch () {
+        return false;
     }
 
+    /**
+     * Get the input node.
+     * @return {AudioNode} - audio node that is the input for this effect
+     */
+    getInputNode () {
+        return this.target.getInputNode();
+    }
+
+    /**
+     * Initialize the Effect.
+     * Effects start out uninitialized. Then initialize when they are first set
+     * with some value.
+     * @throws {Error} throws when left unimplemented
+     */
     initialize () {
         this.initialized = true;
     }

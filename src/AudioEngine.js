@@ -87,6 +87,14 @@ class AudioEngine {
     }
 
     /**
+     * Get the input node.
+     * @return {AudioNode} - audio node that is the input for this effect
+     */
+    getInputNode () {
+        return this.inputNode;
+    }
+
+    /**
      * Decode a sound, decompressing it into audio samples.
      * Store a reference to it the sound in the audioBuffers dictionary, indexed by soundId
      * @param  {object} sound - an object containing audio data and metadata for a sound

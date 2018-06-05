@@ -20,10 +20,20 @@ class PanEffect extends Effect {
         this.channelMerger = null;
     }
 
-    get isNeutral () {
-        return !this.initialized || this.value === 0;
+    /**
+     * Should the effect be connected to the audio graph?
+     * @return {boolean} is the effect affecting the graph?
+     */
+    get _isPatch () {
+        return this.initialized && this.value !== 0;
     }
 
+    /**
+     * Initialize the Effect.
+     * Effects start out uninitialized. Then initialize when they are first set
+     * with some value.
+     * @throws {Error} throws when left unimplemented
+     */
     initialize () {
         const audioContext = this.audioEngine.audioContext;
 
@@ -42,9 +52,9 @@ class PanEffect extends Effect {
     }
 
     /**
-    * Set the effect value
-    * @param {number} value - the new value to set the effect to
-    */
+     * Set the effect value
+     * @param {number} value - the new value to set the effect to
+     */
     _set (value) {
         this.value = value;
 
@@ -74,7 +84,7 @@ class PanEffect extends Effect {
         this.rightGain = null;
         this.channelMerger = null;
         this.outputNode = null;
-        this.targetNode = null;
+        this.target = null;
 
         this.initialized = false;
     }

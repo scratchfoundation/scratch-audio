@@ -20,7 +20,7 @@ class Effect {
         this.inputNode = null;
         this.outputNode = null;
 
-        this.targetNode = null;
+        this.target = null;
     }
 
     /**
@@ -32,13 +32,24 @@ class Effect {
     }
 
     /**
-     * Does the effect currently affect the player's graph.
-     * The pitch effect is always neutral. Instead of affecting the graph it
-     * affects the player directly.
+     * Should the effect be connected to the audio graph?
+     * The pitch effect is an example that does not need to be patched in.
+     * Instead of affecting the graph it affects the player directly.
      * @return {boolean} is the effect affecting the graph?
      */
-    get isNeutral () {
-        return !this.initialized;
+    get _isPatch () {
+        return this.initialized;
+    }
+
+    /**
+     * Get the input node.
+     * @return {AudioNode} - audio node that is the input for this effect
+     */
+    getInputNode () {
+        if (this.initialized) {
+            return this.inputNode;
+        }
+        return this.target.getInputNode();
     }
 
     /**
@@ -71,14 +82,14 @@ class Effect {
         }
 
         // Store whether the graph should currently affected by this effect.
-        const isNeutral = this.isNeutral;
+        const _isPatch = this._isPatch;
 
         // Call the internal implementation per this Effect.
         this._set(value);
 
         // Connect or disconnect from the graph if this now applies or no longer
         // applies an effect.
-        if (this.isNeutral !== isNeutral && this.targetNode !== null) {
+        if (this._isPatch !== _isPatch && this.targetNode !== null) {
             this.connect(this.targetNode);
         }
     }
@@ -97,28 +108,27 @@ class Effect {
 
     /**
      * Connnect this effect's output to another audio node
-     * @param {AudioNode} node - the node to connect to
+     * @param {object} target - target whose node to should be connected
      */
-    connect (node) {
-        this.targetNode = node;
+    connect (target) {
+        this.target = target;
 
-        if (node === null) {
+        if (target === null) {
             return;
         }
 
-        if (this.isNeutral) {
-            if (this.lastEffect === null) {
-                this.audioPlayer.connect(node);
-            } else {
-                this.lastEffect.connect(node);
-            }
+        const targetNode = target.getInputNode();
+
+        let nextNode = targetNode;
+        if (this._isPatch) {
+            nextNode = this.inputNode;
+            this.outputNode.connect(targetNode);
+        }
+
+        if (this.lastEffect === null) {
+            this.audioPlayer.connect(nextNode);
         } else {
-            if (this.lastEffect === null) {
-                this.audioPlayer.connect(this.inputNode);
-            } else {
-                this.lastEffect.connect(this.inputNode);
-            }
-            this.outputNode.connect(node);
+            this.lastEffect.connect(nextNode);
         }
     }
 
@@ -128,7 +138,7 @@ class Effect {
     dispose () {
         this.inputNode = null;
         this.outputNode = null;
-        this.targetNode = null;
+        this.target = null;
 
         this.initialized = false;
     }
