@@ -142,6 +142,7 @@ class AudioPlayer {
      * @param {object} target - target whose node to should be connected
      */
     connect (target) {
+        this.outputNode.disconnect();
         this.outputNode.connect(target.getInputNode());
     }
 

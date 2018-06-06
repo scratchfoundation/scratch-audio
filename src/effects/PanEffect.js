@@ -21,14 +21,6 @@ class PanEffect extends Effect {
     }
 
     /**
-     * Should the effect be connected to the audio graph?
-     * @return {boolean} is the effect affecting the graph?
-     */
-    get _isPatch () {
-        return this.initialized && this.value !== 0;
-    }
-
-    /**
      * Initialize the Effect.
      * Effects start out uninitialized. Then initialize when they are first set
      * with some value.
