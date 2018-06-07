@@ -1,5 +1,6 @@
-const PitchEffect = require('./effects/PitchEffect');
 const PanEffect = require('./effects/PanEffect');
+const PitchEffect = require('./effects/PitchEffect');
+const VolumeEffect = require('./effects/VolumeEffect');
 
 const SoundPlayer = require('./SoundPlayer');
 
@@ -17,9 +18,11 @@ class AudioPlayer {
         this.outputNode = this.audioEngine.audioContext.createGain();
 
         // Create the audio effects
-        const pitchEffect = new PitchEffect(this.audioEngine, this, null);
+        const volumeEffect = new VolumeEffect(this.audioEngine, this, null);
+        const pitchEffect = new PitchEffect(this.audioEngine, this, volumeEffect);
         const panEffect = new PanEffect(this.audioEngine, this, pitchEffect);
         this.effects = {
+            volume: volumeEffect,
             pitch: pitchEffect,
             pan: panEffect
         };
@@ -28,6 +31,7 @@ class AudioPlayer {
         // outputNode -> "pitchEffect" -> panEffect -> audioEngine.input
         panEffect.connect(this.audioEngine);
         pitchEffect.connect(panEffect);
+        volumeEffect.connect(pitchEffect);
 
         // reset effects to their default parameters
         this.clearEffects();
@@ -123,9 +127,6 @@ class AudioPlayer {
         for (const effectName in this.effects) {
             this.effects[effectName].clear();
         }
-
-        if (this.audioEngine === null) return;
-        this.outputNode.gain.setTargetAtTime(1.0, 0, this.audioEngine.DECAY_TIME);
     }
 
     /**
@@ -133,8 +134,7 @@ class AudioPlayer {
      * @param {number} value - the volume in range 0-100
      */
     setVolume (value) {
-        if (this.audioEngine === null) return;
-        this.outputNode.gain.setTargetAtTime(value / 100, 0, this.audioEngine.DECAY_TIME);
+        this.setEffect('volume', value);
     }
 
     /**
@@ -142,6 +142,7 @@ class AudioPlayer {
      * @param {object} target - target whose node to should be connected
      */
     connect (target) {
+        this.outputNode.disconnect();
         this.outputNode.connect(target.getInputNode());
     }
 
@@ -149,6 +150,7 @@ class AudioPlayer {
      * Clean up and disconnect audio nodes.
      */
     dispose () {
+        this.effects.volume.dispose();
         this.effects.pitch.dispose();
         this.effects.pan.dispose();
 

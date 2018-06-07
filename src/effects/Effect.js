@@ -38,7 +38,7 @@ class Effect {
      * @return {boolean} is the effect affecting the graph?
      */
     get _isPatch () {
-        return this.initialized;
+        return this.initialized && this.value !== this.DEFAULT_VALUE;
     }
 
     /**
@@ -46,7 +46,7 @@ class Effect {
      * @return {AudioNode} - audio node that is the input for this effect
      */
     getInputNode () {
-        if (this.initialized) {
+        if (this._isPatch) {
             return this.inputNode;
         }
         return this.target.getInputNode();
@@ -115,6 +115,10 @@ class Effect {
 
         if (target === null) {
             return;
+        }
+
+        if (this.outputNode !== null) {
+            this.outputNode.disconnect();
         }
 
         let nextTarget = target;
