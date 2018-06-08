@@ -41,6 +41,10 @@ class VolumeEffect extends Effect {
      * Clean up and disconnect audio nodes.
      */
     dispose () {
+        if (!this.initialized) {
+            return;
+        }
+
         this.outputNode.disconnect();
 
         this.inputNode = null;

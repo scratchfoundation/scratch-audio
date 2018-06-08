@@ -66,6 +66,10 @@ class PanEffect extends Effect {
      * Clean up and disconnect audio nodes.
      */
     dispose () {
+        if (!this.initialized) {
+            return;
+        }
+
         this.inputNode.disconnect();
         this.leftGain.disconnect();
         this.rightGain.disconnect();
