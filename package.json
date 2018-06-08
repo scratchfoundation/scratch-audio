@@ -5,10 +5,11 @@
   "main": "dist.js",
   "browser": "./src/index.js",
   "scripts": {
-    "test": "npm run lint && npm run build",
+    "test": "npm run lint && npm run tap && npm run build",
     "build": "webpack --bail",
     "watch": "webpack --watch",
     "lint": "eslint .",
+    "tap": "tap test/effects/*.js test/*.js",
     "prepublish": "npm run build"
   },
   "repository": {
