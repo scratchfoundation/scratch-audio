@@ -2,9 +2,19 @@ language: node_js
 node_js:
 - 6
 - node
+env:
+  matrix:
+  - NPM_SCRIPT="tap -- --jobs=4"
 cache:
   directories:
   - node_modules
+script: npm run $NPM_SCRIPT
+jobs:
+  include:
+  - env: NPM_SCRIPT=build
+    node_js: node
+  - env: NPM_SCRIPT=lint
+    node_js: node
 after_script:
 - |
   # RELEASE_BRANCHES and NPM_TOKEN defined in Travis settings panel
