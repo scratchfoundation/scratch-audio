@@ -111,26 +111,36 @@ class Effect {
      * @param {object} target - target whose node to should be connected
      */
     connect (target) {
-        this.target = target;
-
         if (target === null) {
-            return;
+            throw new Error('target may not be null');
         }
+
+        const checkForCircularReference = subtarget => {
+            if (subtarget) {
+                if (subtarget === this) {
+                    return true;
+                }
+                return checkForCircularReference(subtarget.target);
+            }
+        };
+        if (checkForCircularReference(target)) {
+            throw new Error('Effect cannot connect to itself');
+        }
+
+        this.target = target;
 
         if (this.outputNode !== null) {
             this.outputNode.disconnect();
         }
 
-        let nextTarget = target;
         if (this._isPatch) {
-            nextTarget = this;
             this.outputNode.connect(target.getInputNode());
         }
 
         if (this.lastEffect === null) {
-            this.audioPlayer.connect(nextTarget);
+            this.audioPlayer.connect(this);
         } else {
-            this.lastEffect.connect(nextTarget);
+            this.lastEffect.connect(this);
         }
     }
 
