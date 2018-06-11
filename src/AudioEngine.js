@@ -77,13 +77,20 @@ class AudioEngine {
     }
 
     /**
-     * A short duration, for use as a time constant for exponential audio parameter transitions.
-     * See:
-     * https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime
+     * A short duration to transition audio prarameters.
+     *
+     * Used as a time constant for exponential transitions. A general value
+     * must be large enough that it does not cute off lower frequency, or bass,
+     * sounds. Human hearing lower limit is ~20Hz making a safe value 25
+     * milliseconds or 0.025 seconds, where half of a 20Hz wave will play along
+     * with the DECAY. Higher frequencies will play multiple waves during the
+     * same amount of time and avoid clipping.
+     *
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime}
      * @const {number}
      */
     get DECAY_TIME () {
-        return 0.001;
+        return 0.025;
     }
 
     /**
