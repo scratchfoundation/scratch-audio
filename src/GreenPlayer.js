@@ -2,9 +2,22 @@ const {EventEmitter} = require('events');
 
 const VolumeEffect = require('./effects/VolumeEffect');
 
+/**
+ * Name of event that indicates playback has ended.
+ * @const {string}
+ */
 const ON_ENDED = 'ended';
 
 class SoundPlayer extends EventEmitter {
+    /**
+     * Play sounds that stop without audible clipping.
+     *
+     * @param {AudioEngine} audioEngine - engine to play sounds on
+     * @param {object} data - required data for sound playback
+     * @param {string} data.id - a unique id for this sound
+     * @param {ArrayBuffer} data.buffer - buffer of the sound's waveform to play
+     * @constructor
+     */
     constructor (audioEngine, {id, buffer}) {
         super();
 
@@ -23,6 +36,7 @@ class SoundPlayer extends EventEmitter {
 
     /**
      * Handle any event we have told the output node to listen for.
+     * @param {Event} event - dom event to handle
      */
     handleEvent (event) {
         if (event.type === ON_ENDED) {
@@ -30,12 +44,19 @@ class SoundPlayer extends EventEmitter {
         }
     }
 
+    /**
+     * Event listener for when playback ends.
+     */
     onEnded () {
         this.emit('stop');
 
         this.isPlaying = false;
     }
 
+    /**
+     * Create the buffer source node during initialization or secondary
+     * playback.
+     */
     _createSource () {
         if (this.outputNode !== null) {
             this.outputNode.removeEventListener(ON_ENDED, this);
@@ -53,6 +74,9 @@ class SoundPlayer extends EventEmitter {
         }
     }
 
+    /**
+     * Initialize the player for first playback.
+     */
     initialize () {
         this.initialized = true;
 
@@ -61,6 +85,11 @@ class SoundPlayer extends EventEmitter {
         this._createSource();
     }
 
+    /**
+     * Connect the player to the engine or an effect chain.
+     * @param {object} target - object to connect to
+     * @returns {object} - return this sound player
+     */
     connect (target) {
         if (target === this.volumeEffect) {
             this.outputNode.disconnect();
@@ -79,6 +108,9 @@ class SoundPlayer extends EventEmitter {
         return this;
     }
 
+    /**
+     * Teardown the player.
+     */
     dispose () {
         if (!this.initialized) {
             return;
@@ -87,6 +119,7 @@ class SoundPlayer extends EventEmitter {
         this.stopImmediately();
 
         this.volumeEffect.dispose();
+        this.volumeEffect = null;
 
         this.outputNode.disconnect();
         this.outputNode = null;
@@ -96,6 +129,15 @@ class SoundPlayer extends EventEmitter {
         this.initialized = false;
     }
 
+    /**
+     * Take the internal state of this player and create a new player from
+     * that. Restore the state of this player to that before its first playback.
+     *
+     * The returned player can be used to stop the original playback or
+     * continue it without manipulation from the original player.
+     *
+     * @returns {SoundPlayer} - new SoundPlayer with old state
+     */
     take () {
         if (this.outputNode) {
             this.outputNode.removeEventListener(ON_ENDED, this);
@@ -131,6 +173,12 @@ class SoundPlayer extends EventEmitter {
         return taken;
     }
 
+    /**
+     * Start playback for this sound.
+     *
+     * If the sound is already playing it will stop playback with a quick fade
+     * out.
+     */
     play () {
         if (this.isPlaying) {
             // Spawn a Player with the current buffer source, and play for a
@@ -153,6 +201,9 @@ class SoundPlayer extends EventEmitter {
         this.emit('play');
     }
 
+    /**
+     * Stop playback after quickly fading out.
+     */
     stop () {
         if (!this.isPlaying) {
             return;
@@ -166,6 +217,9 @@ class SoundPlayer extends EventEmitter {
         this.emit('stop');
     }
 
+    /**
+     * Stop immediately without fading out. May cause audible clipping.
+     */
     stopImmediately () {
         if (!this.isPlaying) {
             return;
@@ -178,12 +232,20 @@ class SoundPlayer extends EventEmitter {
         this.emit('stop');
     }
 
+    /**
+     * Return a promise that resolves when the sound next finishes.
+     * @returns {Promise} - resolves when the sound finishes
+     */
     finished () {
         return new Promise(resolve => {
             this.once('stop', resolve);
         });
     }
 
+    /**
+     * Set the sound's playback rate.
+     * @param {number} value - playback rate. Default is 1.
+     */
     setPlaybackRate (value) {
         this.playbackRate = value;
 
