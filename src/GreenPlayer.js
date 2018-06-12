@@ -2,6 +2,8 @@ const {EventEmitter} = require('events');
 
 const VolumeEffect = require('./effects/VolumeEffect');
 
+const ON_ENDED = 'ended';
+
 class SoundPlayer extends EventEmitter {
     constructor (audioEngine, {id, buffer}) {
         super();
@@ -18,28 +20,38 @@ class SoundPlayer extends EventEmitter {
         this.isPlaying = false;
         this.playbackRate = 1;
 
-        this.onEnd = this.onEnd.bind(this);
+        this.onEnded = this.onEnded.bind(this);
     }
 
-    onEnd () {
+    onEnded () {
         this.emit('stop');
+
+        this.isPlaying = false;
     }
 
-    initialize () {
+    _createSource () {
+        if (this.outputNode !== null) {
+            this.outputNode.removeEventListener(ON_ENDED, this.onEnded);
+            this.outputNode.disconnect();
+        }
+
         this.outputNode = this.audioEngine.audioContext.createBufferSource();
         this.outputNode.playbackRate.value = this.playbackRate;
         this.outputNode.buffer = this.buffer;
 
-        this.outputNode.addEventListener('end', this.onEnd);
-
-        this.volumeEffect = new VolumeEffect(this.audioEngine, this, null);
-
-        this.initialized = true;
+        this.outputNode.addEventListener(ON_ENDED, this.onEnded);
 
         if (this.target !== null) {
             this.connect(this.target);
-            this.setPlaybackRate(this.playbackRate);
         }
+    }
+
+    initialize () {
+        this.initialized = true;
+
+        this.volumeEffect = new VolumeEffect(this.audioEngine, this, null);
+
+        this._createSource();
     }
 
     connect (target) {
@@ -79,7 +91,7 @@ class SoundPlayer extends EventEmitter {
 
     take () {
         if (this.outputNode) {
-            this.outputNode.removeEventListener('end', this.onEnd);
+            this.outputNode.removeEventListener(ON_ENDED, this.onEnded);
         }
 
         const taken = new SoundPlayer(this.audioEngine, this);
@@ -119,6 +131,8 @@ class SoundPlayer extends EventEmitter {
 
         if (!this.initialized) {
             this.initialize();
+        } else {
+            this._createSource();
         }
 
         this.volumeEffect.set(this.volumeEffect.DEFAULT_VALUE);
@@ -135,7 +149,7 @@ class SoundPlayer extends EventEmitter {
         }
 
         this.volumeEffect.set(0);
-        this.outputNode.stop(this.audioEngine.audioEngineoContext.currentTime + this.audioEngine.DECAY_TIME);
+        this.outputNode.stop(this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME);
 
         this.isPlaying = false;
 
@@ -152,6 +166,12 @@ class SoundPlayer extends EventEmitter {
         this.isPlaying = false;
 
         this.emit('stop');
+    }
+
+    finished () {
+        return new Promise(resolve => {
+            this.once('stop', resolve);
+        });
     }
 
     setPlaybackRate (value) {
