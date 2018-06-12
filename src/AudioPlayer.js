@@ -2,7 +2,7 @@ const PanEffect = require('./effects/PanEffect');
 const PitchEffect = require('./effects/PitchEffect');
 const VolumeEffect = require('./effects/VolumeEffect');
 
-const SoundPlayer = require('./SoundPlayer');
+const SoundPlayer = require('./GreenPlayer');
 
 class AudioPlayer {
     /**
@@ -17,7 +17,7 @@ class AudioPlayer {
 
         this.outputNode = this.audioEngine.audioContext.createGain();
 
-        // Create the audio effects
+        // Create the audio effects.
         const volumeEffect = new VolumeEffect(this.audioEngine, this, null);
         const pitchEffect = new PitchEffect(this.audioEngine, this, volumeEffect);
         const panEffect = new PanEffect(this.audioEngine, this, pitchEffect);
@@ -33,12 +33,11 @@ class AudioPlayer {
         pitchEffect.connect(panEffect);
         volumeEffect.connect(pitchEffect);
 
-        // reset effects to their default parameters
+        // Reset effects to their default parameters.
         this.clearEffects();
 
-        // sound players that are currently playing, indexed by the sound's
-        // soundId
-        this.activeSoundPlayers = {};
+        // SoundPlayers mapped by sound id.
+        this.soundPlayers = {};
     }
 
     /**
@@ -55,7 +54,19 @@ class AudioPlayer {
      *     players
      */
     getSoundPlayers () {
-        return this.activeSoundPlayers;
+        return this.soundPlayers;
+    }
+
+    /**
+     * Add a SoundPlayer instance to soundPlayers map.
+     * @param {SoundPlayer} soundPlayer - SoundPlayer instance to add
+     */
+    addSoundPlayer (soundPlayer) {
+        this.soundPlayers[soundPlayer.id] = soundPlayer;
+
+        for (const effectName in this.effects) {
+            this.effects[effectName].update();
+        }
     }
 
     /**
@@ -64,37 +75,16 @@ class AudioPlayer {
      * @return {Promise} a Promise that resolves when the sound finishes playing
      */
     playSound (soundId) {
-        // if this sound is not in the audio engine, return
-        if (!this.audioEngine.audioBuffers[soundId]) {
-            return;
-        }
-
-        // if this sprite or clone is already playing this sound, stop it first
-        if (this.activeSoundPlayers[soundId]) {
-            this.activeSoundPlayers[soundId].stop();
-        }
-
         // create a new soundplayer to play the sound
-        const player = new SoundPlayer(this.audioEngine.audioContext);
-        player.setBuffer(this.audioEngine.audioBuffers[soundId]);
-        player.connect(this.outputNode);
-        player.start();
-
-        // add it to the list of active sound players
-        this.activeSoundPlayers[soundId] = player;
-        for (const effectName in this.effects) {
-            this.effects[effectName].update();
+        if (!this.soundPlayers[soundId]) {
+            this.addSoundPlayer(new SoundPlayer(
+                this.audioEngine,
+                {id: soundId, buffer: this.audioEngine.audioBuffers[soundId]}
+            ));
         }
-
-        // remove sounds that are not playing from the active sound players
-        // array
-        for (const id in this.activeSoundPlayers) {
-            if (this.activeSoundPlayers.hasOwnProperty(id)) {
-                if (!this.activeSoundPlayers[id].isPlaying) {
-                    delete this.activeSoundPlayers[id];
-                }
-            }
-        }
+        const player = this.soundPlayers[soundId];
+        player.connect(this);
+        player.play();
 
         return player.finished();
     }
@@ -104,8 +94,8 @@ class AudioPlayer {
      */
     stopAllSounds () {
         // stop all active sound players
-        for (const soundId in this.activeSoundPlayers) {
-            this.activeSoundPlayers[soundId].stop();
+        for (const soundId in this.soundPlayers) {
+            this.soundPlayers[soundId].stop();
         }
     }
 
