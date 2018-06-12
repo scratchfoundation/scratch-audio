@@ -38,7 +38,7 @@ class Effect {
      * @return {boolean} is the effect affecting the graph?
      */
     get _isPatch () {
-        return this.initialized && this.value !== this.DEFAULT_VALUE;
+        return this.initialized && (this.value !== this.DEFAULT_VALUE || this.audioPlayer === null);
     }
 
     /**
@@ -138,7 +138,9 @@ class Effect {
         }
 
         if (this.lastEffect === null) {
-            this.audioPlayer.connect(this);
+            if (this.audioPlayer !== null) {
+                this.audioPlayer.connect(this);
+            }
         } else {
             this.lastEffect.connect(this);
         }

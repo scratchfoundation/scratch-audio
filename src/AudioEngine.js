@@ -5,9 +5,9 @@ const log = require('./log');
 const uid = require('./uid');
 
 const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
-
 const AudioPlayer = require('./AudioPlayer');
 const Loudness = require('./Loudness');
+const SoundPlayer = require('./GreenPlayer');
 
 /**
  * Wrapper to ensure that audioContext.decodeAudioData is a promise
@@ -77,13 +77,20 @@ class AudioEngine {
     }
 
     /**
-     * A short duration, for use as a time constant for exponential audio parameter transitions.
-     * See:
-     * https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime
+     * A short duration to transition audio prarameters.
+     *
+     * Used as a time constant for exponential transitions. A general value
+     * must be large enough that it does not cute off lower frequency, or bass,
+     * sounds. Human hearing lower limit is ~20Hz making a safe value 25
+     * milliseconds or 0.025 seconds, where half of a 20Hz wave will play along
+     * with the DECAY. Higher frequencies will play multiple waves during the
+     * same amount of time and avoid clipping.
+     *
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime}
      * @const {number}
      */
     get DECAY_TIME () {
-        return 0.001;
+        return 0.025;
     }
 
     /**
@@ -96,40 +103,77 @@ class AudioEngine {
 
     /**
      * Decode a sound, decompressing it into audio samples.
-     * Store a reference to it the sound in the audioBuffers dictionary, indexed by soundId
-     * @param  {object} sound - an object containing audio data and metadata for a sound
-     * @property {Buffer} data - sound data loaded from scratch-storage.
-     * @returns {?Promise} - a promise which will resolve to the soundId if decoded and stored.
+     * @param {object} sound - an object containing audio data and metadata for
+     *     a sound
+     * @param {Buffer} sound.data - sound data loaded from scratch-storage
+     * @returns {?Promise} - a promise which will resolve to the sound id and
+     *     buffer if decoded
      */
-    decodeSound (sound) {
-        // Make a copy of the buffer because decoding detaches the original buffer
+    _decodeSound (sound) {
+        // Make a copy of the buffer because decoding detaches the original
+        // buffer
         const bufferCopy1 = sound.data.buffer.slice(0);
 
+        // todo: multiple decodings of the same buffer create duplicate decoded
+        // copies in audioBuffers. Create a hash id of the buffer or deprecate
+        // audioBuffers to avoid memory issues for large audio buffers.
         const soundId = uid();
-        // Partially apply updateSoundBuffer function with the current
-        // soundId so that it's ready to be used on successfully decoded audio
-        const addDecodedAudio = this.updateSoundBuffer.bind(this, soundId);
 
-        // Attempt to decode the sound using the browser's native audio data decoder
-        // If that fails, attempt to decode as ADPCM
-        return decodeAudioData(this.audioContext, bufferCopy1).then(
-            addDecodedAudio,
-            () => {
+        // Attempt to decode the sound using the browser's native audio data
+        // decoder If that fails, attempt to decode as ADPCM
+        const decoding = decodeAudioData(this.audioContext, bufferCopy1)
+            .catch(() => {
                 // The audio context failed to parse the sound data
                 // we gave it, so try to decode as 'adpcm'
 
                 // First we need to create another copy of our original data
                 const bufferCopy2 = sound.data.buffer.slice(0);
                 // Try decoding as adpcm
-                return (new ADPCMSoundDecoder(this.audioContext)).decode(bufferCopy2)
-                    .then(
-                        addDecodedAudio,
-                        error => {
-                            log.warn('audio data could not be decoded', error);
-                        }
-                    );
-            }
-        );
+                return new ADPCMSoundDecoder(this.audioContext).decode(bufferCopy2);
+            })
+            .then(
+                buffer => ([soundId, buffer]),
+                error => {
+                    log.warn('audio data could not be decoded', error);
+                }
+            );
+
+        return decoding;
+    }
+
+    /**
+     * Decode a sound, decompressing it into audio samples.
+     *
+     * Store a reference to it the sound in the audioBuffers dictionary,
+     * indexed by soundId.
+     *
+     * @param {object} sound - an object containing audio data and metadata for
+     *     a sound
+     * @param {Buffer} sound.data - sound data loaded from scratch-storage
+     * @returns {?Promise} - a promise which will resolve to the sound id
+     */
+    decodeSound (sound) {
+        return this._decodeSound(sound)
+            .then(([id, buffer]) => {
+                this.audioBuffers[id] = buffer;
+                return id;
+            });
+    }
+
+    /**
+     * Decode a sound, decompressing it into audio samples.
+     *
+     * Create a SoundPlayer instance that can be used to play the sound and
+     * stop and fade out playback.
+     *
+     * @param {object} sound - an object containing audio data and metadata for
+     *     a sound
+     * @param {Buffer} sound.data - sound data loaded from scratch-storage
+     * @returns {?Promise} - a promise which will resolve to the buffer
+     */
+    decodeSoundPlayer (sound) {
+        return this._decodeSound(sound)
+        .then(([id, buffer]) => new SoundPlayer(this, {id, buffer}));
     }
 
     /**
@@ -138,6 +182,11 @@ class AudioEngine {
      * @return {AudioBuffer} the buffer corresponding to the given sound id.
      */
     getSoundBuffer (soundId) {
+        // todo: Deprecate audioBuffers. If something wants to hold onto the
+        // buffer, it should. Otherwise buffers need to be able to release their
+        // decoded memory to avoid running out of memory which is possible with
+        // enough large audio buffers as they are full 16bit pcm waveforms for
+        // each audio channel.
         return this.audioBuffers[soundId];
     }
 
