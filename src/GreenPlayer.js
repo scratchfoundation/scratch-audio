@@ -102,16 +102,18 @@ class SoundPlayer extends EventEmitter {
         }
 
         const taken = new SoundPlayer(this.audioEngine, this);
-        taken.outputNode = this.outputNode;
-        if (this.volumeEffect !== null) {
-            taken.volumeEffect.set(this.volumeEffect.value);
-        }
-        if (this.target !== null) {
-            taken.connect(this.target);
-        }
-        taken.initialized = this.initialized;
-        taken.isPlaying = this.isPlaying;
         taken.playbackRate = this.playbackRate;
+        if (this.isPlaying) {
+            taken.isPlaying = this.isPlaying;
+            taken.initialize();
+            taken.outputNode.disconnect();
+            taken.outputNode = this.outputNode;
+            taken.outputNode.addEventListener(ON_ENDED, taken);
+            taken.volumeEffect.set(this.volumeEffect.value);
+            if (this.target !== null) {
+                taken.connect(this.target);
+            }
+        }
 
         if (this.isPlaying) {
             this.emit('stop');
@@ -123,9 +125,10 @@ class SoundPlayer extends EventEmitter {
             this.volumeEffect.dispose();
         }
         this.volumeEffect = null;
-        this.target = null;
         this.initialized = false;
         this.isPlaying = false;
+
+        return taken;
     }
 
     play () {
