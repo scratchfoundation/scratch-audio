@@ -9,8 +9,7 @@
     "build": "webpack --bail",
     "watch": "webpack --watch",
     "lint": "eslint .",
-    "tap": "tap test/effects/*.js test/*.js",
-    "prepublish": "npm run build"
+    "tap": "tap test/effects/*.js test/*.js"
   },
   "repository": {
     "type": "git",
