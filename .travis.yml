@@ -18,13 +18,14 @@ jobs:
     node_js: 8
   - stage: release
     node_js: 8
-    script: skip
+    env: NPM_SCRIPT=build
     before_deploy:
     - npm --no-git-tag-version version 0.1.0-prerelease.$(date +%Y%m%d%H%M%S)
     deploy:
     - provider: npm
       on:
         all_branches: true
+      skip_cleanup: true
       email: $NPM_EMAIL
       api_key: $NPM_TOKEN
 stages:
