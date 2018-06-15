@@ -20,6 +20,10 @@ class PanEffect extends Effect {
         this.channelMerger = null;
     }
 
+    get name () {
+        return 'pan';
+    }
+
     /**
      * Initialize the Effect.
      * Effects start out uninitialized. Then initialize when they are first set
