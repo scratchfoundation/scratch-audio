@@ -9,9 +9,9 @@ const AudioPlayer = require('./AudioPlayer');
 const Loudness = require('./Loudness');
 const SoundPlayer = require('./GreenPlayer');
 
-const PanEffect = require('./PanEffect');
-const PitchEffect = require('./PitchEffect');
-const VolumeEffect = require('./VolumeEffect');
+const PanEffect = require('./effects/PanEffect');
+const PitchEffect = require('./effects/PitchEffect');
+const VolumeEffect = require('./effects/VolumeEffect');
 
 /**
  * Wrapper to ensure that audioContext.decodeAudioData is a promise
