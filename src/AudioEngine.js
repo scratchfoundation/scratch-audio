@@ -9,6 +9,12 @@ const AudioPlayer = require('./AudioPlayer');
 const Loudness = require('./Loudness');
 const SoundPlayer = require('./GreenPlayer');
 
+const PanEffect = require('./effects/PanEffect');
+const PitchEffect = require('./effects/PitchEffect');
+const VolumeEffect = require('./effects/VolumeEffect');
+
+const SoundBank = require('./SoundBank');
+
 /**
  * Wrapper to ensure that audioContext.decodeAudioData is a promise
  * @param {object} audioContext The current AudioContext
@@ -63,6 +69,12 @@ class AudioEngine {
          * @type {Loudness}
          */
         this.loudness = null;
+
+        /**
+         * Array of effects applied in order, left to right,
+         * Left is closest to input, Right is closest to output
+         */
+        this.effects = [PanEffect, PitchEffect, VolumeEffect];
     }
 
     /**
@@ -232,6 +244,11 @@ class AudioEngine {
      */
     createPlayer () {
         return new AudioPlayer(this);
+    }
+
+
+    createBank () {
+        return new SoundBank(this);
     }
 }
 
