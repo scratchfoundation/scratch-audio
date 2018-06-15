@@ -13,6 +13,8 @@ const PanEffect = require('./effects/PanEffect');
 const PitchEffect = require('./effects/PitchEffect');
 const VolumeEffect = require('./effects/VolumeEffect');
 
+const SoundBank = require('./SoundBank');
+
 /**
  * Wrapper to ensure that audioContext.decodeAudioData is a promise
  * @param {object} audioContext The current AudioContext
@@ -242,6 +244,11 @@ class AudioEngine {
      */
     createPlayer () {
         return new AudioPlayer(this);
+    }
+
+
+    createBank () {
+        return new SoundBank(this);
     }
 }
 

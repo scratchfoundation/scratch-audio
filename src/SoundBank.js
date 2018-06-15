@@ -1,5 +1,5 @@
 const SoundPlayer = require('./GreenPlayer');
-const EffectsChain = require('./EffectsChain');
+const EffectsChain = require('./effects/EffectChain');
 
 const ALL_TARGETS = '*';
 
@@ -12,7 +12,7 @@ class SoundBank {
         this.soundEffects = new Map();
     }
 
-    getSound (soundId) {
+    getSoundPlayer (soundId) {
         if (!this.soundPlayers[soundId]) {
             this.soundPlayers[soundId] = new SoundPlayer(this.audioEngine, {
                 id: soundId, buffer: this.audioEngine.audioBuffers[soundId]
@@ -36,7 +36,7 @@ class SoundBank {
         const player = this.getSoundPlayer(soundId);
 
         this.playerTargets.set(soundId, target);
-        effects.setFromTarget(target);
+        effects.setEffectsFromTarget(target);
         effects.addSoundPlayer(player);
 
         player.connect(effects);
@@ -48,7 +48,7 @@ class SoundBank {
     setEffects (target) {
         this.playerTargets.forEach((playerTarget, key) => {
             if (playerTarget === target) {
-                this.getSoundEffects(key).setFromTarget(target);
+                this.getSoundEffects(key).setEffectsFromTarget(target);
             }
         });
     }
@@ -62,7 +62,7 @@ class SoundBank {
     stopAllSounds (target = ALL_TARGETS) {
         this.playerTargets.forEach((playerTarget, key) => {
             if (target === ALL_TARGETS || playerTarget === target) {
-                this.getSound(key).stop();
+                this.getSoundPlayer(key).stop();
             }
         });
     }

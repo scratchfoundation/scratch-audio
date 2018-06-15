@@ -38,6 +38,16 @@ class EffectChain {
         return this.outputNode;
     }
 
+    /**
+     * Connnect this player's output to another audio node
+     * @param {object} target - target whose node to should be connected
+     */
+    connect (target) {
+        this.outputNode.disconnect();
+        this.outputNode.connect(target.getInputNode());
+    }
+
+
     getSoundPlayers () {
         return [...this._soundPlayers];
     }
