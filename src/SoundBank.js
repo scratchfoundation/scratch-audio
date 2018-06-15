@@ -13,7 +13,7 @@ class SoundBank {
     }
 
     getSound (soundId) {
-        if (this.soundPlayers[soundId]) {
+        if (!this.soundPlayers[soundId]) {
             this.soundPlayers[soundId] = new SoundPlayer(this.audioEngine, {
                 id: soundId, buffer: this.audioEngine.audioBuffers[soundId]
             });
