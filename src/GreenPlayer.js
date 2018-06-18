@@ -31,6 +31,7 @@ class SoundPlayer extends EventEmitter {
 
         this.initialized = false;
         this.isPlaying = false;
+        this.isStarting = null;
         this.playbackRate = 1;
     }
 
@@ -146,6 +147,7 @@ class SoundPlayer extends EventEmitter {
         const taken = new SoundPlayer(this.audioEngine, this);
         taken.playbackRate = this.playbackRate;
         if (this.isPlaying) {
+            taken.isStarting = this.isStarting;
             taken.isPlaying = this.isPlaying;
             taken.initialize();
             taken.outputNode.disconnect();
@@ -168,6 +170,7 @@ class SoundPlayer extends EventEmitter {
         }
         this.volumeEffect = null;
         this.initialized = false;
+        this.isStarting = null;
         this.isPlaying = false;
 
         return taken;
@@ -180,6 +183,10 @@ class SoundPlayer extends EventEmitter {
      * out.
      */
     play () {
+        if (this.isStarting) {
+            return;
+        }
+
         if (this.isPlaying) {
             // Spawn a Player with the current buffer source, and play for a
             // short period until its volume is 0 and release it to be
@@ -198,6 +205,13 @@ class SoundPlayer extends EventEmitter {
 
         this.isPlaying = true;
 
+        const isStarting = this.isStarting = Promise.resolve()
+            .then(() => {
+                if (this.isStarting === isStarting) {
+                    this.isStarting = null;
+                }
+            });
+
         this.emit('play');
     }
 
@@ -213,6 +227,7 @@ class SoundPlayer extends EventEmitter {
         this.outputNode.stop(this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME);
 
         this.isPlaying = false;
+        this.isStarting = null;
 
         this.emit('stop');
     }
@@ -228,6 +243,7 @@ class SoundPlayer extends EventEmitter {
         this.outputNode.stop();
 
         this.isPlaying = false;
+        this.isStarting = null;
 
         this.emit('stop');
     }
