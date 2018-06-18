@@ -9,6 +9,7 @@ const AudioPlayer = require('./AudioPlayer');
 const Loudness = require('./Loudness');
 const SoundPlayer = require('./GreenPlayer');
 
+const EffectChain = require('./effects/EffectChain');
 const PanEffect = require('./effects/PanEffect');
 const PitchEffect = require('./effects/PitchEffect');
 const VolumeEffect = require('./effects/VolumeEffect');
@@ -190,27 +191,23 @@ class AudioEngine {
 
     /**
      * Retrieve the audio buffer as held in memory for a given sound id.
-     * @param {!string} soundId - the id of the sound buffer to get
-     * @return {AudioBuffer} the buffer corresponding to the given sound id.
+     * @todo remove this
      */
-    getSoundBuffer (soundId) {
+    getSoundBuffer () {
         // todo: Deprecate audioBuffers. If something wants to hold onto the
         // buffer, it should. Otherwise buffers need to be able to release their
         // decoded memory to avoid running out of memory which is possible with
         // enough large audio buffers as they are full 16bit pcm waveforms for
         // each audio channel.
-        return this.audioBuffers[soundId];
+        log.warn('The getSoundBuffer function is no longer available. Use soundBank.getSoundPlayer().buffer.');
     }
 
     /**
      * Add or update the in-memory audio buffer to a new one by soundId.
-     * @param {!string} soundId - the id of the sound buffer to update.
-     * @param {AudioBuffer} newBuffer - the new buffer to swap in.
-     * @return {string} The uid of the sound that was updated or added
+     * @todo remove this
      */
-    updateSoundBuffer (soundId, newBuffer) {
-        this.audioBuffers[soundId] = newBuffer;
-        return soundId;
+    updateSoundBuffer () {
+        log.warn('The updateSoundBuffer function is no longer available. Use soundBank.getSoundPlayer().buffer.');
     }
 
     /**
@@ -248,7 +245,9 @@ class AudioEngine {
 
 
     createBank () {
-        return new SoundBank(this);
+        const effects = new EffectChain(this, this.effects);
+        effects.connect(this);
+        return new SoundBank(this, effects);
     }
 }
 
