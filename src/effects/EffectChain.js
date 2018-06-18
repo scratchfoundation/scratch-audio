@@ -46,7 +46,7 @@ class EffectChain {
      * @param {object} target - target whose node to should be connected
      */
     connect (target) {
-        const lastEffect = this._effects[this._effects.length - 1];
+        const {lastEffect} = this;
         if (target === lastEffect) {
             this.inputNode.disconnect();
             this.inputNode.connect(lastEffect.getInputNode());
