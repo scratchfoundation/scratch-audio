@@ -1,5 +1,4 @@
-const SoundPlayer = require('./GreenPlayer');
-const EffectsChain = require('./effects/EffectChain');
+const log = require('./log');
 
 const ALL_TARGETS = '*';
 
@@ -19,7 +18,7 @@ class SoundBank {
 
     getSoundPlayer (soundId) {
         if (!this.soundPlayers[soundId]) {
-            console.error(`SoundBank.getSoundPlayer(${soundId}): called missing sound in bank`);
+            log.error(`SoundBank.getSoundPlayer(${soundId}): called missing sound in bank`);
         }
 
         return this.soundPlayers[soundId];
