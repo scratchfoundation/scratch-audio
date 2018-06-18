@@ -1,32 +1,35 @@
 class EffectChain {
-    constructor (audioEngine) {
+    constructor (audioEngine, effects) {
         this.audioEngine = audioEngine;
 
-        this.outputNode = this.audioEngine.audioContext.createGain();
+        this.inputNode = this.audioEngine.audioContext.createGain();
+
+        this.effects = effects;
 
         this.lastEffect = null;
 
-        this._effects = audioEngine.effects.map(Effect => {
+        this._effects = effects.map(Effect => {
             const effect = new Effect(audioEngine, this, this.lastEffect);
             this[effect.name] = effect;
             this.lastEffect = effect;
             return effect;
         });
 
-        // Walk backwards through effects connecting the last output to audio engine,
-        // then each effect's output to the input of the next effect.
-        this._effects.reduceRight((nextNode, effect) => {
-            effect.connect(nextNode);
-            return effect;
-        }, this.audioEngine);
-
         this._soundPlayers = new Set();
+    }
+
+    clone () {
+        const chain = new EffectChain(this.audioEngine, this.effects);
+        if (this.target === target) {
+            chain.connect(target);
+        }
+        return chain;
     }
 
     addSoundPlayer (soundPlayer) {
         if (!this._soundPlayers.has(soundPlayer)) {
             this._soundPlayers.add(soundPlayer);
-            this._effects.forEach(effect => effect.update());
+            this.update();
         }
     }
 
@@ -35,7 +38,7 @@ class EffectChain {
     }
 
     getInputNode () {
-        return this.outputNode;
+        return this.inputNode;
     }
 
     /**
@@ -43,8 +46,17 @@ class EffectChain {
      * @param {object} target - target whose node to should be connected
      */
     connect (target) {
-        this.outputNode.disconnect();
-        this.outputNode.connect(target.getInputNode());
+        const lastEffect = this._effects[this._effects.length - 1];
+        if (target === lastEffect) {
+            this.inputNode.disconnect();
+            this.inputNode.connect(lastEffect.getInputNode());
+
+            return;
+        }
+
+        this.target = target;
+
+        this._effects[0].connect(target);
     }
 
 
@@ -54,12 +66,10 @@ class EffectChain {
 
     setEffectsFromTarget (target) {
         this._effects.forEach(effect => {
-            if (effect.name in target) {
-                effect.set(target[effect.name]);
-            } else if ('soundEffects' in target && effect.name in target.soundEffects) {
+            if ('soundEffects' in target && effect.name in target.soundEffects) {
                 effect.set(target.soundEffects[effect.name]);
-            } else {
-                effect.set(effect.DEFAULT_VALUE);
+            } else if (effect.name in target) {
+                effect.set(target[effect.name]);
             }
         });
     }
@@ -68,6 +78,10 @@ class EffectChain {
         if (effect in this) {
             this[effect].set(value);
         }
+    }
+
+    update () {
+        this._effects.forEach(effect => effect.update());
     }
 
     clear () {
