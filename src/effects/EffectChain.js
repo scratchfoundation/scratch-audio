@@ -6,22 +6,30 @@ class EffectChain {
 
         this.effects = effects;
 
-        this.lastEffect = null;
+        // Effects are instantiate in reverse so that the first refers to the
+        // second, the second refers to the third, etc and the last refers to
+        // null.
+        let lastEffect = null;
+        this._effects = effects
+            .reverse()
+            .map(Effect => {
+                const effect = new Effect(audioEngine, this, lastEffect);
+                this[effect.name] = effect;
+                lastEffect = effect;
+                return effect;
+            })
+            .reverse();
 
-        this._effects = effects.map(Effect => {
-            const effect = new Effect(audioEngine, this, this.lastEffect);
-            this[effect.name] = effect;
-            this.lastEffect = effect;
-            return effect;
-        });
+        this.firstEffect = this._effects[0];
+        this.lastEffect = this._effects[this._effects.length - 1];
 
         this._soundPlayers = new Set();
     }
 
     clone () {
         const chain = new EffectChain(this.audioEngine, this.effects);
-        if (this.target === target) {
-            chain.connect(target);
+        if (this.target) {
+            chain.connect(this.target);
         }
         return chain;
     }
@@ -46,17 +54,20 @@ class EffectChain {
      * @param {object} target - target whose node to should be connected
      */
     connect (target) {
-        const {lastEffect} = this;
+        const {firstEffect, lastEffect} = this;
+
         if (target === lastEffect) {
             this.inputNode.disconnect();
             this.inputNode.connect(lastEffect.getInputNode());
 
             return;
+        } else if (target === firstEffect) {
+            return;
         }
 
         this.target = target;
 
-        this._effects[0].connect(target);
+        firstEffect.connect(target);
     }
 
 
