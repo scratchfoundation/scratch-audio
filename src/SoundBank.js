@@ -1,22 +1,24 @@
-const SoundPlayer = require('./GreenPlayer');
-const EffectsChain = require('./effects/EffectChain');
+const log = require('./log');
 
 const ALL_TARGETS = '*';
 
 class SoundBank {
-    constructor (audioEngine) {
+    constructor (audioEngine, effectChainPrime) {
         this.audioEngine = audioEngine;
 
         this.soundPlayers = {};
         this.playerTargets = new Map();
         this.soundEffects = new Map();
+        this.effectChainPrime = effectChainPrime;
+    }
+
+    addSoundPlayer (soundPlayer) {
+        this.soundPlayers[soundPlayer.id] = soundPlayer;
     }
 
     getSoundPlayer (soundId) {
         if (!this.soundPlayers[soundId]) {
-            this.soundPlayers[soundId] = new SoundPlayer(this.audioEngine, {
-                id: soundId, buffer: this.audioEngine.audioBuffers[soundId]
-            });
+            log.error(`SoundBank.getSoundPlayer(${soundId}): called missing sound in bank`);
         }
 
         return this.soundPlayers[soundId];
@@ -24,7 +26,7 @@ class SoundBank {
 
     getSoundEffects (sound) {
         if (!this.soundEffects.has(sound)) {
-            this.soundEffects.set(sound, new EffectsChain(this.audioEngine));
+            this.soundEffects.set(sound, this.effectChainPrime.clone());
         }
 
         return this.soundEffects.get(sound);
