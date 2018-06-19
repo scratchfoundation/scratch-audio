@@ -33,6 +33,8 @@ class SoundPlayer extends EventEmitter {
         this.isPlaying = false;
         this.startingUntil = 0;
         this.playbackRate = 1;
+
+        this.handleEvent = this.handleEvent.bind(this);
     }
 
     /**
@@ -68,7 +70,7 @@ class SoundPlayer extends EventEmitter {
      */
     _createSource () {
         if (this.outputNode !== null) {
-            this.outputNode.removeEventListener(ON_ENDED, this);
+            this.outputNode.removeEventListener(ON_ENDED, this.handleEvent);
             this.outputNode.disconnect();
         }
 
@@ -76,7 +78,7 @@ class SoundPlayer extends EventEmitter {
         this.outputNode.playbackRate.value = this.playbackRate;
         this.outputNode.buffer = this.buffer;
 
-        this.outputNode.addEventListener(ON_ENDED, this);
+        this.outputNode.addEventListener(ON_ENDED, this.handleEvent);
 
         if (this.target !== null) {
             this.connect(this.target);
@@ -149,7 +151,7 @@ class SoundPlayer extends EventEmitter {
      */
     take () {
         if (this.outputNode) {
-            this.outputNode.removeEventListener(ON_ENDED, this);
+            this.outputNode.removeEventListener(ON_ENDED, this.handleEvent);
         }
 
         const taken = new SoundPlayer(this.audioEngine, this);
@@ -160,7 +162,7 @@ class SoundPlayer extends EventEmitter {
             taken.initialize();
             taken.outputNode.disconnect();
             taken.outputNode = this.outputNode;
-            taken.outputNode.addEventListener(ON_ENDED, taken);
+            taken.outputNode.addEventListener(ON_ENDED, taken.handleEvent);
             taken.volumeEffect.set(this.volumeEffect.value);
             if (this.target !== null) {
                 taken.connect(this.target);
@@ -202,10 +204,10 @@ class SoundPlayer extends EventEmitter {
             this.take().stop();
         }
 
-        if (!this.initialized) {
-            this.initialize();
-        } else {
+        if (this.initialized) {
             this._createSource();
+        } else {
+            this.initialize();
         }
 
         this.volumeEffect.set(this.volumeEffect.DEFAULT_VALUE);
