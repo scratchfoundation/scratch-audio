@@ -70,26 +70,28 @@ tap.test('SoundPlayer', suite => {
     });
 
     suite.test('stop decay', t => {
-        t.plan(6);
+        t.plan(7);
         soundPlayer.play();
         soundPlayer.connect(audioEngine);
+        const outputNode = soundPlayer.outputNode;
 
         audioContext.$processTo(0);
         soundPlayer.stop();
+        t.equal(soundPlayer.outputNode, null, 'nullify outputNode immediately (taken sound is stopping)');
         t.deepEqual(audioEngine.inputNode.toJSON().inputs, [{
             name: 'GainNode',
             gain: {
                 value: 1,
                 inputs: []
             },
-            inputs: [soundPlayer.outputNode.toJSON()]
+            inputs: [outputNode.toJSON()]
         }], 'output node connects to gain node to input node');
 
         audioContext.$processTo(audioEngine.DECAY_TIME / 2);
         const engineInputs = audioEngine.inputNode.toJSON().inputs;
         t.notEqual(engineInputs[0].gain.value, 1, 'gain value should not be 1');
         t.notEqual(engineInputs[0].gain.value, 0, 'gain value should not be 0');
-        t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+        t.equal(outputNode.$state, 'PLAYING');
 
         audioContext.$processTo(audioEngine.DECAY_TIME);
         t.deepEqual(audioEngine.inputNode.toJSON().inputs, [{
@@ -98,10 +100,10 @@ tap.test('SoundPlayer', suite => {
                 value: 0,
                 inputs: []
             },
-            inputs: [soundPlayer.outputNode.toJSON()]
+            inputs: [outputNode.toJSON()]
         }], 'output node connects to gain node to input node decayed');
 
-        t.equal(soundPlayer.outputNode.$state, 'FINISHED');
+        t.equal(outputNode.$state, 'FINISHED');
 
         t.end();
     });
