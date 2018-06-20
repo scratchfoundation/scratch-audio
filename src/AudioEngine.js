@@ -243,11 +243,14 @@ class AudioEngine {
         return new AudioPlayer(this);
     }
 
-
-    createBank () {
+    createEffectChain () {
         const effects = new EffectChain(this, this.effects);
         effects.connect(this);
-        return new SoundBank(this, effects);
+        return effects;
+    }
+
+    createBank () {
+        return new SoundBank(this, this.createEffectChain());
     }
 }
 
