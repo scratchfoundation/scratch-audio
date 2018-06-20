@@ -113,6 +113,7 @@ tap.test('SoundPlayer', suite => {
         soundPlayer.finished().then(() => log.push('play 1 finished'));
         soundPlayer.connect(audioEngine);
 
+        await Promise.resolve();
 
         audioContext.$processTo(0.005);
         t.equal(soundPlayer.outputNode.$state, 'PLAYING');
