@@ -6,7 +6,7 @@ const uid = require('./uid');
 
 const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
 const Loudness = require('./Loudness');
-const SoundPlayer = require('./GreenPlayer');
+const SoundPlayer = require('./SoundPlayer');
 
 const EffectChain = require('./effects/EffectChain');
 const PanEffect = require('./effects/PanEffect');
