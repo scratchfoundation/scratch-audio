@@ -108,51 +108,61 @@ tap.test('SoundPlayer', suite => {
         t.end();
     });
 
-    suite.test('play while playing', async t => {
+    suite.test('play while playing', t => {
         t.plan(15);
         const log = [];
         soundPlayer.play();
         soundPlayer.finished().then(() => log.push('play 1 finished'));
         soundPlayer.connect(audioEngine);
+        let oldPlayerNode;
 
-        await Promise.resolve();
+        return Promise.resolve()
+            .then(() => {
 
-        audioContext.$processTo(0.005);
-        t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+                audioContext.$processTo(0.005);
+                t.equal(soundPlayer.outputNode.$state, 'PLAYING');
 
-        const oldPlayerNode = soundPlayer.outputNode;
-        soundPlayer.play();
-        soundPlayer.finished().then(() => log.push('play 2 finished'));
+                oldPlayerNode = soundPlayer.outputNode;
+                soundPlayer.play();
+                soundPlayer.finished().then(() => log.push('play 2 finished'));
 
-        // wait for a micro-task loop to fire our previous events
-        await Promise.resolve();
-        t.equal(log[0], 'play 1 finished');
-        t.notEqual(soundPlayer.outputNode, oldPlayerNode, 'created new player node');
+            // wait for a micro-task loop to fire our previous events
+                return Promise.resolve();
+            })
+            .then(() => {
 
-        t.equal(help.engineInputs.length, 2, 'there should be 2 players connected');
-        t.equal(oldPlayerNode.$state, 'PLAYING');
-        t.equal(soundPlayer.outputNode.$state, 'PLAYING');
-        t.equal(help.engineInputs[0].gain.value, 1, 'old sound connectect to gain node with volume 1');
+                t.equal(log[0], 'play 1 finished');
+                t.notEqual(soundPlayer.outputNode, oldPlayerNode, 'created new player node');
 
-        audioContext.$processTo(audioContext.currentTime + 0.001);
-        t.notEqual(help.engineInputs[0].gain.value, 1,
+                t.equal(help.engineInputs.length, 2, 'there should be 2 players connected');
+                t.equal(oldPlayerNode.$state, 'PLAYING');
+                t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+                t.equal(help.engineInputs[0].gain.value, 1, 'old sound connectect to gain node with volume 1');
+
+                audioContext.$processTo(audioContext.currentTime + 0.001);
+                t.notEqual(help.engineInputs[0].gain.value, 1,
             'old sound connected to gain node which will fade');
 
-        audioContext.$processTo(audioContext.currentTime + audioEngine.DECAY_TIME + 0.001);
-        t.equal(soundPlayer.outputNode.$state, 'PLAYING');
-        t.equal(oldPlayerNode.$state, 'FINISHED');
+                audioContext.$processTo(audioContext.currentTime + audioEngine.DECAY_TIME + 0.001);
+                t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+                t.equal(oldPlayerNode.$state, 'FINISHED');
 
-        t.equal(help.engineInputs[0].gain.value, 0, 'faded old sound to 0');
+                t.equal(help.engineInputs[0].gain.value, 0, 'faded old sound to 0');
 
-        t.equal(log.length, 1);
-        audioContext.$processTo(audioContext.currentTime + 0.2);
+                t.equal(log.length, 1);
+                audioContext.$processTo(audioContext.currentTime + 0.2);
 
-        await Promise.resolve();
-        t.equal(log[1], 'play 2 finished');
-        t.equal(help.engineInputs.length, 1, 'old sound disconneted itself after done');
-        t.equal(log.length, 2);
+            // wait for a micro-task loop to fire our previous events
+                return Promise.resolve();
+            })
+            .then(() => {
 
-        t.end();
+                t.equal(log[1], 'play 2 finished');
+                t.equal(help.engineInputs.length, 1, 'old sound disconneted itself after done');
+                t.equal(log.length, 2);
+
+                t.end();
+            });
     });
 
     suite.end();
