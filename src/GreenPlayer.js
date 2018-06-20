@@ -28,6 +28,7 @@ class SoundPlayer extends EventEmitter {
 
         this.outputNode = null;
         this.target = null;
+        this.volumeEffect = null;
 
         this.initialized = false;
         this.isPlaying = false;

@@ -24,6 +24,14 @@ class Effect {
     }
 
     /**
+     * Return the name of the effect.
+     * @type {string}
+     */
+    get name () {
+        throw new Error(`${this.constructor.name}.name is not implemented`);
+    }
+
+    /**
      * Default value to set the Effect to when constructed and when clear'ed.
      * @const {number}
      */
