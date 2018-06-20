@@ -35,6 +35,9 @@ class SoundPlayer extends EventEmitter {
         this.startingUntil = 0;
         this.playbackRate = 1;
 
+        // handleEvent is a EventTarget api for the DOM, however the web-audio-test-api we use
+        // uses an addEventListener that isn't compatable with object and requires us to pass
+        // this bound function instead
         this.handleEvent = this.handleEvent.bind(this);
     }
 
@@ -169,6 +172,9 @@ class SoundPlayer extends EventEmitter {
             taken.outputNode = this.outputNode;
             taken.outputNode.addEventListener(ON_ENDED, taken.handleEvent);
             taken.volumeEffect = this.volumeEffect;
+            if (taken.volumeEffect) {
+                taken.volumeEffect.audioPlayer = taken;
+            }
             if (this.target !== null) {
                 taken.connect(this.target);
             }
@@ -229,8 +235,11 @@ class SoundPlayer extends EventEmitter {
         // nodes / etc
         const taken = this.take();
         taken.volumeEffect = new VolumeEffect(taken.audioEngine, taken, null);
+
         taken.volumeEffect.connect(taken.target);
-        taken.connect(taken.volumeEffect);
+        // volumeEffect will recursively connect to us if it needs to, so this happens too:
+        // taken.connect(taken.volumeEffect);
+
         taken.finished().then(() => taken.dispose());
 
         taken.volumeEffect.set(0);
