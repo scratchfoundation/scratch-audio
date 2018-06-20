@@ -6,6 +6,7 @@ const {AudioContext} = require('web-audio-test-api');
 tap.test('AudioEngine', t => {
     const audioEngine = new AudioEngine(new AudioContext());
 
+    t.plan(1);
     t.deepEqual(audioEngine.inputNode.toJSON(), {
         gain: {
             inputs: [],
