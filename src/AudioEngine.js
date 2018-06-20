@@ -5,7 +5,6 @@ const log = require('./log');
 const uid = require('./uid');
 
 const ADPCMSoundDecoder = require('./ADPCMSoundDecoder');
-const AudioPlayer = require('./AudioPlayer');
 const Loudness = require('./Loudness');
 const SoundPlayer = require('./GreenPlayer');
 
@@ -242,13 +241,11 @@ class AudioEngine {
     }
 
     /**
-     * Create an AudioPlayer. Each sprite or clone has an AudioPlayer.
-     * It includes a reference to the AudioEngine so it can use global
-     * functionality such as playing notes.
-     * @return {AudioPlayer} new AudioPlayer instance
+     * Deprecated way to create an AudioPlayer
+     * @todo remove this
      */
     createPlayer () {
-        return new AudioPlayer(this);
+        log.warn('the createPlayer method is no longer available, please use createBank');
     }
 
 
