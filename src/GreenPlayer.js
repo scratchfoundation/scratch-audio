@@ -113,7 +113,7 @@ class SoundPlayer extends EventEmitter {
             return;
         }
 
-        if (this.volumeEffect) {
+        if (this.volumeEffect !== null) {
             this.volumeEffect.connect(target);
         } else {
             this.outputNode.disconnect();
@@ -133,7 +133,7 @@ class SoundPlayer extends EventEmitter {
 
         this.stopImmediately();
 
-        if (this.volumeEffect) {
+        if (this.volumeEffect !== null) {
             this.volumeEffect.dispose();
             this.volumeEffect = null;
         }
@@ -178,9 +178,6 @@ class SoundPlayer extends EventEmitter {
         }
 
         this.outputNode = null;
-        if (this.volumeEffect !== null) {
-            this.volumeEffect.dispose();
-        }
         this.volumeEffect = null;
         this.initialized = false;
         this.startingUntil = 0;
@@ -234,6 +231,7 @@ class SoundPlayer extends EventEmitter {
         taken.volumeEffect = new VolumeEffect(taken.audioEngine, taken, null);
         taken.volumeEffect.connect(taken.target);
         taken.connect(taken.volumeEffect);
+        taken.finished().then(() => taken.dispose());
 
         taken.volumeEffect.set(0);
         taken.outputNode.stop(this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME);

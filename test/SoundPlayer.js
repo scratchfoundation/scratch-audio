@@ -109,7 +109,7 @@ tap.test('SoundPlayer', suite => {
     });
 
     suite.test('play while playing', async t => {
-        t.plan(14);
+        t.plan(15);
         const log = [];
         soundPlayer.play();
         soundPlayer.finished().then(() => log.push('play 1 finished'));
@@ -149,6 +149,7 @@ tap.test('SoundPlayer', suite => {
 
         await Promise.resolve();
         t.equal(log[1], 'play 2 finished');
+        t.equal(help.engineInputs.length, 1, 'old sound disconneted itself after done');
         t.equal(log.length, 2);
 
         t.end();
