@@ -90,11 +90,17 @@ class SoundBank {
         const effects = this.getSoundEffects(soundId);
         const player = this.getSoundPlayer(soundId);
 
-        this.playerTargets.set(soundId, target);
-        effects.setEffectsFromTarget(target);
-        effects.addSoundPlayer(player);
+        if (this.playerTargets.get(soundId) !== target) {
+            // make sure to stop the old sound, effectively "forking" the output
+            // when the target switches before we adjust it's effects
+            player.stop();
+        }
 
+        this.playerTargets.set(soundId, target);
+        effects.addSoundPlayer(player);
+        effects.setEffectsFromTarget(target);
         player.connect(effects);
+
         player.play();
 
         return player.finished();
