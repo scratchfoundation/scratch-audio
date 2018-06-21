@@ -65,6 +65,10 @@ class AudioEngine {
         this.loudness = null;
     }
 
+    /**
+     * Current time in the AudioEngine.
+     * @type {number}
+     */
     get currentTime () {
         return this.audioContext.currentTime;
     }
