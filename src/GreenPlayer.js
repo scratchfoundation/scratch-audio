@@ -202,7 +202,6 @@ class SoundPlayer extends EventEmitter {
         if (this.isStarting) {
             this.emit('stop');
             this.emit('play');
-            this.isPlaying = true;
             return;
         }
 
