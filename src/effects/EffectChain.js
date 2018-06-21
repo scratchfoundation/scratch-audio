@@ -33,14 +33,12 @@ class EffectChain {
          * @type {Array<Effect>}
          */
         this._effects = effects
-            .reverse()
             .map(Effect => {
                 const effect = new Effect(audioEngine, this, lastEffect);
                 this[effect.name] = effect;
                 lastEffect = effect;
                 return effect;
-            })
-            .reverse();
+            });
 
         /**
          * First effect of this chain.
@@ -106,18 +104,18 @@ class EffectChain {
     connect (target) {
         const {firstEffect, lastEffect} = this;
 
-        if (target === lastEffect) {
+        if (target === firstEffect) {
             this.inputNode.disconnect();
             this.inputNode.connect(lastEffect.getInputNode());
 
             return;
-        } else if (target === firstEffect) {
+        } else if (target === lastEffect) {
             return;
         }
 
         this.target = target;
 
-        firstEffect.connect(target);
+        lastEffect.connect(target);
     }
 
     /**
