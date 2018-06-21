@@ -27,12 +27,18 @@ class SoundPlayer extends EventEmitter {
         this.buffer = buffer;
 
         this.outputNode = null;
+        this.volumeEffect = null;
         this.target = null;
 
         this.initialized = false;
         this.isPlaying = false;
         this.startingUntil = 0;
         this.playbackRate = 1;
+
+        // handleEvent is a EventTarget api for the DOM, however the web-audio-test-api we use
+        // uses an addEventListener that isn't compatable with object and requires us to pass
+        // this bound function instead
+        this.handleEvent = this.handleEvent.bind(this);
     }
 
     /**
@@ -68,7 +74,7 @@ class SoundPlayer extends EventEmitter {
      */
     _createSource () {
         if (this.outputNode !== null) {
-            this.outputNode.removeEventListener(ON_ENDED, this);
+            this.outputNode.removeEventListener(ON_ENDED, this.handleEvent);
             this.outputNode.disconnect();
         }
 
@@ -76,7 +82,7 @@ class SoundPlayer extends EventEmitter {
         this.outputNode.playbackRate.value = this.playbackRate;
         this.outputNode.buffer = this.buffer;
 
-        this.outputNode.addEventListener(ON_ENDED, this);
+        this.outputNode.addEventListener(ON_ENDED, this.handleEvent);
 
         if (this.target !== null) {
             this.connect(this.target);
@@ -88,8 +94,6 @@ class SoundPlayer extends EventEmitter {
      */
     initialize () {
         this.initialized = true;
-
-        this.volumeEffect = new VolumeEffect(this.audioEngine, this, null);
 
         this._createSource();
     }
@@ -112,7 +116,12 @@ class SoundPlayer extends EventEmitter {
             return;
         }
 
-        this.volumeEffect.connect(target);
+        if (this.volumeEffect === null) {
+            this.outputNode.disconnect();
+            this.outputNode.connect(target.getInputNode());
+        } else {
+            this.volumeEffect.connect(target);
+        }
 
         return this;
     }
@@ -127,8 +136,10 @@ class SoundPlayer extends EventEmitter {
 
         this.stopImmediately();
 
-        this.volumeEffect.dispose();
-        this.volumeEffect = null;
+        if (this.volumeEffect !== null) {
+            this.volumeEffect.dispose();
+            this.volumeEffect = null;
+        }
 
         this.outputNode.disconnect();
         this.outputNode = null;
@@ -149,7 +160,7 @@ class SoundPlayer extends EventEmitter {
      */
     take () {
         if (this.outputNode) {
-            this.outputNode.removeEventListener(ON_ENDED, this);
+            this.outputNode.removeEventListener(ON_ENDED, this.handleEvent);
         }
 
         const taken = new SoundPlayer(this.audioEngine, this);
@@ -157,25 +168,22 @@ class SoundPlayer extends EventEmitter {
         if (this.isPlaying) {
             taken.startingUntil = this.startingUntil;
             taken.isPlaying = this.isPlaying;
-            taken.initialize();
-            taken.outputNode.disconnect();
+            taken.initialized = this.initialized;
             taken.outputNode = this.outputNode;
-            taken.outputNode.addEventListener(ON_ENDED, taken);
-            taken.volumeEffect.set(this.volumeEffect.value);
+            taken.outputNode.addEventListener(ON_ENDED, taken.handleEvent);
+            taken.volumeEffect = this.volumeEffect;
+            if (taken.volumeEffect) {
+                taken.volumeEffect.audioPlayer = taken;
+            }
             if (this.target !== null) {
                 taken.connect(this.target);
             }
-        }
 
-        if (this.isPlaying) {
             this.emit('stop');
             taken.emit('play');
         }
 
         this.outputNode = null;
-        if (this.volumeEffect !== null) {
-            this.volumeEffect.dispose();
-        }
         this.volumeEffect = null;
         this.initialized = false;
         this.startingUntil = 0;
@@ -192,23 +200,21 @@ class SoundPlayer extends EventEmitter {
      */
     play () {
         if (this.isStarting) {
+            this.emit('stop');
+            this.emit('play');
             return;
         }
 
         if (this.isPlaying) {
-            // Spawn a Player with the current buffer source, and play for a
-            // short period until its volume is 0 and release it to be
-            // eventually garbage collected.
-            this.take().stop();
+            this.stop();
         }
 
-        if (!this.initialized) {
-            this.initialize();
-        } else {
+        if (this.initialized) {
             this._createSource();
+        } else {
+            this.initialize();
         }
 
-        this.volumeEffect.set(this.volumeEffect.DEFAULT_VALUE);
         this.outputNode.start();
 
         this.isPlaying = true;
@@ -226,13 +232,20 @@ class SoundPlayer extends EventEmitter {
             return;
         }
 
-        this.volumeEffect.set(0);
-        this.outputNode.stop(this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME);
+        // always do a manual stop on a taken / volume effect fade out sound player
+        // take will emit "stop" as well as reset all of our playing statuses / remove our
+        // nodes / etc
+        const taken = this.take();
+        taken.volumeEffect = new VolumeEffect(taken.audioEngine, taken, null);
 
-        this.isPlaying = false;
-        this.startingUntil = 0;
+        taken.volumeEffect.connect(taken.target);
+        // volumeEffect will recursively connect to us if it needs to, so this happens too:
+        // taken.connect(taken.volumeEffect);
 
-        this.emit('stop');
+        taken.finished().then(() => taken.dispose());
+
+        taken.volumeEffect.set(0);
+        taken.outputNode.stop(this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME);
     }
 
     /**

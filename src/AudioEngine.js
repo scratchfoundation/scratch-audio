@@ -1,4 +1,4 @@
-const StartAudioContext = require('startaudiocontext');
+const StartAudioContext = require('./StartAudioContext');
 const AudioContext = require('audio-context');
 
 const log = require('./log');
@@ -35,13 +35,13 @@ const decodeAudioData = function (audioContext, buffer) {
  * sprites.
  */
 class AudioEngine {
-    constructor () {
+    constructor (audioContext = new AudioContext()) {
         /**
          * AudioContext to play and manipulate sounds with a graph of source
          * and effect nodes.
          * @type {AudioContext}
          */
-        this.audioContext = new AudioContext();
+        this.audioContext = audioContext;
         StartAudioContext(this.audioContext);
 
         /**
@@ -63,6 +63,14 @@ class AudioEngine {
          * @type {Loudness}
          */
         this.loudness = null;
+    }
+
+    /**
+     * Current time in the AudioEngine.
+     * @type {number}
+     */
+    get currentTime () {
+        return this.audioContext.currentTime;
     }
 
     /**

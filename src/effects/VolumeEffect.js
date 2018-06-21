@@ -32,13 +32,11 @@ class VolumeEffect extends Effect {
      */
     _set (value) {
         this.value = value;
-        // A gain of 1 is normal. Scale down scratch's volume value. Apply the
-        // change over a tiny period of time.
-        this.outputNode.gain.setTargetAtTime(
-            value / 100,
-            this.audioEngine.audioContext.currentTime,
-            this.audioEngine.DECAY_TIME
-        );
+
+        const {gain} = this.outputNode;
+        const {audioContext: {currentTime}, DECAY_TIME} = this.audioEngine;
+        gain.setValueAtTime(gain.value, currentTime);
+        gain.linearRampToValueAtTime(value / 100, currentTime + DECAY_TIME);
     }
 
     /**

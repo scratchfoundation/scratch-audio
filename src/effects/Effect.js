@@ -82,14 +82,17 @@ class Effect {
         }
 
         // Store whether the graph should currently affected by this effect.
-        const _isPatch = this._isPatch;
+        const wasPatch = this._isPatch;
+        if (wasPatch) {
+            this._lastPatch = this.audioEngine.currentTime;
+        }
 
         // Call the internal implementation per this Effect.
         this._set(value);
 
         // Connect or disconnect from the graph if this now applies or no longer
         // applies an effect.
-        if (this._isPatch !== _isPatch && this.target !== null) {
+        if (this._isPatch !== wasPatch && this.target !== null) {
             this.connect(this.target);
         }
     }
@@ -133,7 +136,7 @@ class Effect {
             this.outputNode.disconnect();
         }
 
-        if (this._isPatch) {
+        if (this._isPatch || this._lastPatch + this.audioEngine.DECAY_TIME < this.audioEngine.currentTime) {
             this.outputNode.connect(target.getInputNode());
         }
 
