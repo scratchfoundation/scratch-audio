@@ -31,8 +31,16 @@ class SoundPlayer extends EventEmitter {
 
         this.initialized = false;
         this.isPlaying = false;
-        this.isStarting = null;
+        this.startingUntil = 0;
         this.playbackRate = 1;
+    }
+
+    /**
+     * Is plaback currently starting?
+     * @type {boolean}
+     */
+    get isStarting () {
+        return this.isPlaying && this.startingUntil > this.audioEngine.audioContext.currentTime;
     }
 
     /**
@@ -147,7 +155,7 @@ class SoundPlayer extends EventEmitter {
         const taken = new SoundPlayer(this.audioEngine, this);
         taken.playbackRate = this.playbackRate;
         if (this.isPlaying) {
-            taken.isStarting = this.isStarting;
+            taken.startingUntil = this.startingUntil;
             taken.isPlaying = this.isPlaying;
             taken.initialize();
             taken.outputNode.disconnect();
@@ -170,7 +178,7 @@ class SoundPlayer extends EventEmitter {
         }
         this.volumeEffect = null;
         this.initialized = false;
-        this.isStarting = null;
+        this.startingUntil = 0;
         this.isPlaying = false;
 
         return taken;
@@ -205,12 +213,7 @@ class SoundPlayer extends EventEmitter {
 
         this.isPlaying = true;
 
-        const isStarting = this.isStarting = Promise.resolve()
-            .then(() => {
-                if (this.isStarting === isStarting) {
-                    this.isStarting = null;
-                }
-            });
+        this.startingUntil = this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME;
 
         this.emit('play');
     }
@@ -227,7 +230,7 @@ class SoundPlayer extends EventEmitter {
         this.outputNode.stop(this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_TIME);
 
         this.isPlaying = false;
-        this.isStarting = null;
+        this.startingUntil = 0;
 
         this.emit('stop');
     }
@@ -243,7 +246,7 @@ class SoundPlayer extends EventEmitter {
         this.outputNode.stop();
 
         this.isPlaying = false;
-        this.isStarting = null;
+        this.startingUntil = 0;
 
         this.emit('stop');
     }
