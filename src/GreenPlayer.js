@@ -116,11 +116,11 @@ class SoundPlayer extends EventEmitter {
             return;
         }
 
-        if (this.volumeEffect !== null) {
-            this.volumeEffect.connect(target);
-        } else {
+        if (this.volumeEffect === null) {
             this.outputNode.disconnect();
             this.outputNode.connect(target.getInputNode());
+        } else {
+            this.volumeEffect.connect(target);
         }
 
         return this;

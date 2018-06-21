@@ -39,14 +39,13 @@ tap.test('SoundPlayer', suite => {
 
     suite.plan(4);
 
-    suite.test('play initializes and creates chain', t => {
+    suite.test('play initializes and creates source node', t => {
         t.plan(3);
         t.equal(soundPlayer.initialized, false, 'not yet initialized');
         soundPlayer.play();
         t.equal(soundPlayer.initialized, true, 'now is initialized');
-        let buffer = audioContext.DECODE_AUDIO_DATA_RESULT.toJSON();
         t.deepEqual(soundPlayer.outputNode.toJSON(), {
-            buffer,
+            buffer: audioContext.DECODE_AUDIO_DATA_RESULT.toJSON(),
             inputs: [],
             loop: false,
             loopEnd: 0,
@@ -65,7 +64,7 @@ tap.test('SoundPlayer', suite => {
         t.plan(1);
         soundPlayer.play();
         soundPlayer.connect(audioEngine);
-        t.deepEqual(audioEngine.inputNode.toJSON().inputs, [
+        t.deepEqual(help.engineInputs, [
             soundPlayer.outputNode.toJSON()
         ], 'output node connects to input node');
         t.end();
@@ -80,7 +79,7 @@ tap.test('SoundPlayer', suite => {
         audioContext.$processTo(0);
         soundPlayer.stop();
         t.equal(soundPlayer.outputNode, null, 'nullify outputNode immediately (taken sound is stopping)');
-        t.deepEqual(audioEngine.inputNode.toJSON().inputs, [{
+        t.deepEqual(help.engineInputs, [{
             name: 'GainNode',
             gain: {
                 value: 1,
@@ -90,13 +89,13 @@ tap.test('SoundPlayer', suite => {
         }], 'output node connects to gain node to input node');
 
         audioContext.$processTo(audioEngine.DECAY_TIME / 2);
-        const engineInputs = audioEngine.inputNode.toJSON().inputs;
+        const engineInputs = help.engineInputs;
         t.notEqual(engineInputs[0].gain.value, 1, 'gain value should not be 1');
         t.notEqual(engineInputs[0].gain.value, 0, 'gain value should not be 0');
         t.equal(outputNode.$state, 'PLAYING');
 
         audioContext.$processTo(audioEngine.DECAY_TIME);
-        t.deepEqual(audioEngine.inputNode.toJSON().inputs, [{
+        t.deepEqual(help.engineInputs, [{
             name: 'GainNode',
             gain: {
                 value: 0,
