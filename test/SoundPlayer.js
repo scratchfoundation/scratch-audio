@@ -37,7 +37,7 @@ tap.test('SoundPlayer', suite => {
         audioContext = null;
     });
 
-    suite.plan(4);
+    suite.plan(5);
 
     suite.test('play initializes and creates source node', t => {
         t.plan(3);
@@ -109,6 +109,45 @@ tap.test('SoundPlayer', suite => {
         t.end();
     });
 
+    suite.test('play while playing debounces', t => {
+        t.plan(7);
+        const log = [];
+        soundPlayer.connect(audioEngine);
+        soundPlayer.play();
+        t.equal(soundPlayer.isStarting, true, 'player.isStarting');
+        const originalNode = soundPlayer.outputNode;
+        // the second play should still "finish" this play
+        soundPlayer.finished().then(() => log.push('finished first'));
+        soundPlayer.play();
+        soundPlayer.finished().then(() => log.push('finished second'));
+        soundPlayer.play();
+        soundPlayer.finished().then(() => log.push('finished third'));
+        soundPlayer.play();
+        t.equal(originalNode, soundPlayer.outputNode, 'same output node');
+        t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+        return Promise.resolve().then(() => {
+            t.deepEqual(log, ['finished first', 'finished second', 'finished third'], 'finished in order');
+
+            // fast forward to one ms before decay time
+            audioContext.$processTo(audioEngine.DECAY_TIME - 0.001);
+            soundPlayer.play();
+
+            t.equal(originalNode, soundPlayer.outputNode, 'same output node');
+
+
+            // now at DECAY_TIME, we should meet a new player as the old one is taken/stopped
+            audioContext.$processTo(audioEngine.DECAY_TIME);
+
+            t.equal(soundPlayer.isStarting, false, 'player.isStarting now false');
+
+            soundPlayer.play();
+            t.notEqual(originalNode, soundPlayer.outputNode, 'New output node');
+
+            t.end();
+        });
+
+    });
+
     suite.test('play while playing', t => {
         t.plan(15);
         const log = [];
@@ -117,7 +156,8 @@ tap.test('SoundPlayer', suite => {
         soundPlayer.connect(audioEngine);
         const firstPlayNode = soundPlayer.outputNode;
 
-        audioContext.$processTo(0.005);
+        // go past debounce time and play again
+        audioContext.$processTo(audioEngine.DECAY_TIME);
 
         return Promise.resolve()
         .then(() => {
