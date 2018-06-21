@@ -12,6 +12,10 @@ class VolumeEffect extends Effect {
         return 100;
     }
 
+    get name () {
+        return 'volume';
+    }
+
     /**
      * Initialize the Effect.
      * Effects start out uninitialized. Then initialize when they are first set

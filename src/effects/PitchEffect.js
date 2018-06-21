@@ -35,6 +35,10 @@ class PitchEffect extends Effect {
         this.ratio = 1;
     }
 
+    get name () {
+        return 'pitch';
+    }
+
     /**
      * Should the effect be connected to the audio graph?
      * @return {boolean} is the effect affecting the graph?
