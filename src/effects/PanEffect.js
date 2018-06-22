@@ -20,6 +20,10 @@ class PanEffect extends Effect {
         this.channelMerger = null;
     }
 
+    /**
+     * Return the name of the effect.
+     * @type {string}
+     */
     get name () {
         return 'pan';
     }
