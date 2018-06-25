@@ -208,36 +208,6 @@ class AudioEngine {
     }
 
     /**
-     * Retrieve the audio buffer as held in memory for a given sound id.
-     * @todo remove this
-     */
-    getSoundBuffer () {
-        // todo: Deprecate audioBuffers. If something wants to hold onto the
-        // buffer, it should. Otherwise buffers need to be able to release their
-        // decoded memory to avoid running out of memory which is possible with
-        // enough large audio buffers as they are full 16bit pcm waveforms for
-        // each audio channel.
-        log.warn('The getSoundBuffer function is no longer available. Use soundBank.getSoundPlayer().buffer.');
-    }
-
-    /**
-     * Add or update the in-memory audio buffer to a new one by soundId.
-     * @todo remove this
-     */
-    updateSoundBuffer () {
-        log.warn('The updateSoundBuffer function is no longer available. Use soundBank.getSoundPlayer().buffer.');
-    }
-
-    /**
-     * An older version of the AudioEngine had this function to load all sounds
-     * This is a stub to provide a warning when it is called
-     * @todo remove this
-     */
-    loadSounds () {
-        log.warn('The loadSounds function is no longer available. Please use Scratch Storage.');
-    }
-
-    /**
      * Get the current loudness of sound received by the microphone.
      * Sound is measured in RMS and smoothed.
      * @return {number} loudness scaled 0 to 100
@@ -249,14 +219,6 @@ class AudioEngine {
         }
 
         return this.loudness.getLoudness();
-    }
-
-    /**
-     * Deprecated way to create an AudioPlayer
-     * @todo remove this
-     */
-    createPlayer () {
-        log.warn('the createPlayer method is no longer available, please use createBank');
     }
 
     /**
