@@ -114,6 +114,17 @@ class AudioEngine {
     }
 
     /**
+     * Some environments cannot smoothly change parameters immediately, provide
+     * a small delay before decaying.
+     *
+     * @see {@link https://bugzilla.mozilla.org/show_bug.cgi?id=1228207}
+     * @const {number}
+     */
+    get DECAY_SOON () {
+        return 0.05;
+    }
+
+    /**
      * Get the input node.
      * @return {AudioNode} - audio node that is the input for this effect
      */
