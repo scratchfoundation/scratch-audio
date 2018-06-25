@@ -35,6 +35,10 @@ class PitchEffect extends Effect {
         this.ratio = 1;
     }
 
+    /**
+     * Return the name of the effect.
+     * @type {string}
+     */
     get name () {
         return 'pitch';
     }

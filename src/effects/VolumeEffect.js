@@ -12,6 +12,10 @@ class VolumeEffect extends Effect {
         return 100;
     }
 
+    /**
+     * Return the name of the effect.
+     * @type {string}
+     */
     get name () {
         return 'volume';
     }

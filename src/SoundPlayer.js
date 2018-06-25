@@ -21,23 +21,75 @@ class SoundPlayer extends EventEmitter {
     constructor (audioEngine, {id, buffer}) {
         super();
 
+        /**
+         * Unique sound identifier set by AudioEngine.
+         * @type {string}
+         */
         this.id = id;
 
+        /**
+         * AudioEngine creating this sound player.
+         * @type {AudioEngine}
+         */
         this.audioEngine = audioEngine;
+
+        /**
+         * Decoded audio buffer from audio engine for playback.
+         * @type {AudioBuffer}
+         */
         this.buffer = buffer;
 
+        /**
+         * Output audio node.
+         * @type {AudioNode}
+         */
         this.outputNode = null;
+
+        /**
+         * VolumeEffect used to fade out playing sounds when stopping them.
+         * @type {VolumeEffect}
+         */
         this.volumeEffect = null;
+
+
+        /**
+         * Target engine, effect, or chain this player directly connects to.
+         * @type {AudioEngine|Effect|EffectChain}
+         */
         this.target = null;
 
+        /**
+         * Internally is the SoundPlayer initialized with at least its buffer
+         * source node and output node.
+         * @type {boolean}
+         */
         this.initialized = false;
+
+        /**
+         * Is the sound playing or starting to play?
+         * @type {boolean}
+         */
         this.isPlaying = false;
+
+        /**
+         * Timestamp sound is expected to be starting playback until. Once the
+         * future timestamp is reached the sound is considered to be playing
+         * through the audio hardware and stopping should fade out instead of
+         * cutting off playback.
+         * @type {number}
+         */
         this.startingUntil = 0;
+
+        /**
+         * Rate to play back the audio at.
+         * @type {number}
+         */
         this.playbackRate = 1;
 
-        // handleEvent is a EventTarget api for the DOM, however the web-audio-test-api we use
-        // uses an addEventListener that isn't compatable with object and requires us to pass
-        // this bound function instead
+        // handleEvent is a EventTarget api for the DOM, however the
+        // web-audio-test-api we use uses an addEventListener that isn't
+        // compatable with object and requires us to pass this bound function
+        // instead
         this.handleEvent = this.handleEvent.bind(this);
     }
 
@@ -232,14 +284,15 @@ class SoundPlayer extends EventEmitter {
             return;
         }
 
-        // always do a manual stop on a taken / volume effect fade out sound player
-        // take will emit "stop" as well as reset all of our playing statuses / remove our
-        // nodes / etc
+        // always do a manual stop on a taken / volume effect fade out sound
+        // player take will emit "stop" as well as reset all of our playing
+        // statuses / remove our nodes / etc
         const taken = this.take();
         taken.volumeEffect = new VolumeEffect(taken.audioEngine, taken, null);
 
         taken.volumeEffect.connect(taken.target);
-        // volumeEffect will recursively connect to us if it needs to, so this happens too:
+        // volumeEffect will recursively connect to us if it needs to, so this
+        // happens too:
         // taken.connect(taken.volumeEffect);
 
         taken.finished().then(() => taken.dispose());

@@ -248,12 +248,21 @@ class AudioEngine {
         log.warn('the createPlayer method is no longer available, please use createBank');
     }
 
+    /**
+     * Create an effect chain.
+     * @returns {EffectChain} chain of effects defined by this AudioEngine
+     */
     createEffectChain () {
         const effects = new EffectChain(this, this.effects);
         effects.connect(this);
         return effects;
     }
 
+    /**
+     * Create a sound bank and effect chain.
+     * @returns {SoundBank} a sound bank configured with an effect chain
+     *     defined by this AudioEngine
+     */
     createBank () {
         return new SoundBank(this, this.createEffectChain());
     }
