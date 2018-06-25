@@ -65,12 +65,12 @@ class PanEffect extends Effect {
         this.leftGain.gain.setTargetAtTime(
             leftVal,
             this.audioEngine.audioContext.currentTime,
-            this.audioEngine.DECAY_TIME
+            this.audioEngine.DECAY_DURATION
         );
         this.rightGain.gain.setTargetAtTime(
             rightVal,
             this.audioEngine.audioContext.currentTime,
-            this.audioEngine.DECAY_TIME
+            this.audioEngine.DECAY_DURATION
         );
     }
 

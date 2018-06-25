@@ -144,7 +144,7 @@ class Effect {
             this.outputNode.disconnect();
         }
 
-        if (this._isPatch || this._lastPatch + this.audioEngine.DECAY_TIME < this.audioEngine.currentTime) {
+        if (this._isPatch || this._lastPatch + this.audioEngine.DECAY_DURATION < this.audioEngine.currentTime) {
             this.outputNode.connect(target.getInputNode());
         }
 

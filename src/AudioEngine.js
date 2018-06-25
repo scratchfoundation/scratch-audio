@@ -109,7 +109,7 @@ class AudioEngine {
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/AudioParam/setTargetAtTime}
      * @const {number}
      */
-    get DECAY_TIME () {
+    get DECAY_DURATION () {
         return 0.025;
     }
 
@@ -120,7 +120,7 @@ class AudioEngine {
      * @see {@link https://bugzilla.mozilla.org/show_bug.cgi?id=1228207}
      * @const {number}
      */
-    get DECAY_SOON () {
+    get DECAY_WAIT () {
         return 0.05;
     }
 
