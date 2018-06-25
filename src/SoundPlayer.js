@@ -46,7 +46,7 @@ class SoundPlayer extends EventEmitter {
      * @type {boolean}
      */
     get isStarting () {
-        return this.isPlaying && this.startingUntil > this.audioEngine.audioContext.currentTime;
+        return this.isPlaying && this.startingUntil > this.audioEngine.currentTime;
     }
 
     /**
@@ -219,7 +219,8 @@ class SoundPlayer extends EventEmitter {
 
         this.isPlaying = true;
 
-        this.startingUntil = this.audioEngine.audioContext.currentTime + this.audioEngine.DECAY_DURATION;
+        const {currentTime, DECAY_DURATION} = this.audioEngine;
+        this.startingUntil = currentTime + DECAY_DURATION;
 
         this.emit('play');
     }
@@ -245,8 +246,8 @@ class SoundPlayer extends EventEmitter {
         taken.finished().then(() => taken.dispose());
 
         taken.volumeEffect.set(0);
-        const {audioContext, DECAY_DURATION, DECAY_WAIT} = this.audioEngine;
-        taken.outputNode.stop(audioContext.currentTime + DECAY_WAIT + DECAY_DURATION);
+        const {currentTime, DECAY_WAIT, DECAY_DURATION} = this.audioEngine;
+        taken.outputNode.stop(currentTime + DECAY_WAIT + DECAY_DURATION);
     }
 
     /**

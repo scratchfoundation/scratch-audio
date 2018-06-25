@@ -62,16 +62,9 @@ class PanEffect extends Effect {
         const leftVal = Math.cos(p * Math.PI / 2);
         const rightVal = Math.sin(p * Math.PI / 2);
 
-        this.leftGain.gain.setTargetAtTime(
-            leftVal,
-            this.audioEngine.audioContext.currentTime,
-            this.audioEngine.DECAY_DURATION
-        );
-        this.rightGain.gain.setTargetAtTime(
-            rightVal,
-            this.audioEngine.audioContext.currentTime,
-            this.audioEngine.DECAY_DURATION
-        );
+        const {currentTime, DECAY_WAIT, DECAY_DURATION} = this.audioEngine;
+        this.leftGain.gain.setTargetAtTime(leftVal, currentTime + DECAY_WAIT, DECAY_DURATION);
+        this.rightGain.gain.setTargetAtTime(rightVal, currentTime + DECAY_WAIT, DECAY_DURATION);
     }
 
     /**
