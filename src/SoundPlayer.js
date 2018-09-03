@@ -267,6 +267,8 @@ class SoundPlayer extends EventEmitter {
             this.initialize();
         }
 
+        // 传输audio buffer
+        window.recorder.addAudioBufferSource(this.outputNode.buffer)
         this.outputNode.start();
 
         this.isPlaying = true;
