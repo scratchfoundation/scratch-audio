@@ -2,6 +2,28 @@ const ArrayBufferStream = require('./ArrayBufferStream');
 const log = require('./log');
 
 /**
+ * Data used by the decompression algorithm
+ * @type {Array}
+ */
+const STEP_TABLE = [
+    7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
+    50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
+    253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
+    1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327,
+    3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487,
+    12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
+];
+
+/**
+ * Data used by the decompression algorithm
+ * @type {Array}
+ */
+const INDEX_TABLE = [
+    -1, -1, -1, -1, 2, 4, 6, 8,
+    -1, -1, -1, -1, 2, 4, 6, 8
+];
+
+/**
  * Decode wav audio files that have been compressed with the ADPCM format.
  * This is necessary because, while web browsers have native decoders for many audio
  * formats, ADPCM is a non-standard format used by Scratch since its early days.
@@ -16,19 +38,13 @@ class ADPCMSoundDecoder {
     constructor (audioContext) {
         this.audioContext = audioContext;
     }
+
     /**
      * Data used by the decompression algorithm
      * @type {Array}
      */
     static get STEP_TABLE () {
-        return [
-            7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45,
-            50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230,
-            253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963,
-            1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024, 3327,
-            3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487,
-            12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
-        ];
+        return STEP_TABLE;
     }
 
     /**
@@ -36,10 +52,7 @@ class ADPCMSoundDecoder {
      * @type {Array}
      */
     static get INDEX_TABLE () {
-        return [
-            -1, -1, -1, -1, 2, 4, 6, 8,
-            -1, -1, -1, -1, 2, 4, 6, 8
-        ];
+        return INDEX_TABLE;
     }
 
     /**
@@ -81,14 +94,11 @@ class ADPCMSoundDecoder {
             this.samplesPerBlock = formatChunk.readUint16();
             this.adpcmBlockSize = ((this.samplesPerBlock - 1) / 2) + 4; // block size in bytes
 
-            const samples = this.imaDecompress(this.extractChunk('data', stream), this.adpcmBlockSize);
+            const compressedData = this.extractChunk('data', stream);
+            const sampleCount = this.numberOfSamples(compressedData, this.adpcmBlockSize);
 
-            const buffer = this.audioContext.createBuffer(1, samples.length, this.samplesPerSecond);
-
-            // @todo optimize this? e.g. replace the divide by storing 1/32768 and multiply?
-            for (let i = 0; i < samples.length; i++) {
-                buffer.getChannelData(0)[i] = samples[i] / 32768;
-            }
+            const buffer = this.audioContext.createBuffer(1, sampleCount, this.samplesPerSecond);
+            this.imaDecompress(compressedData, this.adpcmBlockSize, buffer.getChannelData(0));
 
             resolve(buffer);
         });
@@ -115,35 +125,59 @@ class ADPCMSoundDecoder {
     }
 
     /**
+     * Count the exact number of samples in the compressed data.
+     * @param {ArrayBufferStream} compressedData - the compressed data
+     * @param {number} blockSize - size of each block in the data in bytes
+     * @return {number} number of samples in the compressed data
+     */
+    numberOfSamples (compressedData, blockSize) {
+        if (!compressedData) return 0;
+
+        compressedData.position = 0;
+
+        const available = compressedData.getBytesAvailable();
+        const blocks = (available / blockSize) | 0;
+        // Number of samples in full blocks.
+        const fullBlocks = blocks * (2 * (blockSize - 4)) + 1;
+        // Number of samples in the last incomplete block. 0 if the last block
+        // is full.
+        const subBlock = Math.max((available % blockSize) - 4, 0) * 2;
+        // 1 if the last block is incomplete. 0 if it is complete.
+        const incompleteBlock = Math.min(available % blockSize, 1);
+        return fullBlocks + subBlock + incompleteBlock;
+    }
+
+    /**
      * Decompress sample data using the IMA ADPCM algorithm.
      * Note: Handles only one channel, 4-bits per sample.
      * @param  {ArrayBufferStream} compressedData - a stream of compressed audio samples
      * @param  {number} blockSize - the number of bytes in the stream
-     * @return {Int16Array} the uncompressed audio samples
+     * @param  {Float32Array} out - the uncompressed audio samples
      */
-    imaDecompress (compressedData, blockSize) {
+    imaDecompress (compressedData, blockSize, out) {
         let sample;
         let step;
         let code;
         let delta;
         let index = 0;
         let lastByte = -1; // -1 indicates that there is no saved lastByte
-        const out = [];
 
         // Bail and return no samples if we have no data
-        if (!compressedData) return out;
+        if (!compressedData) return;
 
         compressedData.position = 0;
 
-        // @todo Update this loop ported from Scratch 2.0 to use a condition or a for loop.
-        while (true) { // eslint-disable-line no-constant-condition
+        const size = out.length;
+
+        let i = 0;
+        while (i < size) {
             if (((compressedData.position % blockSize) === 0) && (lastByte < 0)) { // read block header
                 if (compressedData.getBytesAvailable() === 0) break;
                 sample = compressedData.readInt16();
                 index = compressedData.readUint8();
                 compressedData.position++; // skip extra header byte
                 if (index > 88) index = 88;
-                out.push(sample);
+                out[i++] = sample / 32768;
             } else {
                 // read 4-bit code and compute delta from previous sample
                 if (lastByte < 0) {
@@ -154,25 +188,23 @@ class ADPCMSoundDecoder {
                     code = (lastByte >> 4) & 0xF;
                     lastByte = -1;
                 }
-                step = ADPCMSoundDecoder.STEP_TABLE[index];
+                step = STEP_TABLE[index];
                 delta = 0;
                 if (code & 4) delta += step;
                 if (code & 2) delta += step >> 1;
                 if (code & 1) delta += step >> 2;
                 delta += step >> 3;
                 // compute next index
-                index += ADPCMSoundDecoder.INDEX_TABLE[code];
+                index += INDEX_TABLE[code];
                 if (index > 88) index = 88;
                 if (index < 0) index = 0;
                 // compute and output sample
                 sample += (code & 8) ? -delta : delta;
                 if (sample > 32767) sample = 32767;
                 if (sample < -32768) sample = -32768;
-                out.push(sample);
+                out[i++] = sample / 32768;
             }
         }
-        const samples = Int16Array.from(out);
-        return samples;
     }
 }
 
