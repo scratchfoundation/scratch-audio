@@ -23,6 +23,36 @@ const INDEX_TABLE = [
     -1, -1, -1, -1, 2, 4, 6, 8
 ];
 
+let _deltaTable = null;
+
+/**
+ * Build a table of deltas from the 89 possible steps and 16 codes.
+ * @return {Array<number>} computed delta values
+ */
+const deltaTable = function () {
+    if (_deltaTable === null) {
+        const NUM_STEPS = STEP_TABLE.length;
+        const NUM_INDICES = INDEX_TABLE.length;
+        _deltaTable = new Array(NUM_STEPS * NUM_INDICES).fill(0);
+        let i = 0;
+
+        for (let index = 0; index < NUM_STEPS; index++) {
+            for (let code = 0; code < NUM_INDICES; code++) {
+                const step = STEP_TABLE[index];
+
+                let delta = 0;
+                if (code & 4) delta += step;
+                if (code & 2) delta += step >> 1;
+                if (code & 1) delta += step >> 2;
+                delta += step >> 3;
+                _deltaTable[i++] = (code & 8) ? -delta : delta;
+            }
+        }
+    }
+
+    return _deltaTable;
+};
+
 /**
  * Decode wav audio files that have been compressed with the ADPCM format.
  * This is necessary because, while web browsers have native decoders for many audio
@@ -156,7 +186,6 @@ class ADPCMSoundDecoder {
      */
     imaDecompress (compressedData, blockSize, out) {
         let sample;
-        let step;
         let code;
         let delta;
         let index = 0;
@@ -168,40 +197,48 @@ class ADPCMSoundDecoder {
         compressedData.position = 0;
 
         const size = out.length;
+        const samplesAfterBlockHeader = (blockSize - 4) * 2;
+
+        const DELTA_TABLE = deltaTable();
 
         let i = 0;
         while (i < size) {
-            if (((compressedData.position % blockSize) === 0) && (lastByte < 0)) { // read block header
-                if (compressedData.getBytesAvailable() === 0) break;
-                sample = compressedData.readInt16();
-                index = compressedData.readUint8();
-                compressedData.position++; // skip extra header byte
-                if (index > 88) index = 88;
-                out[i++] = sample / 32768;
-            } else {
+            // read block header
+            sample = compressedData.readInt16();
+            index = compressedData.readUint8();
+            compressedData.position++; // skip extra header byte
+            if (index > 88) index = 88;
+            out[i++] = sample / 32768;
+
+            const blockLength = Math.min(samplesAfterBlockHeader, size - i);
+            const blockStart = i;
+            while (i - blockStart < blockLength) {
                 // read 4-bit code and compute delta from previous sample
-                if (lastByte < 0) {
-                    if (compressedData.getBytesAvailable() === 0) break;
-                    lastByte = compressedData.readUint8();
-                    code = lastByte & 0xF;
-                } else {
-                    code = (lastByte >> 4) & 0xF;
-                    lastByte = -1;
-                }
-                step = STEP_TABLE[index];
-                delta = 0;
-                if (code & 4) delta += step;
-                if (code & 2) delta += step >> 1;
-                if (code & 1) delta += step >> 2;
-                delta += step >> 3;
+                lastByte = compressedData.readUint8();
+                code = lastByte & 0xF;
+                delta = DELTA_TABLE[index * 16 + code];
                 // compute next index
                 index += INDEX_TABLE[code];
                 if (index > 88) index = 88;
-                if (index < 0) index = 0;
+                else if (index < 0) index = 0;
                 // compute and output sample
-                sample += (code & 8) ? -delta : delta;
+                sample += delta;
                 if (sample > 32767) sample = 32767;
-                if (sample < -32768) sample = -32768;
+                else if (sample < -32768) sample = -32768;
+                out[i++] = sample / 32768;
+
+                // use 4-bit code from lastByte and compute delta from previous
+                // sample
+                code = (lastByte >> 4) & 0xF;
+                delta = DELTA_TABLE[index * 16 + code];
+                // compute next index
+                index += INDEX_TABLE[code];
+                if (index > 88) index = 88;
+                else if (index < 0) index = 0;
+                // compute and output sample
+                sample += delta;
+                if (sample > 32767) sample = 32767;
+                else if (sample < -32768) sample = -32768;
                 out[i++] = sample / 32768;
             }
         }
