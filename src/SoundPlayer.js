@@ -268,7 +268,7 @@ class SoundPlayer extends EventEmitter {
         }
 
         // 传输audio buffer
-        window.recorder.addAudioBufferSource(this.outputNode.buffer)
+        window.canvasRecorder.audioConnect(this.outputNode.buffer);
         this.outputNode.start();
 
         this.isPlaying = true;
