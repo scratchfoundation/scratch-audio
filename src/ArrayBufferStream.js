@@ -150,7 +150,16 @@ class ArrayBufferStream {
      * @return {number} the next 32 bit integer in the stream
      */
     readInt32 () {
-        const val = new Int32Array(this.arrayBuffer, this._position, 1)[0];
+        let val;
+        if (this._position % 4 === 0) {
+            val = new Int32Array(this.arrayBuffer, this._position, 1)[0];
+        } else {
+            // Cannot read Int32 directly out because offset is not multiple of 4
+            // Need to slice out the values first
+            val = new Int32Array(
+                this.arrayBuffer.slice(this._position, this._position + 4)
+            )[0];
+        }
         this._position += 4; // one 32 bit int is 4 bytes
         return val;
     }
