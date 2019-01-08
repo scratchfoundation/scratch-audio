@@ -154,6 +154,11 @@ class AudioEngine {
         // decoder If that fails, attempt to decode as ADPCM
         const decoding = decodeAudioData(this.audioContext, bufferCopy1)
             .catch(() => {
+                // If the file is empty, create an empty sound
+                if (sound.data.length === 0) {
+                    return Promise.resolve(this.audioContext.createBuffer(1, 1, this.audioContext.sampleRate));
+                }
+
                 // The audio context failed to parse the sound data
                 // we gave it, so try to decode as 'adpcm'
 
