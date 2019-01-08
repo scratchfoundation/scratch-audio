@@ -150,7 +150,6 @@ class ArrayBufferStream {
      * @return {number} the next 32 bit integer in the stream
      */
     readInt32 () {
-        // const sliced = this.arrayBuffer.slice
         let val;
         if (this._position % 4 === 0) {
             val = new Int32Array(this.arrayBuffer, this._position, 1)[0];
