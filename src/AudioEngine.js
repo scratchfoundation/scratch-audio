@@ -156,7 +156,7 @@ class AudioEngine {
             .catch(() => {
                 // If the file is empty, create an empty sound
                 if (sound.data.length === 0) {
-                    return Promise.resolve(this._emptySound());
+                    return this._emptySound();
                 }
 
                 // The audio context failed to parse the sound data
@@ -166,7 +166,7 @@ class AudioEngine {
                 const bufferCopy2 = sound.data.buffer.slice(0);
                 // Try decoding as adpcm
                 return new ADPCMSoundDecoder(this.audioContext).decode(bufferCopy2)
-                    .catch(() => Promise.resolve(this._emptySound()));
+                    .catch(() => this._emptySound());
             })
             .then(
                 buffer => ([soundId, buffer]),
