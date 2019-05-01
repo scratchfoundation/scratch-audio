@@ -43,7 +43,6 @@ class VolumeEffect extends Effect {
 
         const {gain} = this.outputNode;
         const {currentTime, DECAY_WAIT, DECAY_DURATION} = this.audioEngine;
-        gain.setValueAtTime(gain.value, currentTime + DECAY_WAIT);
         gain.linearRampToValueAtTime(value / 100, currentTime + DECAY_WAIT + DECAY_DURATION);
     }
 
