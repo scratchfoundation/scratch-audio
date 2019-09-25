@@ -71,7 +71,7 @@ tap.test('SoundPlayer', suite => {
     });
 
     suite.test('stop decay', t => {
-        t.plan(7);
+        t.plan(5);
         soundPlayer.play();
         soundPlayer.connect(audioEngine);
         const outputNode = soundPlayer.outputNode;
@@ -88,13 +88,10 @@ tap.test('SoundPlayer', suite => {
             inputs: [outputNode.toJSON()]
         }], 'output node connects to gain node to input node');
 
-        audioContext.$processTo(audioEngine.DECAY_WAIT + audioEngine.DECAY_DURATION / 2);
-        const engineInputs = help.engineInputs;
-        t.notEqual(engineInputs[0].gain.value, 1, 'gain value should not be 1');
-        t.notEqual(engineInputs[0].gain.value, 0, 'gain value should not be 0');
+        audioContext.$processTo(audioEngine.DECAY_DURATION / 2);
         t.equal(outputNode.$state, 'PLAYING');
 
-        audioContext.$processTo(audioEngine.DECAY_WAIT + audioEngine.DECAY_DURATION + 0.001);
+        audioContext.$processTo(audioEngine.DECAY_DURATION + 0.001);
         t.deepEqual(help.engineInputs, [{
             name: 'GainNode',
             gain: {

@@ -299,8 +299,8 @@ class SoundPlayer extends EventEmitter {
         taken.finished().then(() => taken.dispose());
 
         taken.volumeEffect.set(0);
-        const {currentTime, DECAY_WAIT, DECAY_DURATION} = this.audioEngine;
-        taken.outputNode.stop(currentTime + DECAY_WAIT + DECAY_DURATION);
+        const {currentTime, DECAY_DURATION} = this.audioEngine;
+        taken.outputNode.stop(currentTime + DECAY_DURATION);
     }
 
     /**
