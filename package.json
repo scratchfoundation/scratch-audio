@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/LLK/scratch-audio#readme",
   "dependencies": {
-    "audio-context": "1.0.1",
+    "audio-context": "1.0.3",
     "minilog": "^3.0.1",
     "startaudiocontext": "1.2.1"
   },
