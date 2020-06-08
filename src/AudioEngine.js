@@ -75,6 +75,12 @@ class AudioEngine {
          * Left is closest to input, Right is closest to output
          */
         this.effects = [PanEffect, PitchEffect, VolumeEffect];
+
+        /**
+         * Map of target-specifc output nodes by target.
+         * @type {Map<Target, AudioNode>}
+         */
+        this.targetOutputNodes = new Map();
     }
 
     /**
@@ -130,6 +136,11 @@ class AudioEngine {
      */
     getInputNode () {
         return this.inputNode;
+    }
+
+    createTargetOutputNode (target) {
+        const outputNode = this.audioContext.createGain();
+        this.targetOutputNodes[target] = outputNode;
     }
 
     /**

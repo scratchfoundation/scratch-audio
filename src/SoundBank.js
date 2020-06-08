@@ -89,6 +89,8 @@ class SoundBank {
     playSound (target, soundId) {
         const effects = this.getSoundEffects(soundId);
         const player = this.getSoundPlayer(soundId);
+        
+        player.setVMTarget(target);
 
         if (this.playerTargets.get(soundId) !== target) {
             // make sure to stop the old sound, effectively "forking" the output

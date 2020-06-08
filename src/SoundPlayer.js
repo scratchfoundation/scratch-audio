@@ -91,6 +91,8 @@ class SoundPlayer extends EventEmitter {
         // compatable with object and requires us to pass this bound function
         // instead
         this.handleEvent = this.handleEvent.bind(this);
+
+        this.VMTarget = null;
     }
 
     /**
@@ -171,11 +173,27 @@ class SoundPlayer extends EventEmitter {
         if (this.volumeEffect === null) {
             this.outputNode.disconnect();
             this.outputNode.connect(target.getInputNode());
+
+            this.connectToTargetOutputNode(this.outputNode);
         } else {
             this.volumeEffect.connect(target);
+
+            this.connectToTargetOutputNode(this.volumeEffect);
         }
 
         return this;
+    }
+
+    setVMTarget (VMTarget) {
+        this.VMTarget = VMTarget;
+    }
+
+    connectToTargetOutputNode (input) {
+        if (!this.VMTarget) return;
+        const targetOutputNode = this.audioEngine.targetOutputNodes[this.VMTarget]; 
+        if (targetOutputNode) {
+            input.connect(targetOutputNode);
+        }
     }
 
     /**
