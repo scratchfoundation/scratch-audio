@@ -190,8 +190,10 @@ class SoundPlayer extends EventEmitter {
 
     connectToTargetOutputNode (input) {
         if (!this.VMTarget) return;
-        const targetOutputNode = this.audioEngine.targetOutputNodes[this.VMTarget]; 
+        const targetOutputNode = this.audioEngine.targetOutputNodes.get(this.VMTarget);
+        console.log('targetOutputNodes', this.audioEngine.targetOutputNodes);
         if (targetOutputNode) {
+            console.log('connecting', this.VMTarget.sprite.name, 'to', targetOutputNode.target.sprite.name);
             input.connect(targetOutputNode);
         }
     }

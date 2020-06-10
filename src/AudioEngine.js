@@ -140,7 +140,9 @@ class AudioEngine {
 
     createTargetOutputNode (target) {
         const outputNode = this.audioContext.createGain();
-        this.targetOutputNodes[target] = outputNode;
+        outputNode.target = target;
+        this.targetOutputNodes.set(target, outputNode);
+        return outputNode;
     }
 
     /**
