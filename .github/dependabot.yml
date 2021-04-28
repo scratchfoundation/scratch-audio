@@ -1,0 +1,29 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: weekly
+    time: "10:00"
+  open-pull-requests-limit: 99
+  versioning-strategy: increase-if-necessary
+  ignore:
+  - dependency-name: webpack
+    versions:
+    - 5.24.2
+    - 5.24.4
+    - 5.25.1
+    - 5.27.1
+    - 5.28.0
+    - 5.30.0
+    - 5.31.2
+    - 5.33.2
+  - dependency-name: tap
+    versions:
+    - 14.11.0
+    - 15.0.1
+    - 15.0.2
+  - dependency-name: webpack-cli
+    versions:
+    - 4.4.0
+    - 4.5.0
