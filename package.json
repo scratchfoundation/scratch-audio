@@ -27,10 +27,10 @@
     "startaudiocontext": "1.2.1"
   },
   "devDependencies": {
-    "babel-core": "^6.24.1",
-    "babel-eslint": "^7.2.2",
-    "babel-loader": "^7.1.4",
-    "babel-preset-env": "^1.6.1",
+    "babel-core": "6.26.3",
+    "babel-eslint": "7.2.3",
+    "babel-loader": "7.1.5",
+    "babel-preset-env": "1.7.0",
     "eslint": "^3.19.0",
     "eslint-config-scratch": "^3.1.0",
     "tap": "^12.0.1",
