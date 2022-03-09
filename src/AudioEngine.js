@@ -41,7 +41,7 @@ const decodeAudioData = function (audioContext, buffer) {
  * sprites.
  */
 class AudioEngine {
-    constructor (audioContext = new AudioContext()) {
+    constructor (audioContext = new AudioContext(), optInputNode = null) {
         /**
          * AudioContext to play and manipulate sounds with a graph of source
          * and effect nodes.
@@ -55,7 +55,7 @@ class AudioEngine {
          * will change the volume for all sounds.
          * @type {GainNode}
          */
-        this.inputNode = this.audioContext.createGain();
+        this.inputNode = optInputNode || this.audioContext.createGain();
         this.inputNode.connect(this.audioContext.destination);
 
         /**
