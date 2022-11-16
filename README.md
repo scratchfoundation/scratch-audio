@@ -5,7 +5,7 @@
 
 #### Please note this project is at an early stage and we are not ready for pull requests
 
-[![Build Status](https://travis-ci.org/LLK/scratch-audio.svg?branch=develop)](https://travis-ci.org/LLK/scratch-audio)
+[![CircleCI](https://circleci.com/gh/LLK/scratch-audio/tree/develop.svg?style=shield&circle-token=3792f4f51158c8c9b448527466ffe302b0c6f0f5)](https://circleci.com/gh/LLK/scratch-audio?branch=develop)
 
 ## Installation
 This requires you to have Git and Node.js installed.

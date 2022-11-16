@@ -1,3 +1,6 @@
+# Development files
+/.circleci
+
 # Testing
 /.nyc_output
 /coverage
