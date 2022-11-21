@@ -7,20 +7,9 @@ aliases:
     - master
     - develop
     - /^hotfix\//
-
-executors:
-  default-executor:
-    docker:
-      - image: cimg/node:16.18.1 # Consider switching to LTS when scratch-audio supports that version
-    working_directory: ~/project
-    resource_class: medium
+  - &node-version 16.18.1 # Consider switching to lts when scratch-audio supports that version
 
 commands:
-  test:
-    steps:
-      - run:
-          name: Test
-          command: npm run test
   setup_deploy:
     steps:
       - run:
@@ -53,34 +42,28 @@ commands:
             if npm info | grep -q $RELEASE_VERSION; then git tag $RELEASE_VERSION && git push https://${GH_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git $RELEASE_VERSION; fi
 
 jobs:
-  build-and-test:
-    executor: default-executor
+  deploy:
+    executor:
+      name: node/default
+      tag: *node-version
     steps:
       - checkout
       - node/install-packages
-      - test
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - .
-  deploy:
-    executor: default-executor
-    steps:
-      - attach_workspace:
-          at: ~/project
       - setup_deploy
       - deploy
 
 workflows:
   build-and-test-workflow:
     jobs:
-      - build-and-test:
+      - node/test:
+          version: *node-version
           filters:
             branches:
               ignore: *release-branches
   deploy-workflow:
     jobs:
-      - build-and-test:
+      - node/test:
+          version: *node-version
           filters:
             branches:
               only: *release-branches
@@ -88,4 +71,4 @@ workflows:
           context:
             - scratch-npm-creds
           requires:
-            - build-and-test
+            - node/test
