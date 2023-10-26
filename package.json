@@ -34,7 +34,7 @@
     "eslint": "3.19.0",
     "eslint-config-scratch": "3.1.0",
     "json": "9.0.6",
-    "tap": "12.7.0",
+    "tap": "16.3.2",
     "web-audio-test-api": "0.5.2",
     "webpack": "4.46.0",
     "webpack-cli": "3.3.12"
