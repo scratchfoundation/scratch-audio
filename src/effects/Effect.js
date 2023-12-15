@@ -2,7 +2,7 @@
  * An effect on an AudioPlayer and all its SoundPlayers.
  */
 class Effect {
-     /**
+    /**
       * @param {AudioEngine} audioEngine - audio engine this runs with
       * @param {AudioPlayer} audioPlayer - audio player this affects
       * @param {Effect} lastEffect - effect in the chain before this one

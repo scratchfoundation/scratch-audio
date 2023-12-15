@@ -44,9 +44,9 @@ class Loudness {
                 this.mic.connect(this.analyser);
                 this.micDataArray = new Float32Array(this.analyser.fftSize);
             })
-            .catch(err => {
-                log.warn(err);
-            });
+                .catch(err => {
+                    log.warn(err);
+                });
         }
 
         // If the microphone is set up and active, measure the loudness

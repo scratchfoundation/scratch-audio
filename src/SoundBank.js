@@ -150,7 +150,7 @@ class SoundBank {
         this.soundEffects.forEach(effects => effects.dispose());
         this.soundEffects.clear();
         for (const soundId in this.soundPlayers) {
-            if (this.soundPlayers.hasOwnProperty(soundId)) {
+            if (Object.prototype.hasOwnProperty.call(this.soundPlayers, soundId)) {
                 this.soundPlayers[soundId].dispose();
             }
         }

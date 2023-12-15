@@ -118,7 +118,7 @@ class PitchEffect extends Effect {
         if (!players) return;
 
         for (const id in players) {
-            if (players.hasOwnProperty(id)) {
+            if (Object.prototype.hasOwnProperty.call(players, id)) {
                 this.updatePlayer(players[id]);
             }
         }
