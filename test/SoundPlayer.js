@@ -157,51 +157,51 @@ tap.test('SoundPlayer', suite => {
         audioContext.$processTo(audioEngine.DECAY_DURATION);
 
         return Promise.resolve()
-        .then(() => {
+            .then(() => {
 
-            t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+                t.equal(soundPlayer.outputNode.$state, 'PLAYING');
 
-            soundPlayer.play();
-            soundPlayer.finished().then(() => log.push('play 2 finished'));
+                soundPlayer.play();
+                soundPlayer.finished().then(() => log.push('play 2 finished'));
 
-            // wait for a micro-task loop to fire our previous events
-            return Promise.resolve();
-        })
-        .then(() => {
+                // wait for a micro-task loop to fire our previous events
+                return Promise.resolve();
+            })
+            .then(() => {
 
-            t.equal(log[0], 'play 1 finished');
-            t.notEqual(soundPlayer.outputNode, firstPlayNode, 'created new player node');
+                t.equal(log[0], 'play 1 finished');
+                t.notEqual(soundPlayer.outputNode, firstPlayNode, 'created new player node');
 
-            t.equal(help.engineInputs.length, 2, 'there should be 2 players connected');
-            t.equal(firstPlayNode.$state, 'PLAYING');
-            t.equal(soundPlayer.outputNode.$state, 'PLAYING');
-            t.equal(help.engineInputs[0].gain.value, 1, 'old sound connectect to gain node with volume 1');
+                t.equal(help.engineInputs.length, 2, 'there should be 2 players connected');
+                t.equal(firstPlayNode.$state, 'PLAYING');
+                t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+                t.equal(help.engineInputs[0].gain.value, 1, 'old sound connectect to gain node with volume 1');
 
-            const {currentTime} = audioContext;
-            audioContext.$processTo(currentTime + audioEngine.DECAY_WAIT + 0.001);
-            t.notEqual(help.engineInputs[0].gain.value, 1,
-            'old sound connected to gain node which will fade');
+                const {currentTime} = audioContext;
+                audioContext.$processTo(currentTime + audioEngine.DECAY_WAIT + 0.001);
+                t.notEqual(help.engineInputs[0].gain.value, 1,
+                    'old sound connected to gain node which will fade');
 
-            audioContext.$processTo(currentTime + audioEngine.DECAY_WAIT + audioEngine.DECAY_DURATION + 0.001);
-            t.equal(soundPlayer.outputNode.$state, 'PLAYING');
-            t.equal(firstPlayNode.$state, 'FINISHED');
+                audioContext.$processTo(currentTime + audioEngine.DECAY_WAIT + audioEngine.DECAY_DURATION + 0.001);
+                t.equal(soundPlayer.outputNode.$state, 'PLAYING');
+                t.equal(firstPlayNode.$state, 'FINISHED');
 
-            t.equal(help.engineInputs[0].gain.value, 0, 'faded old sound to 0');
+                t.equal(help.engineInputs[0].gain.value, 0, 'faded old sound to 0');
 
-            t.equal(log.length, 1);
-            audioContext.$processTo(currentTime + audioEngine.DECAY_WAIT + audioEngine.DECAY_DURATION + 0.3);
+                t.equal(log.length, 1);
+                audioContext.$processTo(currentTime + audioEngine.DECAY_WAIT + audioEngine.DECAY_DURATION + 0.3);
 
-            // wait for a micro-task loop to fire our previous events
-            return Promise.resolve();
-        })
-        .then(() => {
+                // wait for a micro-task loop to fire our previous events
+                return Promise.resolve();
+            })
+            .then(() => {
 
-            t.equal(log[1], 'play 2 finished');
-            t.equal(help.engineInputs.length, 1, 'old sound disconneted itself after done');
-            t.equal(log.length, 2);
+                t.equal(log[1], 'play 2 finished');
+                t.equal(help.engineInputs.length, 1, 'old sound disconneted itself after done');
+                t.equal(log.length, 2);
 
-            t.end();
-        });
+                t.end();
+            });
     });
 
     suite.end();

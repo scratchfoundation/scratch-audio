@@ -89,7 +89,7 @@ class ADPCMSoundDecoder {
      * Decode an ADPCM sound stored in an ArrayBuffer and return a promise
      * with the decoded audio buffer.
      * @param  {ArrayBuffer} audioData - containing ADPCM encoded wav audio
-     * @return {AudioBuffer} the decoded audio buffer
+     * @return {Promise.<AudioBuffer>} the decoded audio buffer
      */
     decode (audioData) {
 
@@ -99,7 +99,7 @@ class ADPCMSoundDecoder {
             const riffStr = stream.readUint8String(4);
             if (riffStr !== 'RIFF') {
                 log.warn('incorrect adpcm wav header');
-                reject();
+                reject(new Error('incorrect adpcm wav header'));
             }
 
             const lengthInHeader = stream.readInt32();
@@ -110,7 +110,7 @@ class ADPCMSoundDecoder {
             const wavStr = stream.readUint8String(4);
             if (wavStr !== 'WAVE') {
                 log.warn('incorrect adpcm wav header');
-                reject();
+                reject(new Error('incorrect adpcm wav header'));
             }
 
             const formatChunk = this.extractChunk('fmt ', stream);
@@ -120,7 +120,7 @@ class ADPCMSoundDecoder {
             this.bytesPerSecond = formatChunk.readUint32();
             this.blockAlignment = formatChunk.readUint16();
             this.bitsPerSample = formatChunk.readUint16();
-            formatChunk.position += 2;  // skip extra header byte count
+            formatChunk.position += 2; // skip extra header byte count
             this.samplesPerBlock = formatChunk.readUint16();
             this.adpcmBlockSize = ((this.samplesPerBlock - 1) / 2) + 4; // block size in bytes
 
@@ -168,7 +168,7 @@ class ADPCMSoundDecoder {
         const available = compressedData.getBytesAvailable();
         const blocks = (available / blockSize) | 0;
         // Number of samples in full blocks.
-        const fullBlocks = blocks * (2 * (blockSize - 4)) + 1;
+        const fullBlocks = (blocks * (2 * (blockSize - 4))) + 1;
         // Number of samples in the last incomplete block. 0 if the last block
         // is full.
         const subBlock = Math.max((available % blockSize) - 4, 0) * 2;
@@ -216,7 +216,7 @@ class ADPCMSoundDecoder {
                 // read 4-bit code and compute delta from previous sample
                 lastByte = compressedData.readUint8();
                 code = lastByte & 0xF;
-                delta = DELTA_TABLE[index * 16 + code];
+                delta = DELTA_TABLE[(index * 16) + code];
                 // compute next index
                 index += INDEX_TABLE[code];
                 if (index > 88) index = 88;
@@ -230,7 +230,7 @@ class ADPCMSoundDecoder {
                 // use 4-bit code from lastByte and compute delta from previous
                 // sample
                 code = (lastByte >> 4) & 0xF;
-                delta = DELTA_TABLE[index * 16 + code];
+                delta = DELTA_TABLE[(index * 16) + code];
                 // compute next index
                 index += INDEX_TABLE[code];
                 if (index > 88) index = 88;

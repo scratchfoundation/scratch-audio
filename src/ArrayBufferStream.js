@@ -95,7 +95,6 @@ class ArrayBufferStream {
      */
     set position (value) {
         this._position = value + this.start;
-        return value;
     }
 
     /**
