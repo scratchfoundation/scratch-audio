@@ -1,6 +1,6 @@
 {
   "name": "scratch-audio",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "audio engine for scratch 3.0",
   "main": "dist.js",
   "browser": "./src/index.js",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LLK/scratch-audio.git"
+    "url": "git+https://github.com/scratchfoundation/scratch-audio.git"
   },
   "author": "Massachusetts Institute of Technology",
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/LLK/scratch-audio/issues"
   },
-  "homepage": "https://github.com/LLK/scratch-audio#readme",
+  "homepage": "https://github.com/scratchfoundation/scratch-audio#readme",
   "dependencies": {
     "audio-context": "1.0.1",
     "minilog": "^3.0.1",
@@ -38,6 +38,8 @@
     "eslint-config-scratch": "9.0.3",
     "husky": "8.0.3",
     "json": "9.0.6",
+    "scratch-semantic-release-config": "1.0.8",
+    "semantic-release": "19.0.5",
     "tap": "12.7.0",
     "web-audio-test-api": "0.5.2",
     "webpack": "4.46.0",
