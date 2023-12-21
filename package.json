@@ -42,5 +42,10 @@
     "web-audio-test-api": "0.5.2",
     "webpack": "4.46.0",
     "webpack-cli": "3.3.12"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
   }
 }
