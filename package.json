@@ -5,11 +5,12 @@
   "main": "dist.js",
   "browser": "./src/index.js",
   "scripts": {
-    "test": "npm run lint && npm run tap && npm run build",
     "build": "webpack --bail",
-    "watch": "webpack --watch",
     "lint": "eslint .",
-    "tap": "tap test/effects/*.js test/*.js"
+    "prepare": "husky install",
+    "tap": "tap test/effects/*.js test/*.js",
+    "test": "npm run lint && npm run tap && npm run build",
+    "watch": "webpack --watch"
   },
   "repository": {
     "type": "git",
@@ -35,6 +36,7 @@
     "babel-preset-env": "1.7.0",
     "eslint": "8.0.1",
     "eslint-config-scratch": "9.0.3",
+    "husky": "8.0.3",
     "json": "9.0.6",
     "tap": "12.7.0",
     "web-audio-test-api": "0.5.2",
