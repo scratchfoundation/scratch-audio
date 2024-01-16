@@ -39,7 +39,7 @@
     "husky": "8.0.3",
     "json": "9.0.6",
     "scratch-semantic-release-config": "1.0.8",
-    "semantic-release": "19.0.5",
+    "semantic-release": "23.0.0",
     "tap": "12.7.0",
     "web-audio-test-api": "0.5.2",
     "webpack": "4.46.0",
