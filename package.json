@@ -23,9 +23,9 @@
   },
   "homepage": "https://github.com/scratchfoundation/scratch-audio#readme",
   "dependencies": {
-    "audio-context": "1.0.1",
+    "audio-context": "^1.0.1",
     "minilog": "^3.0.1",
-    "startaudiocontext": "1.2.1"
+    "startaudiocontext": "^1.2.1"
   },
   "devDependencies": {
     "@commitlint/cli": "18.4.3",
