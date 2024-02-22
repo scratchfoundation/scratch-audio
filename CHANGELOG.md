@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.3](https://github.com/scratchfoundation/scratch-audio/compare/v1.0.2...v1.0.3) (2024-02-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency eslint-config-scratch to v9.0.5 ([c8a5e35](https://github.com/scratchfoundation/scratch-audio/commit/c8a5e3571b07e80afa3c6356ae367e6b20a0dc02))
+
 ## [1.0.2](https://github.com/scratchfoundation/scratch-audio/compare/v1.0.1...v1.0.2) (2024-02-22)
 
 
