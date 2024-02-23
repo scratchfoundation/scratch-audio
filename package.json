@@ -19,7 +19,7 @@
   "author": "Massachusetts Institute of Technology",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/LLK/scratch-audio/issues"
+    "url": "https://github.com/scratchfoundation/scratch-audio/issues"
   },
   "homepage": "https://github.com/scratchfoundation/scratch-audio#readme",
   "dependencies": {
