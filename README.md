@@ -12,7 +12,7 @@ This requires you to have Git and Node.js installed.
 
 In your own node environment/application:
 ```bash
-npm install https://github.com/LLK/scratch-audio.git
+npm install https://github.com/scratchfoundation/scratch-audio.git
 ```
 If you want to edit/play yourself:
 ```bash
