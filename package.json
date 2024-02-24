@@ -38,7 +38,7 @@
     "eslint-config-scratch": "9.0.7",
     "husky": "8.0.3",
     "json": "9.0.6",
-    "scratch-semantic-release-config": "1.0.13",
+    "scratch-semantic-release-config": "1.0.14",
     "semantic-release": "19.0.5",
     "tap": "12.7.0",
     "web-audio-test-api": "0.5.2",
