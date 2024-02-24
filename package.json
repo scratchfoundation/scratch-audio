@@ -35,7 +35,7 @@
     "babel-loader": "7.1.5",
     "babel-preset-env": "1.7.0",
     "eslint": "8.56.0",
-    "eslint-config-scratch": "9.0.7",
+    "eslint-config-scratch": "9.0.8",
     "husky": "8.0.3",
     "json": "9.0.6",
     "scratch-semantic-release-config": "1.0.14",
