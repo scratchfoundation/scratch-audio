@@ -42,7 +42,7 @@
     "semantic-release": "19.0.5",
     "tap": "12.7.0",
     "web-audio-test-api": "0.5.2",
-    "webpack": "4.47.0",
+    "webpack": "5.90.3",
     "webpack-cli": "3.3.12"
   },
   "config": {
