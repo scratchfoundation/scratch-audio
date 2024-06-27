@@ -40,7 +40,7 @@
     "json": "9.0.6",
     "scratch-semantic-release-config": "1.0.14",
     "semantic-release": "19.0.5",
-    "tap": "12.7.0",
+    "tap": "20.0.0",
     "web-audio-test-api": "0.5.2",
     "webpack": "4.47.0",
     "webpack-cli": "3.3.12"
