@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file. See
 [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.77](https://github.com/scratchfoundation/scratch-audio/compare/v2.0.76...v2.0.77) (2025-02-24)
+
+
+### Bug Fixes
+
+* **deps:** lock file maintenance ([9c3f20e](https://github.com/scratchfoundation/scratch-audio/commit/9c3f20eeae8a4e69af0720f51be05af1c0fb59d1))
+
 ## [2.0.76](https://github.com/scratchfoundation/scratch-audio/compare/v2.0.75...v2.0.76) (2025-02-23)
 
 
